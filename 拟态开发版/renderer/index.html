@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>拟态 桌宠 v2</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    overflow: visible;
+    background: transparent;
+    user-select: none;
+    position: relative;
+  }
+
+  canvas {
+    display: block;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+  }
+
+  /* ── Drop overlay ─────────────────────────────────── */
+  #overlay {
+    position: absolute; top: 0; left: 0;
+    border: 2px dashed rgba(255, 255, 255, 0.55);
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  #overlay.on { opacity: 1; }
+
+  /* ── Speech bubble (v2: mouth-tail positioned) ────── */
+  #bubble {
+    position: absolute;
+    left: 50%;
+    background: rgba(255, 255, 255, 0.96);
+    color: #333;
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    border-radius: 14px;
+    border: 1px solid #ccc;
+    white-space: normal;
+    word-wrap: break-word;
+    pointer-events: none;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12),
+                0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+  }
+
+  #bubble.on {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+
+  /* Tail pointing to character mouth */
+  #bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(255, 255, 255, 0.96);
+  }
+
+  /* ── Thought dots ─────────────────────────────────── */
+  .thought-dots {
+    position: absolute;
+    pointer-events: none;
+    z-index: 11;
+    font-size: 18px;
+    color: #aaa;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+<canvas id="pet-canvas" width="200" height="200"></canvas>
+<div id="overlay"></div>
+<div id="bubble"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  Module loading (dependency order)                     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<!-- 1. Global namespace + shared state -->
+<script src="mimic.js"></script>
+
+<!-- 2. FSM system -->
+<script src="fsm/expressions.js"></script>
+<script src="fsm/fsm-core.js"></script>
+<script src="fsm/states/idle.js"></script>
+<script src="fsm/states/working.js"></script>
+<script src="fsm/states/happy.js"></script>
+<script src="fsm/states/surprised.js"></script>
+<script src="fsm/states/alert.js"></script>
+<script src="fsm/states/bongo.js"></script>
+<script src="fsm/states/listening.js"></script>
+
+<!-- 3. Rendering (pixel art character v2) -->
+<script src="rendering/pixel-character.js"></script>
+<script src="rendering/particles.js"></script>
+
+<!-- 4. Audio (Web Audio synthesis) -->
+<script src="audio.js"></script>
+
+<!-- 5. Layout engine -->
+<script src="layout.js"></script>
+
+<!-- 6. Speech bubble v2 -->
+<script src="bubble/bubble.js"></script>
+
+<!-- 7. Interaction handlers -->
+<script src="interaction/drag.js"></script>
+<script src="interaction/contextmenu.js"></script>
+<script src="interaction/drop.js"></script>
+<script src="interaction/eye-tracking.js"></script>
+<script src="interaction/click.js"></script>
+<script src="interaction/chat.js"></script>
+<script src="interaction/music-detect.js"></script>
+
+<!-- 8. Bootstrap -->
+<script src="app.js"></script>
+</body>
+</html>

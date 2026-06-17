@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__skills-master__search",
+      "mcp__skills-master__ai_search",
+      "mcp__github__get_file_contents",
+      "mcp__github__search_repositories"
+    ]
+  }
+}

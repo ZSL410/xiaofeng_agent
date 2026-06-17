@@ -1,0 +1,32 @@
+[
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "日常消费",
+    "date": "2026-06-08"
+  },
+  {
+    "type": "expense",
+    "amount": 12,
+    "source": "饭",
+    "date": "2026-06-08"
+  },
+  {
+    "type": "expense",
+    "amount": 7,
+    "source": "饭",
+    "date": "2026-06-09"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "饭",
+    "date": "2026-06-09"
+  },
+  {
+    "type": "expense",
+    "amount": 35,
+    "source": "饭",
+    "date": "2026-06-12"
+  }
+]

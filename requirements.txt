@@ -1,0 +1,17 @@
+# 晓风Agent 核心依赖
+# 安装方法：pip install -r requirements.txt
+
+# 语音合成 (Edge TTS)
+edge-tts
+
+# 离线语音识别 (Vosk)
+vosk
+
+# 音频录制 (PortAudio 绑定)
+sounddevice
+
+# 数值计算 (Vosk 依赖)
+numpy
+
+# Word 文档报告生成
+python-docx

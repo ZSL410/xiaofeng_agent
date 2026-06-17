@@ -1,0 +1,11 @@
+{
+  "_comment": "拟态桌宠配置文件 — 遵循晓风Agent JSON 配置模式",
+  "targetDir": "../02_数据输入",
+  "backendUrl": "http://127.0.0.1:5001",
+  "apiEnabled": false,
+  "defaultSize": 80,
+  "passthrough": false,
+  "musicDetect": true,
+  "musicCheckInterval": 3,
+  "musicPlayers": ["spotify", "qqmusic","SodaMusic", "cloudmusic", "netease", "kwmusic", "kugou"]
+}

@@ -1,0 +1,7 @@
+{
+    "model_name": "qwen2.5:7b",
+    "model_name_small": "qwen2.5:3b",
+    "mic_device_id": 1,
+    "ollama_host": "http://localhost:11434",
+    "ollama_bin": null
+}
