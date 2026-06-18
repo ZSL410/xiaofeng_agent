@@ -1,12 +1,18 @@
 """
-耳朵.py — 语音识别模块
+耳朵.py — 语音识别模块  v2.6.0
 
 录音后端优先级（自动检测）:
   1. parec (PulseAudio)     — WSL2 + WSLg 最可靠方案，零额外 Python 依赖
   2. sounddevice (PortAudio) — 跨平台，原生 Linux / Windows 主流方案
   3. mock                   — 所有后端不可用时的模拟回退
 
-Vosk 模型: 自动相对于本文件定位到 ../../vosk-model-cn-0.22/
+Vosk 模型: 自动相对于本文件定位到 ../vosk-model-cn-0.22/
+
+v2.6.0 改进:
+  - 录音数据严格校验:int16 类型、形状归一化、静音检测
+  - 流式分块送入 Vosk + FinalResult() 强制冲刷，提升识别率
+  - 详细的调试日志(shape/dtype/peak/rms/JSON 结果）
+  - Windows 麦克风权限问题的明确诊断提示
 
 调试: 设置环境变量 XIAOFENG_DEBUG=1 启用详细日志
 """
@@ -53,6 +59,78 @@ _model_loaded = False
 _model = None          # vosk.Model 实例，创建新 KaldiRecognizer 时复用
 
 
+def _resolve_model_path():
+    """
+    将模型路径转换为 Vosk C++ 库可接受的格式。
+
+    Vosk 底层 C++ 代码在 Windows 上使用窄字符 API(CreateFileA 等），
+    无法处理含中文/Unicode 的路径。这里通过子进程调用 Windows 的
+    ``mklink /J`` 创建目录连接，映射到一个纯 ASCII 路径。
+    """
+    resolved = os.path.abspath(MODEL_PATH)
+
+    # Linux / WSL / macOS — 原生支持 UTF-8 路径，无需处理
+    if sys.platform != "win32":
+        return resolved
+
+    # 路径全为 ASCII → 直接使用
+    try:
+        resolved.encode("ascii")
+    except UnicodeEncodeError:
+        pass
+    else:
+        return resolved
+
+    # --- Windows 下路径含非 ASCII 字符 → 创建目录连接 ---
+    import tempfile
+
+    link_dir = os.path.join(tempfile.gettempdir(), "xf_vosk_model")
+    if os.path.exists(link_dir):
+        # 连接已存在：验证是否指向正确位置
+        try:
+            # 通过读取一个已知文件判断连接是否有效
+            test_file = os.path.join(link_dir, "am", "final.mdl")
+            if os.path.exists(test_file):
+                _log(f"Vosk 模型路径映射: {resolved} → {link_dir} (已存在)")
+                return link_dir
+        except Exception:
+            pass
+        # 连接损坏，重建
+        _log("移除旧的模型连接...")
+        try:
+            subprocess.run(
+                ["cmd", "/c", "rmdir", link_dir],
+                capture_output=True, timeout=10
+            )
+        except Exception:
+            pass
+        # 如果 rmdir 失败，尝试删除目录（可能是真实目录而非连接）
+        if os.path.exists(link_dir):
+            try:
+                import shutil as _shutil
+                _shutil.rmtree(link_dir, ignore_errors=True)
+            except Exception:
+                pass
+
+    # 创建目录连接（Junction — 不需要管理员权限，仅限本机目录）
+    _log(f"创建 Vosk 模型路径映射: {resolved} → {link_dir}")
+    result = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", link_dir, resolved],
+        capture_output=True, text=True, timeout=10
+    )
+    if result.returncode != 0:
+        _warn(f"mklink /J 失败 (rc={result.returncode}): {result.stderr.strip()}")
+        # 回退：直接返回原始路径，让 Vosk 自己去处理（可能失败）
+        return resolved
+
+    if os.path.isdir(link_dir):
+        _log(f"Vosk 模型路径映射成功: {link_dir}")
+        return link_dir
+    else:
+        _warn("目录连接创建后不可用，回退到原始路径")
+        return resolved
+
+
 def _load_vosk_model():
     """加载 Vosk 离线语音识别模型。返回 (是否成功, 错误信息)。"""
     global _model_loaded, _model
@@ -83,15 +161,18 @@ def _load_vosk_model():
     try:
         import vosk
     except ImportError:
-        msg = "vosk 未安装。请在 venv 中运行: pip install vosk"
+        msg = "vosk 未安装。请运行: pip install vosk"
         _warn(msg)
         return False, msg
 
+    # 4. 解决 Windows 下非 ASCII 路径兼容问题
+    model_path = _resolve_model_path()
+
     try:
         vosk.SetLogLevel(-1)              # 抑制 Vosk 内部调试输出
-        _model = vosk.Model(MODEL_PATH)
+        _model = vosk.Model(model_path)
         _model_loaded = True
-        _log(f"Vosk 模型加载成功 ({MODEL_PATH})")
+        _log(f"Vosk 模型加载成功 ({model_path})")
         return True, None
     except Exception as e:
         msg = f"Vosk 模型加载失败: {e}"
@@ -235,6 +316,10 @@ def _record_sounddevice():
     使用 sounddevice (PortAudio) 录音。
     在原生 Linux / Windows 上效果最佳；
     在 WSL2 中仅当 PortAudio 编译了 PulseAudio 后端时才可用。
+
+    返回:
+        bytes — int16 PCM 原始音频数据 (s16le, 16kHz, mono)
+        None  — 录音失败
     """
     import sounddevice as sd
     import numpy as np
@@ -289,9 +374,12 @@ def _record_sounddevice():
 
     if device_idx is None:
         _warn("sounddevice: 未找到任何输入设备")
+        _warn("请确认麦克风已连接并在 Windows 隐私设置中允许桌面应用访问麦克风。")
         return None
 
     print("🎤 正在听，请说话...（说完自动停止）")
+    _log(f"录音参数: samplerate={SAMPLE_RATE}, channels={CHANNELS}, dtype=int16, "
+         f"duration={RECORD_SECONDS}s, device_idx={device_idx}")
 
     try:
         recording = sd.rec(
@@ -303,16 +391,62 @@ def _record_sounddevice():
             blocking=True
         )
         sd.wait()
-        audio_data = np.asarray(recording, dtype='int16').tobytes()
-        actual_sec = len(audio_data) / (SAMPLE_RATE * 2)
-        _log(f"sounddevice 录制: {len(audio_data)} bytes ({actual_sec:.1f}s)")
-        return audio_data
     except sd.PortAudioError as e:
+        err_str = str(e).lower()
         _warn(f"sounddevice PortAudio 错误: {e}")
+        if any(kw in err_str for kw in (
+            "permission", "access", "device unavailable",
+            "invalid device", "unanticipated host"
+        )):
+            _warn(">>> Windows 用户请检查麦克风权限：")
+            _warn("    设置 → 隐私和安全性 → 麦克风")
+            _warn("    确保「麦克风访问」和「允许桌面应用访问麦克风」已开启。")
         return None
     except Exception as e:
         _warn(f"sounddevice 录音失败: {e}")
         return None
+
+    # =========================================================================
+    # 数据格式校验与转换 — 确保与 Vosk 要求严格一致
+    #   Vosk 期望: s16le (signed 16-bit little-endian), 16kHz, mono
+    # =========================================================================
+    original_shape = recording.shape
+    original_dtype = recording.dtype
+    _log(f"录音原始数据: shape={original_shape}, dtype={original_dtype}")
+
+    # 1) 确保数据类型为 int16
+    if recording.dtype != np.int16:
+        _log(f"数据类型从 {recording.dtype} 转换为 int16")
+        if recording.dtype in (np.float32, np.float64):
+            # float [-1.0, 1.0] → int16 [-32768, 32767]
+            recording = np.clip(recording * 32767, -32768, 32767)
+        recording = recording.astype(np.int16)
+
+    # 2) 确保形状为 (samples,) — 单声道不需要 (samples, 1)
+    if recording.ndim == 2:
+        if recording.shape[1] == 1:
+            recording = recording.ravel()
+            _log(f"形状从 {original_shape} ravel → {recording.shape}")
+        elif recording.shape[1] > 1:
+            # 多声道 → 取第一声道
+            _warn(f"录音为 {recording.shape[1]} 声道，仅取第一声道")
+            recording = recording[:, 0].copy()
+
+    # 3) 静音 / 信号强度检测
+    peak = int(np.max(np.abs(recording)))
+    rms = float(np.sqrt(np.mean(recording.astype(np.float64) ** 2)))
+    _log(f"音频统计: peak={peak}, rms={rms:.1f}, shape={recording.shape}, dtype={recording.dtype}")
+
+    if peak < 10:
+        _warn(f"录音信号极弱 (peak={peak})，可能麦克风静音、被占用或权限不足。")
+        _warn("请检查 Windows 麦克风隐私设置和硬件静音开关。")
+        return None
+
+    # 4) 转为原始 PCM 字节 (s16le, 16kHz, mono)
+    audio_data = recording.tobytes()
+    actual_sec = len(audio_data) / (SAMPLE_RATE * 2)
+    _log(f"sounddevice 录制完成: {len(audio_data)} bytes ({actual_sec:.1f}s)")
+    return audio_data
 
 
 # ============================================================================
@@ -322,6 +456,9 @@ def _record_sounddevice():
 def _recognize_pcm(pcm_data):
     """
     将原始 PCM (s16le, 16kHz, mono) 送入 Vosk 进行识别。
+
+    采用流式分块送入，模拟实时语音流，并在最后调用 FinalResult()
+    强制冲刷识别器缓冲以获取残余结果。
 
     参数:
         pcm_data: bytes — 原始 PCM 音频数据
@@ -335,31 +472,69 @@ def _recognize_pcm(pcm_data):
     if not ok:
         return False, err
 
-    # 数据校验
-    if len(pcm_data) < SAMPLE_RATE * 2 * 1:  # 不足 1 秒
-        return False, "录音时长不足"
+    data_len = len(pcm_data)
+    duration_sec = data_len / (SAMPLE_RATE * 2)
+    _log(f"识别输入: {data_len} bytes ({duration_sec:.1f}s)")
+
+    # 数据校验 — 至少 0.5 秒
+    min_bytes = SAMPLE_RATE * 2 // 2   # 0.5s = 16000 bytes
+    if data_len < min_bytes:
+        return False, f"录音时长不足 ({duration_sec:.1f}s < 0.5s)"
 
     # 每次识别创建新的 KaldiRecognizer，避免跨录音状态污染
     try:
         import vosk
         recognizer = vosk.KaldiRecognizer(_model, SAMPLE_RATE)
-        recognizer.SetWords(False)
+        recognizer.SetWords(True)   # 启用词级信息便于调试
     except Exception as e:
         _warn(f"创建识别器失败: {e}")
         return False, "识别器创建失败"
 
     try:
-        if recognizer.AcceptWaveform(pcm_data):
-            result = json.loads(recognizer.Result())
-            text = result.get("text", "").strip()
-            _log(f"识别(终态): '{text}'")
-            return (True, text) if text else (False, "未检测到语音")
+        # =====================================================================
+        # 流式分块送入音频 — 每块约 0.5 秒，模拟实时识别流
+        # =====================================================================
+        chunk_size = SAMPLE_RATE * 2 // 2   # 0.5 秒 = 16000 bytes
+        final_text = ""
+        partial_text = ""
 
-        # 尝试获取部分结果
-        partial = json.loads(recognizer.PartialResult())
-        text = partial.get("partial", "").strip()
-        _log(f"识别(部分): '{text}'")
-        return (True, text) if text else (False, "未检测到语音")
+        for offset in range(0, data_len, chunk_size):
+            chunk = pcm_data[offset:offset + chunk_size]
+            chunk_sec = offset / (SAMPLE_RATE * 2)
+
+            if recognizer.AcceptWaveform(chunk):
+                result = json.loads(recognizer.Result())
+                final_text = result.get("text", "").strip()
+                _log(f"识别(终态 @{chunk_sec:.1f}s): json={json.dumps(result, ensure_ascii=False)}")
+            else:
+                partial = json.loads(recognizer.PartialResult())
+                partial_text = partial.get("partial", "").strip()
+                if _VERBOSE and partial_text:
+                    _log(f"识别(部分 @{chunk_sec:.1f}s): '{partial_text}'")
+
+        # =====================================================================
+        # 强制冲刷 FinalResult — 喂完所有数据后必须调用
+        # =====================================================================
+        try:
+            final_result = json.loads(recognizer.FinalResult())
+            forced_text = final_result.get("text", "").strip()
+            _log(f"识别(FinalResult): json={json.dumps(final_result, ensure_ascii=False)}")
+            if forced_text:
+                final_text = forced_text
+        except Exception as e:
+            _log(f"FinalResult 异常（非致命）: {e}")
+
+        # =====================================================================
+        # 合并结果 — 优先 FinalResult/AcceptWaveform 终态，其次部分结果
+        # =====================================================================
+        text = final_text or partial_text
+        if text:
+            _log(f"识别成功: '{text}'")
+            return True, text
+        else:
+            _log("识别结果为空 — 未检测到有效语音")
+            return False, "未检测到语音"
+
     except Exception as e:
         _warn(f"Vosk 识别异常: {e}")
         return False, f"识别异常: {e}"

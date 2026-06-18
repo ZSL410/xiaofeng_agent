@@ -1,14 +1,6 @@
 [
   {
     "role": "user",
-    "content": "结束"
-  },
-  {
-    "role": "assistant",
-    "content": "好的，霖，很高兴认识你。如果有什么需要帮助的地方或者想要继续聊天，请随时告诉\u001b[K\n我。祝你有一个愉快的一天！😊✨"
-  },
-  {
-    "role": "user",
     "content": ""
   },
   {
@@ -78,5 +70,13 @@
   {
     "role": "assistant",
     "content": "晓风有点卡住了，错误：[Errno 2] No such file or directory: 'ollama'"
+  },
+  {
+    "role": "user",
+    "content": "你好"
+  },
+  {
+    "role": "assistant",
+    "content": "你好！很高兴再次见到你。最近怎么样？有啥有趣的事情或者想聊的话题吗？😊👋儿时的趣事、最近看的书还是喜欢的电影，都可以和我分享哦！🌟📚✨"
   }
 ]
