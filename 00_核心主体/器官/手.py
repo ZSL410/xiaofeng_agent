@@ -9,8 +9,14 @@ if TOOLS_PATH not in sys.path:
     sys.path.insert(0, TOOLS_PATH)
 
 def call_tool(tool_name, *args, **kwargs):
-    """调用指定的工具模块"""
-    print(f"🖐️ 正在调用工具: {tool_name}")
+    """调用指定的工具模块
+
+    支持两种调用模式：
+    1. 默认模式：call_tool("日程", user_input) → 调用模块的 process_command()
+    2. 命名函数模式：call_tool("日程", params, _func="add_reminder_from_params") → 调用指定函数
+    """
+    func_name = kwargs.pop("_func", "process_command")
+    print(f"🖐️ 正在调用工具: {tool_name} → {func_name}")
     
     # 工具名到模块路径的映射（请根据你的实际文件名调整）
     TOOL_MODULES = {
@@ -25,12 +31,12 @@ def call_tool(tool_name, *args, **kwargs):
     
     try:
         module = importlib.import_module(TOOL_MODULES[tool_name])
-        # 假设每个工具模块都有一个 process_command 函数
-        if hasattr(module, "process_command"):
-            return module.process_command(*args, **kwargs)
-        else:
-            print(f"❌ 工具模块 {tool_name} 没有 process_command 函数")
+        # 优先调用指定的函数名，回退到 process_command
+        target_func = getattr(module, func_name, None)
+        if target_func is None:
+            print(f"❌ 工具模块 {tool_name} 没有 {func_name} 函数")
             return None
+        return target_func(*args, **kwargs)
     except Exception as e:
         print(f"❌ 调用工具 {tool_name} 时出错: {e}")
         return None
