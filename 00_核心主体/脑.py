@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.1.1"
+VERSION = "3.6.0"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +14,9 @@ sys.path.insert(0, BASE_DIR)
 from 器官.嘴巴 import speak
 from 器官.耳朵 import listen_once
 from 器官.手 import call_tool
-from 记忆.记忆引擎 import load_short_term, save_short_term, load_long_term
+from 记忆.记忆引擎 import (load_short_term, save_short_term, load_long_term,
+                              decay_patterns, reject_pattern)
+from 记忆.数据提炼 import refine
 
 # 加载配置
 with open(os.path.join(BASE_DIR, "模型.json"), "r", encoding="utf-8") as f:
@@ -54,7 +56,7 @@ def _ollama_chat(messages, model=None):
         )
         return result.stdout.strip()
     except Exception as e:
-        return f"晓风有点卡住了，错误：{e}"
+        return f"晓风有点卡住了,错误:{e}"
 
 
 # ===================== LLM 意图路由 =====================
@@ -73,117 +75,140 @@ TOOLS = [
     },
 ]
 
-_ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入，判断意图并提取结构化参数。
+_ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器.分析用户输入,判断意图并提取结构化参数.
 
-当前时间：{current_time}
+当前时间:{current_time}
 
 {tool_descriptions}
 
 ## 意图分类与参数提取
 
-### 1. 日程提醒（add_reminder）
-当用户表达了"在某个时间需要被提醒做某事"的意图：
+### 1. 日程提醒(add_reminder)
+当用户表达了"在某个时间需要被提醒做某事"的意图:
 
-**信号词（含语音识别容错）：**
-- 明确："叫我"、"喊我"、"提醒我"、"叫醒我"、"通知我"、"叫一下"、"到点提醒"
-- ⚠️ 容错："教我"（语音识别常把"叫"误识别为"教"，如"5分钟教我"实际是"5分钟叫我"）
-- 容错："叫我"前只有数字（如"38叫我"）→ 数字是分钟数，在当前小时触发
+**信号词(含语音识别容错):**
+- 明确:"叫我"、"喊我"、"提醒我"、"叫醒我"、"通知我"、"叫一下"、"到点提醒"
+- ⚠️ 容错:"教我"(语音识别常把"叫"误识别为"教",如"5分钟教我"实际是"5分钟叫我")
+- 容错:"叫我"前只有数字(如"38叫我")→ 数字是分钟数,在当前小时触发
 
-**时间表达：**
-- 相对："X分钟后"、"半小时后"、"X小时后"、"X分钟之后"
-- 绝对："明天X点"、"下午X点"、"晚上X点"、"X点X分"、"X:XX"
-- 隐含：纯数字+信号词（如"26喊我"→当前小时:26）
+**时间表达:**
+- 相对:"X分钟后"、"半小时后"、"X小时后"、"X分钟之后"
+- 绝对:"明天X点"、"下午X点"、"晚上X点"、"X点X分"、"X:XX"
+- 隐含:纯数字+信号词(如"26喊我"→当前小时:26)
 
-**提取规则：**
-- time_offset: 明确的相对分钟数（"5分钟后"→5, "半小时后"→30, "一小时后"→60, "2个小时后"→120, "1分钟"→1），否则 null
-- absolute_time: 明确的时钟时间。根据当前时间推断小时（如当前14:30，用户说"38叫我"→"14:38"；说"明天8点"→"08:00"），否则 null
-- content: 去掉时间词和信号词后的核心内容（≤10字），如"泡咖啡"、"喝水"、"起床"。如果只有"叫我"没其他内容，content="提醒"
+**提取规则:**
+- time_offset: 明确的相对分钟数.⚠️ "X分钟后"的X始终是分钟("5分钟后"→5, "两分钟后"→2, "1分钟后"→1), 不是小时!
+  只有明确说"X小时后"/"X个小时后"才按小时转分钟("2小时后"→120, "一小时后"→60).
+  "半小时后"→30.否则 null
+- absolute_time: 明确的时钟时间.根据当前时间推断小时(如当前14:30,用户说"38叫我"→"14:38";说"明天8点"→"08:00"),否则 null
+- content: 去掉时间词和信号词后的核心内容(≤10字),如"泡咖啡"、"喝水"、"起床".如果只有"叫我"没其他内容,content="提醒"
+  ⚠️ 纠正文本("不是X是Y"/"改成Z")中,content取Y/Z部分的内容,不要取被否定的X部分
 - raw_text: 用户原始输入全文
 
-**即使没有明确的"提醒/叫/喊"关键词，只要整体语义是"在某个时间做某事"，也视为提醒。**
+**即使没有明确的"提醒/叫/喊"关键词,只要整体语义是"在某个时间做某事",也视为提醒.**
 
-### 2. 修正意图（correct_reminder）⭐ 新增
-当用户表达对上次提醒的纠正，包含以下模式：
-- "不是X，是Y"、"不是X是Y"（如"不是两分钟，是五分钟"、"不是两分钟是五分钟冥想"）
-- "说错了，应该是Z"、"说错了应该是Z"
-- "改成W"、"换成W"、"应该是W"、"不对，是W"
-- "X不对，Y才对"、"X错了，Y"
+### 2. 修正意图(correct_reminder) ⭐ 新增
+当用户表达对上次提醒的纠正,包含以下模式:
+- "不是X,是Y"、"不是X是Y"(如"不是两分钟,是五分钟"、"不是两分钟是五分钟冥想")
+- "说错了,应该是Z"、"说错了应该是Z"
+- "改成W"、"换成W"、"应该是W"、"不对,是W"
+- "X不对,Y才对"、"X错了,Y"
 
-此时提取修正后的新参数（time_offset / absolute_time / content），action 设为 "correct_reminder"。
+此时提取**修正后的新参数**(被纠正的值,不是被否定的旧值):
+  "不是X是Y" → time_offset/content 取 Y 的值,忽略 X
+  "改成Z" / "应该是Z" → time_offset/content 取 Z 的值
+  action 设为 "correct_reminder".
+⚠️ 时间始终基于当前时间计算,不要基于旧提醒的时间累加.
 
-修正意图通常置信度较高（≥0.85），因为用户明确在纠错。
+修正意图通常置信度较高(≥0.85),因为用户明确在纠错.
 
-### 3. 日程管理（manage）
+### 3. 删除提醒(delete_reminder) ⭐ v3.2.0 新增
+当用户表达删除/取消某个提醒或待办的意图,且没有指定数字序号:
+- "把两个小时的那个定时删掉"、"删除泡咖啡那个提醒"
+- "取消明天的会议"、"去掉那个喝水的提醒"、"把X的那个定时删掉"
+- "删掉5分钟那个"、"把提醒删了"
+
+提取规则:
+- query: 用户对目标提醒的核心描述,去掉"删除"/"取消"/"那个"/"的"/"定时"/"提醒"/"把"/"给"等噪声词
+  例:"把两个小时的那个定时删掉" → query="两个小时"
+  例:"删除泡咖啡那个提醒" → query="泡咖啡"
+  action 设为 "delete_reminder".
+
+### 4. 日程管理(manage)
 "显示日程"、"查看日程"、"添加会议"、"添加任务"、"显示待办"、"完成任务"、"删除日程"等
 
-### 4. 财务
+### 5. 财务
 "记账"、"查账"、"花了"、"报销"、"帮我记"、金额+元
 
-### 5. 聊天
-其他日常对话、闲聊、问答；以及"是"/"不是"/"对"/"不对"等确认词（这些留给主循环处理）
+### 6. 聊天
+其他日常对话、闲聊、问答;以及"是"/"不是"/"对"/"不对"等确认词(这些留给主循环处理)
 
-## 置信度（confidence）评估标准
+## 置信度(confidence) 评估标准
 
-置信度反映你对解析结果的确定程度（0-1 的浮点数）：
+置信度反映你对解析结果的确定程度(0-1 的浮点数):
 
-- **0.9-1.0**：完全明确。信号词清晰、时间表达无歧义、内容完整。
-  例："5分钟后叫我喝水" → 0.95（明确信号词+明确时间+明确内容）
-  例："不是两分钟，是五分钟冥想" → 0.95（明确纠错意图）
+- **0.9-1.0**:完全明确.信号词清晰、时间表达无歧义、内容完整.
+  例:"5分钟后叫我喝水" → 0.95(明确信号词+明确时间+明确内容)
+  例:"不是两分钟,是五分钟冥想" → 0.95(明确纠错意图)
 
-- **0.7-0.85**：基本确定。有时间表达但信号词模糊，或内容需要推断。
-  例："26叫我" → 0.8（信号词明确但内容缺失，需推断为"提醒"）
-  例："半个小时后洗衣服" → 0.8（缺少"叫我/提醒"但语义完整）
+- **0.7-0.85**:基本确定.有时间表达但信号词模糊,或内容需要推断.
+  例:"26叫我" → 0.8(信号词明确但内容缺失,需推断为"提醒")
+  例:"半个小时后洗衣服" → 0.8(缺少"叫我/提醒"但语义完整)
 
-- **0.5-0.65**：不太确定。时间模糊、内容残缺、或存在歧义。
-  例："5分钟教我我泡一杯咖啡" → 0.6（"教"可能是"叫"的误识别，时间明确但存在歧义）
-  例："38"（只有数字无上下文）→ 0.3
+- **0.5-0.65**:不太确定.时间模糊、内容残缺、或存在歧义.
+  例:"5分钟教我我泡一杯咖啡" → 0.6("教"可能是"叫"的误识别,时间明确但存在歧义)
+  例:"38"(只有数字无上下文)→ 0.3
 
-- **explanation**：一句话说明判断依据（≤30字），如"明确包含'X分钟后叫我'信号词"、"'教'推断为'叫'的语音误识别"
+- **explanation**:一句话说明判断依据(≤30字),如"明确包含'X分钟后叫我'信号词"、"'教'推断为'叫'的语音误识别"
 
 ## 输出格式
 
-⚠️ 所有输出都包含 confidence 和 explanation 字段！
+⚠️ 所有输出都包含 confidence 和 explanation 字段!
 
-提醒（高置信度）：
+提醒(高置信度):
 {{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟叫我泡咖啡"}},"confidence":0.95,"explanation":"明确的'X分钟后叫我'信号词"}}
 
-提醒（低置信度，含语音容错）：
+提醒(低置信度,含语音容错):
 {{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟教我我泡一杯咖啡"}},"confidence":0.55,"explanation":"'教'可能是'叫'的语音误识别"}}
 
-修正：
-{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户明确纠正时间：2→5分钟"}}
+修正:
+{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户明确纠正时间:2→5分钟"}}
 
-日程管理：
+删除提醒:
+{{"tool":"日程","action":"delete_reminder","params":{{"query":"两个小时"}},"confidence":0.9,"explanation":"用户要删除特定描述的提醒"}}
+
+日程管理:
 {{"tool":"日程","action":"manage","params":null,"confidence":0.9,"explanation":"日程管理指令"}}
 
-财务：
+财务:
 {{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"明确的记账/查账关键词"}}
 
-聊天（确认回复——留给主循环处理）：
+聊天(确认回复——留给主循环处理):
 {{"tool":"聊天","action":"confirm_response","params":null,"confidence":1.0,"explanation":"用户对确认问题的回复"}}
 
-聊天（其他）：
+聊天(其他):
 {{"tool":"聊天","action":null,"params":null,"confidence":0.9,"explanation":"日常闲聊"}}
 
-无法确定意图：
-{{"tool":"聊天","action":"ask_clarify","message":"请问你想设置什么提醒？","confidence":0.3,"explanation":"无法从输入中提取有效意图"}}
+无法确定意图:
+{{"tool":"聊天","action":"ask_clarify","message":"请问你想设置什么提醒?","confidence":0.3,"explanation":"无法从输入中提取有效意图"}}
 
-⚠️ 只返回一个JSON对象，不要任何解释、标点或换行。
+⚠️ 只返回一个JSON对象,不要任何解释、标点或换行.
 
-用户输入：{user_input}
-JSON："""
+用户输入:{user_input}
+JSON:"""
 
 
-def _route_intent(user_input, timeout=5):
+def _route_intent(user_input, timeout=8):
     """
-    LLM 驱动的意图路由（v2.1：置信度 + 修正意图）。
-    成功返回完整 intent dict（含 params, confidence, explanation），失败返回 None。
+    LLM 驱动的意图路由(v3.2.0: +删除意图, 超时优化, 模型降级)。
+    成功返回完整 intent dict(含 params, confidence, explanation), 失败返回 None。
+    主模型 qwen2.5:7b 超时后自动降级为 qwen2.5:3b(更快).
     """
     from datetime import datetime
 
     desc_lines = []
     for t in TOOLS:
-        desc_lines.append(f"- {t['name']}（{t['desc']}）示例：{t['signals']}")
+        desc_lines.append(f"- {t['name']}({t['desc']})示例:{t['signals']}")
 
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
     prompt = _ROUTE_PROMPT_V2.format(
@@ -192,9 +217,10 @@ def _route_intent(user_input, timeout=5):
         user_input=user_input,
     )
 
-    try:
+    def _try_ollama(model, req_timeout):
+        """尝试用指定模型解析意图,成功返回 intent dict, 失败返回 None"""
         body = json.dumps({
-            "model": "qwen2.5:7b",
+            "model": model,
             "prompt": prompt,
             "stream": False,
             "options": {"num_predict": 256, "temperature": 0},
@@ -206,59 +232,55 @@ def _route_intent(user_input, timeout=5):
             headers={"Content-Type": "application/json"},
         )
 
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=req_timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            result = (data.get("response", "") or "").strip()
+            return (data.get("response", "") or "").strip()
 
+    def _parse_result(result):
+        """从 LLM 输出中解析 intent dict, 失败返回 None"""
         # 清洗：去掉可能的 markdown 代码块
         result = re.sub(r'^```(?:json)?\s*', '', result)
         result = re.sub(r'\s*```$', '', result)
         result = result.strip()
 
-        # 尝试 JSON 解析
-        parsed = json.loads(result)
-        if isinstance(parsed, dict):
-            tool = parsed.get("tool")
-            if tool in ("日程", "财务", "聊天"):
-                intent = {"tool": tool}
-                # 提取 action
-                action = parsed.get("action")
-                if action:
-                    intent["action"] = action
-                # 提取并规范化 params
-                params = parsed.get("params")
-                if action in ("add_reminder", "correct_reminder") and isinstance(params, dict):
-                    params.setdefault("time_offset", None)
-                    params.setdefault("absolute_time", None)
-                    params.setdefault("content", "")
-                    params.setdefault("raw_text", user_input)
-                    intent["params"] = params
-                elif params is not None:
-                    intent["params"] = params
-                # 提取置信度（v2.1 新增）
-                confidence = parsed.get("confidence")
-                if confidence is not None:
-                    try:
-                        intent["confidence"] = float(confidence)
-                    except (ValueError, TypeError):
-                        intent["confidence"] = 0.7  # 默认中等置信度
-                else:
-                    intent["confidence"] = 0.7
-                # 提取解释（v2.1 新增）
-                explanation = parsed.get("explanation", "")
-                intent["explanation"] = str(explanation) if explanation else ""
-                # 提取 message（用于 ask_clarify）
-                if action == "ask_clarify" and parsed.get("message"):
-                    intent["message"] = parsed["message"]
-                return intent
+        try:
+            parsed = json.loads(result)
+            if isinstance(parsed, dict):
+                tool = parsed.get("tool")
+                if tool in ("日程", "财务", "聊天"):
+                    intent = {"tool": tool}
+                    action = parsed.get("action")
+                    if action:
+                        intent["action"] = action
+                    params = parsed.get("params")
+                    if action in ("add_reminder", "correct_reminder") and isinstance(params, dict):
+                        params.setdefault("time_offset", None)
+                        params.setdefault("absolute_time", None)
+                        params.setdefault("content", "")
+                        params.setdefault("raw_text", user_input)
+                        intent["params"] = params
+                    elif action == "delete_reminder" and isinstance(params, dict):
+                        params.setdefault("query", user_input)
+                        intent["params"] = params
+                    elif params is not None:
+                        intent["params"] = params
+                    confidence = parsed.get("confidence")
+                    if confidence is not None:
+                        try:
+                            intent["confidence"] = float(confidence)
+                        except (ValueError, TypeError):
+                            intent["confidence"] = 0.7
+                    else:
+                        intent["confidence"] = 0.7
+                    explanation = parsed.get("explanation", "")
+                    intent["explanation"] = str(explanation) if explanation else ""
+                    if action == "ask_clarify" and parsed.get("message"):
+                        intent["message"] = parsed["message"]
+                    return intent
+        except json.JSONDecodeError:
+            pass
 
-        # 降级：正则匹配旧格式（仅 tool 字段）
-        m = re.search(r'\{\s*"tool"\s*:\s*"(日程|财务|聊天)"\s*\}', result)
-        if m:
-            return {"tool": m.group(1), "confidence": 0.5, "explanation": "降级正则匹配"}
-
-    except json.JSONDecodeError:
-        # JSON 解析失败，尝试正则提取关键字段
+        # 降级：正则提取
         m = re.search(r'"tool"\s*:\s*"(日程|财务|聊天)"', result)
         if m:
             tool = m.group(1)
@@ -275,6 +297,8 @@ def _route_intent(user_input, timeout=5):
                         params.setdefault("absolute_time", None)
                         params.setdefault("content", "")
                         params.setdefault("raw_text", user_input)
+                    elif intent.get("action") == "delete_reminder":
+                        params.setdefault("query", user_input)
                     intent["params"] = params
                 except json.JSONDecodeError:
                     pass
@@ -285,8 +309,30 @@ def _route_intent(user_input, timeout=5):
                 except ValueError:
                     pass
             return intent
+
+        return None
+
+    # 第 1 步：主模型 qwen2.5:7b（8 秒超时）
+    try:
+        result = _try_ollama("qwen2.5:7b", timeout)
+        intent = _parse_result(result)
+        if intent:
+            return intent
+        print(f"[路由] qwen2.5:7b 返回无法解析,尝试降级模型...")
+
+
     except Exception as e:
-        print(f"⚠️ LLM 路由失败（降级为关键词匹配）：{e}")
+        print(f"⚠️ qwen2.5:7b 路由超时/失败({e}),尝试降级模型 qwen2.5:3b...")
+
+    # 第 2 步：降级模型 qwen2.5:3b（更快，5 秒超时）
+    try:
+        result = _try_ollama("qwen2.5:3b", 5)
+        intent = _parse_result(result)
+        if intent:
+            intent["explanation"] = intent.get("explanation", "") + "(降级模型)"
+            return intent
+    except Exception as e:
+        print(f"⚠️ qwen2.5:3b 路由也失败({e}),降级为关键词匹配")
 
     return None
 
@@ -314,10 +360,10 @@ def _describe_reminder(params):
 
 def chat_with_xiaofeng(user_input, history):
     system_prompt = """
-你是晓风，一个温暖、体贴的私人助手。你的职责是：
-1. 与用户进行自然、流畅、让人放松的聊天。
-2. 只有当用户明确提出"记账"、"查账"或"帮我记一下"等指令时，才去处理财务问题。
-3. 请不要在日常对话中主动追问金额或消费细节，这会打扰用户的交流体验。
+你是晓风,一个温暖、体贴的私人助手.你的职责是:
+1. 与用户进行自然、流畅、让人放松的聊天.
+2. 只有当用户明确提出"记账"、"查账"或"帮我记一下"等指令时,才去处理财务问题.
+3. 请不要在日常对话中主动追问金额或消费细节,这会打扰用户的交流体验.
 """
     messages = [{"role": "system", "content": system_prompt}]
     for turn in history[-10:]:
@@ -325,6 +371,66 @@ def chat_with_xiaofeng(user_input, history):
     messages.append({"role": "user", "content": user_input})
 
     return _ollama_chat(messages)
+
+def _try_daily_refine(long_term):
+    """
+    每日自动数据提炼（v3.3.0 新增）。
+
+    检查 长期记忆.json 中的 last_refined 字段:
+    - 今天已提炼过 → 跳过
+    - 从未提炼或不是今天 → 静默执行 refine()
+    """
+    from datetime import date
+
+    last_refined = long_term.get("last_refined", "") if isinstance(long_term, dict) else ""
+
+    today_str = date.today().isoformat()  # "2026-06-22"
+    if last_refined and last_refined[:10] == today_str:
+        return  # 今天已提炼，跳过
+
+    # 静默提炼（不打印详细列表，避免干扰启动体验）
+    try:
+        result = refine(verbose=False)
+        if result.get("status") == "ok" and result.get("total", 0) > 0:
+            print(f"📊 每日数据提炼: 发现 {result['total']} 条行为模式 "
+                  f"({', '.join(f'{k}×{v}' for k, v in result.get('by_type', {}).items())})")
+    except Exception as e:
+        # 提炼失败不影响正常启动
+        print(f"⚠️ 每日数据提炼跳过: {e}")
+
+
+def _try_weekly_decay(long_term):
+    """
+    每周规律衰减检查（v3.5.0 新增）。
+
+    检查 长期记忆.json 中的 last_decay 字段:
+    - 距上次衰减 < 7 天 → 跳过
+    - 从未衰减或 ≥ 7 天 → 执行 decay_patterns()
+    """
+    from datetime import date
+
+    last_decay = long_term.get("last_decay", "") if isinstance(long_term, dict) else ""
+    today_str = date.today().isoformat()
+
+    if last_decay:
+        try:
+            last_date = date.fromisoformat(last_decay)
+            if (date.today() - last_date).days < 7:
+                return  # 本周已衰减，跳过
+        except (ValueError, TypeError):
+            pass  # 日期格式异常，执行衰减
+
+    try:
+        result = decay_patterns()
+        removed = result.get("removed", 0)
+        decayed = result.get("decayed", 0)
+        kept = result.get("kept", 0)
+        if removed > 0 or decayed > 0:
+            print(f"🧠 规律衰减完成: {decayed} 条置信度降低, "
+                  f"{removed} 条已遗忘, 保留 {kept} 条")
+    except Exception as e:
+        print(f"⚠️ 规律衰减跳过: {e}")
+
 
 def main():
     print("=" * 50)
@@ -336,19 +442,27 @@ def main():
     print("=" * 50)
 
     # 清空 Windows 按键缓冲区（防止残留的 PowerShell 命令被 input() 读取）
-    try:
-        import msvcrt
-        flushed = 0
-        while msvcrt.kbhit():
-            msvcrt.getch()
-            flushed += 1
-        if flushed:
-            print(f"🧹 已清空 {flushed} 个残留按键")
-    except ImportError:
-        pass  # 非 Windows 平台（Linux/WSL），无 msvcrt 模块
+    import sys
+    if sys.platform == "win32":
+        try:
+            import msvcrt
+            flushed = 0
+            while msvcrt.kbhit():
+                msvcrt.getch()
+                flushed += 1
+            if flushed:
+                print(f"🧹 已清空 {flushed} 个残留按键")
+        except Exception:
+            pass
 
     short_term = load_short_term()
     long_term = load_long_term()
+
+    # ============================================================
+    # 每日数据提炼（v3.3.0）：启动时检查，每天最多执行一次
+    # ============================================================
+    _try_daily_refine(long_term)
+    _try_weekly_decay(long_term)
 
     # 启动日程提醒后台线程（确保模块被导入，触发 daemon 线程启动）
     try:
@@ -374,18 +488,48 @@ def main():
                 print(f"⚠️ {user_input}，请重试或手动输入文字")
                 continue
 
-        # 过滤残留的 PowerShell/Windows 终端命令
-        _RESIDUAL_PREFIXES = (
-            "set-executionpolicy", "&", "powershell", "d:/",
-        )
-        if user_input.lower().startswith(_RESIDUAL_PREFIXES):
-            print("检测到残留命令，已忽略")
+        # ============================================================
+        # 残留输入过滤（v3.1.4 增强）
+        # 终端残留的 PowerShell/Venv 命令可能在 input() 时被自动读取
+        # ============================================================
+        _RESIDUAL_PATTERNS = [
+            # 盘符路径: d:\...  /  d:/...  /  D:\... 等
+            r'^[a-zA-Z]:[\\/]',
+            # venv 激活脚本路径
+            r'[\\/]\.venv[\\/]',
+            r'[\\/]venv[\\/]',
+            r'[\\/]Scripts[\\/]',
+            r'[/]Scripts[/]',
+            r'[\\/]Scripts$',
+            # 关键词
+            r'\.venv',
+            r'\bvenv\b.*\bactivate\b',
+            r'\bactivate\b.*\bvenv\b',
+            r'\bactivate\b',
+            r'Set-ExecutionPolicy',
+            r'\bPowerShell\b',
+            # & 符号（PowerShell 命令连接符，但排除正常对话中的 &）
+            r'&\s*(?:chcp|powershell|cmd|\.)',
+        ]
+        if any(re.search(p, user_input, re.IGNORECASE) for p in _RESIDUAL_PATTERNS):
+            print("[系统] 检测到残留输入，已自动忽略")
             continue
 
         # 文本规范化：去除多余空格（语音识别可能引入空格噪声）
         user_input = ' '.join(user_input.split())
         # 移除中文字符之间的空格（如 "一 分钟 后 叫 我" → "一分钟后叫我"）
         user_input = re.sub(r'(?<=[一-鿿])\s+(?=[一-鿿])', '', user_input)
+
+        # ============================================================
+        # 数据提炼命令（v3.3.0 新增）
+        # ============================================================
+        REFINE_KW = ["提炼规律", "分析习惯", "分析模式", "提炼数据", "发现规律"]
+        if any(kw in user_input for kw in REFINE_KW):
+            print("🔍 正在分析历史数据，提炼行为模式...")
+            result = refine(verbose=True)
+            print(result["message"])
+            speak(result["message"])
+            continue
 
         # ============================================================
         # 状态机：检查是否有待确认的意图
@@ -449,6 +593,27 @@ def main():
             print(f"👌 已取消之前的确认请求，处理新输入...")
 
         # ============================================================
+        # 规律拒绝处理（v3.5.0 新增）
+        # 匹配 "不用X" / "不要X" / "拒绝X" 等，降低对应规律的置信度
+        # ============================================================
+        REJECT_PATTERNS = [
+            (r'(?:不用|不要|别|拒绝|取消)\s*(.+)', "reject"),
+        ]
+        for pattern, action in REJECT_PATTERNS:
+            m = re.search(pattern, user_input)
+            if m:
+                content = m.group(1).strip()
+                # 排除一些太短的噪声匹配（如纯"不用"）
+                if len(content) >= 2:
+                    result = reject_pattern(content)
+                    print(f"🧠 {result['message']}")
+                    speak(result['message'])
+                    # 如果影响了规律，跳过正常路由
+                    if result.get("affected", 0) > 0:
+                        continue
+                break
+
+        # ============================================================
         # 正常路由流程
         # ============================================================
         print(f"[路由] 收到输入: {user_input!r}")
@@ -460,6 +625,7 @@ def main():
             SCHEDULE_KW = ["日程", "提醒", "待办", "todo", "任务",
                            "叫我", "教", "叫醒", "喊我", "通知", "闹钟", "分钟后"]
             CORRECTION_KW = ["不是", "说错了", "改成", "应该是", "不对", "换个"]
+            DELETE_KW = ["删掉", "删", "删除", "取消", "去掉", "移除"]
             if any(kw in user_input for kw in FINANCE_KW):
                 intent = {"tool": "财务", "confidence": 0.5,
                           "explanation": "降级关键词匹配"}
@@ -468,6 +634,11 @@ def main():
                 intent = {"tool": "日程", "action": "correct_reminder",
                           "params": {"raw_text": user_input},
                           "confidence": 0.5, "explanation": "降级修正关键词匹配"}
+            elif any(kw in user_input for kw in DELETE_KW):
+                # 删除关键词 → 模糊删除
+                intent = {"tool": "日程", "action": "delete_reminder",
+                          "params": {"query": user_input},
+                          "confidence": 0.6, "explanation": "降级删除关键词匹配"}
             elif any(kw in user_input for kw in SCHEDULE_KW):
                 intent = {"tool": "日程", "confidence": 0.5,
                           "explanation": "降级关键词匹配"}
@@ -485,6 +656,10 @@ def main():
                       f"confidence={conf:.2f}, {expl})")
             elif action == "correct_reminder":
                 print(f"[路由] → LLM 判定: 修正提醒 (confidence={conf:.2f}, {expl})")
+            elif action == "delete_reminder":
+                print(f"[路由] → LLM 判定: 删除提醒 "
+                      f"(query={intent.get('params',{}).get('query','?')!r}, "
+                      f"confidence={conf:.2f}, {expl})")
             else:
                 print(f"[路由] → LLM 判定: {intent['tool']} (confidence={conf:.2f})")
 
@@ -498,7 +673,7 @@ def main():
         if (tool == "日程" and action == "add_reminder"
                 and intent.get("params") and confidence < 0.6):
             desc = _describe_reminder(intent["params"])
-            print(f'🤔 你是想说「{desc}」吗？（回复"是"或"不是"）')
+            print(f'🤔 你是想说「{desc}」吗？(回复"是"或"不是")')
             _pending_confirmation = {
                 "intent": intent,
                 "raw_input": user_input,
@@ -525,6 +700,12 @@ def main():
                 print("🔧 正在修正提醒...")
                 params = intent.get("params") or {"raw_text": user_input}
                 result = call_tool("日程", params, _func="modify_last_reminder")
+                print(result)
+                speak(result)
+            elif action == "delete_reminder":
+                print("🔧 正在按描述删除提醒...")
+                query = intent.get("params", {}).get("query", user_input)
+                result = call_tool("日程", query, _func="delete_reminder_by_query")
                 print(result)
                 speak(result)
             else:

@@ -56,7 +56,7 @@ def _warn(msg):
 # 模型加载（模块级单例，懒加载）
 # ============================================================================
 _model_loaded = False
-_model = None          # vosk.Model 实例，创建新 KaldiRecognizer 时复用
+_model = None          # vosk.Model 实例,创建新 KaldiRecognizer 时复用
 
 
 def _resolve_model_path():
@@ -127,7 +127,7 @@ def _resolve_model_path():
         _log(f"Vosk 模型路径映射成功: {link_dir}")
         return link_dir
     else:
-        _warn("目录连接创建后不可用，回退到原始路径")
+        _warn("目录连接创建后不可用,回退到原始路径")
         return resolved
 
 
@@ -153,7 +153,7 @@ def _load_vosk_model():
     required_dirs = ["am", "conf", "graph", "ivector"]
     missing = [d for d in required_dirs if not os.path.exists(os.path.join(MODEL_PATH, d))]
     if missing:
-        msg = f"Vosk 模型不完整，缺少子目录: {missing}\n请重新下载完整模型并解压。"
+        msg = f"Vosk 模型不完整,缺少子目录: {missing}\n请重新下载完整模型并解压."
         _warn(msg)
         return False, msg
 
@@ -161,7 +161,7 @@ def _load_vosk_model():
     try:
         import vosk
     except ImportError:
-        msg = "vosk 未安装。请运行: pip install vosk"
+        msg = "vosk 未安装.请运行: pip install vosk"
         _warn(msg)
         return False, msg
 
@@ -208,7 +208,7 @@ def _detect_audio_backend():
             _log("后端: parec (PulseAudio local) ✓")
             return _AUDIO_BACKEND
         else:
-            _log("parec 存在但 PULSE_SERVER 不可达，跳过")
+            _log("parec 存在但 PULSE_SERVER 不可达,跳过")
     else:
         _log("parec 未找到")
 
@@ -230,8 +230,8 @@ def _detect_audio_backend():
 
     # --- 3) 无可用后端 → 模拟 ---
     _AUDIO_BACKEND = "mock"
-    _warn("未找到可用录音后端，语音输入将使用模拟模式。")
-    _warn("WSL2 安装指南（系统包）:")
+    _warn("未找到可用录音后端,语音输入将使用模拟模式.")
+    _warn("WSL2 安装指南(系统包):")
     _warn("  sudo apt install pulseaudio-utils    # parec + pactl")
     _log("后端: mock (模拟)")
     return _AUDIO_BACKEND
@@ -261,7 +261,7 @@ def _record_parec():
         except Exception as e:
             _log(f"pactl get-default-source 失败: {e}")
 
-    print("🎤 正在听，请说话...（说完自动停止）")
+    print("🎤 正在听,请说话...(说完自动停止)")
 
     # parec 输出到 stdout（默认行为，无文件参数时写 stdout）
     parec = subprocess.Popen(
@@ -299,9 +299,9 @@ def _record_parec():
     _log(f"parec 录制: {len(audio_data)} bytes ({actual_sec:.1f}s)")
 
     if len(audio_data) < SAMPLE_RATE * 2 * 1:   # 不足 1 秒 → 可能静音/未说话
-        _warn(f"录音数据过短 ({actual_sec:.1f}s)。")
-        _warn("请检查 Windows 麦克风隐私设置是否允许桌面应用访问，")
-        _warn("以及 WSLg 是否能监听麦克风。")
+        _warn(f"录音数据过短 ({actual_sec:.1f}s).")
+        _warn("请检查 Windows 麦克风隐私设置是否允许桌面应用访问,")
+        _warn("以及 WSLg 是否能监听麦克风.")
         return None
 
     return audio_data
@@ -374,10 +374,10 @@ def _record_sounddevice():
 
     if device_idx is None:
         _warn("sounddevice: 未找到任何输入设备")
-        _warn("请确认麦克风已连接并在 Windows 隐私设置中允许桌面应用访问麦克风。")
+        _warn("请确认麦克风已连接并在 Windows 隐私设置中允许桌面应用访问麦克风.")
         return None
 
-    print("🎤 正在听，请说话...（说完自动停止）")
+    print("🎤 正在听,请说话...(说完自动停止)")
     _log(f"录音参数: samplerate={SAMPLE_RATE}, channels={CHANNELS}, dtype=int16, "
          f"duration={RECORD_SECONDS}s, device_idx={device_idx}")
 
@@ -398,9 +398,9 @@ def _record_sounddevice():
             "permission", "access", "device unavailable",
             "invalid device", "unanticipated host"
         )):
-            _warn(">>> Windows 用户请检查麦克风权限：")
+            _warn(">>> Windows 用户请检查麦克风权限:")
             _warn("    设置 → 隐私和安全性 → 麦克风")
-            _warn("    确保「麦克风访问」和「允许桌面应用访问麦克风」已开启。")
+            _warn("    确保「麦克风访问」和「允许桌面应用访问麦克风」已开启.")
         return None
     except Exception as e:
         _warn(f"sounddevice 录音失败: {e}")
@@ -429,7 +429,7 @@ def _record_sounddevice():
             _log(f"形状从 {original_shape} ravel → {recording.shape}")
         elif recording.shape[1] > 1:
             # 多声道 → 取第一声道
-            _warn(f"录音为 {recording.shape[1]} 声道，仅取第一声道")
+            _warn(f"录音为 {recording.shape[1]} 声道,仅取第一声道")
             recording = recording[:, 0].copy()
 
     # 3) 静音 / 信号强度检测
@@ -438,8 +438,8 @@ def _record_sounddevice():
     _log(f"音频统计: peak={peak}, rms={rms:.1f}, shape={recording.shape}, dtype={recording.dtype}")
 
     if peak < 10:
-        _warn(f"录音信号极弱 (peak={peak})，可能麦克风静音、被占用或权限不足。")
-        _warn("请检查 Windows 麦克风隐私设置和硬件静音开关。")
+        _warn(f"录音信号极弱 (peak={peak}),可能麦克风静音、被占用或权限不足.")
+        _warn("请检查 Windows 麦克风隐私设置和硬件静音开关.")
         return None
 
     # 4) 转为原始 PCM 字节 (s16le, 16kHz, mono)
@@ -522,7 +522,7 @@ def _recognize_pcm(pcm_data):
             if forced_text:
                 final_text = forced_text
         except Exception as e:
-            _log(f"FinalResult 异常（非致命）: {e}")
+            _log(f"FinalResult 异常(非致命): {e}")
 
         # =====================================================================
         # 合并结果 — 优先 FinalResult/AcceptWaveform 终态，其次部分结果
@@ -640,7 +640,7 @@ def diagnose():
     backend = _detect_audio_backend()
     print(f"  当前后端: {backend}")
     if backend == "mock":
-        print(f"\n  要启用录音，请安装 pulseaudio-utils:")
+        print(f"\n  要启用录音,请安装 pulseaudio-utils:")
         print(f"    sudo apt install pulseaudio-utils")
 
     # 如果在 WSL2 且 parec 可用，列出 PulseAudio 源

@@ -46,7 +46,7 @@ def _ollama_generate(prompt):
         )
         return result.stdout.strip()
     except Exception as e:
-        return f"总结生成失败：{e}"
+        return f"总结生成失败:{e}"
 # ===================================================
 
 def clean_text(text):
@@ -65,20 +65,20 @@ def load_data():
 def generate_report():
     data = load_data()
     if not data:
-        print("📭 数据为空，请先记账或导入数据。")
+        print("📭 数据为空,请先记账或导入数据.")
         return
 
     if not os.path.exists(OUTPUT_FOLDER):
         os.makedirs(OUTPUT_FOLDER)
 
     print("🤖 正在调用本地模型生成总结...")
-    summary_prompt = f"请根据以下财务数据，生成一份简洁的财务总结（包含总支出、总收入、结余和主要趋势）。数据：{json.dumps(data, ensure_ascii=False)}"
+    summary_prompt = f"请根据以下财务数据,生成一份简洁的财务总结(包含总支出、总收入、结余和主要趋势).数据:{json.dumps(data, ensure_ascii=False)}"
     raw_text = _ollama_generate(summary_prompt)
     summary_text = clean_text(raw_text)
 
     doc = Document()
     doc.add_heading('📊 每日财务报告', 0)
-    doc.add_paragraph(f'报告生成时间：{datetime.now().strftime("%Y-%m-%d %H:%M")}')
+    doc.add_paragraph(f'报告生成时间:{datetime.now().strftime("%Y-%m-%d %H:%M")}')
     doc.add_paragraph()
 
     doc.add_heading('一、财务总结', level=1)
@@ -108,8 +108,8 @@ def generate_report():
     doc.save(full_path)
 
     print("=" * 50)
-    print(f"✅ 报告生成完毕！")
-    print(f"📁 保存位置：{full_path}")
+    print(f"✅ 报告生成完毕!")
+    print(f"📁 保存位置:{full_path}")
     print("=" * 50)
 
 if __name__ == "__main__":

@@ -60,7 +60,7 @@ def _play_audio(output_file):
         os.system(f"start \"\" \"{abs_path}\"")
         return
 
-    print("⚠️ 未找到可用的音频播放器 (mpv/ffplay)。音频已保存，可手动播放。")
+    print("⚠️ 未找到可用的音频播放器 (mpv/ffplay).音频已保存,可手动播放.")
 
 def speak(text):
     print(f"🔊 晓风说: {text}")

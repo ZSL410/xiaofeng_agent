@@ -238,7 +238,7 @@ def _parse_time(text):
         return time_str, remaining
 
     # 3. "15:00" / "3:30pm" / "3:00 PM"
-    m = re.search(r"(\d{1,2})[：:](\d{2})\s*(p\.?m\.?|P\.?M\.?|am|AM)?", text)
+    m = re.search(r"(\d{1,2})[::](\d{2})\s*(p\.?m\.?|P\.?M\.?|am|AM)?", text)
     if m:
         hour = int(m.group(1))
         minute = int(m.group(2))
@@ -270,24 +270,32 @@ def _parse_time(text):
 
 # ===================== LLM 时间解析 =====================
 
-_TIME_PARSE_PROMPT = """你是一个精确的时间解析助手。当前时间是 {current_time}。
+_TIME_PARSE_PROMPT = """你是一个精确的时间解析助手.当前时间是 {current_time}.
 
-请将用户的自然语言表达转换为具体的日期和时间。只返回格式 "YYYY-MM-DD HH:MM"，不要任何解释、标点或额外文字。
+请将用户的自然语言表达转换为具体的日期和时间.只返回格式 "YYYY-MM-DD HH:MM",不要任何解释、标点或额外文字.
 
-解析规则（按优先级）：
-1. "X叫我" / "X喊我" / "X叫我一下" / "X到点提醒"：在当前小时的第 X 分钟提醒。但如果当前分钟数 > X，则自动推到下一个小时。
-   例：当前 14:35，用户说"26叫我" → 下一个 26 分是 15:26 → 返回当天 15:26
-   例：当前 14:10，用户说"26叫我" → 本小时 26 分是 14:26 → 返回当天 14:26
-2. "X分钟后"：当前时间 + X 分钟。如 "5分钟后" 就是当前时间加5分钟。
-3. "半个小时" / "半小时后"：当前时间 + 30 分钟。
-4. "X个小时后" / "X小时后"：当前时间 + X 小时。
-5. "明天X点" / "明天上午X点" / "明天下午X点"：明天的对应时间。
-6. "下午X点" / "上午X点" / "晚上X点"：当天的对应时间段。
-7. "X:XX" / "XX:XX"：直接解析为当天时间。如果该时间已过，推到明天。
-8. 如果无法解析，返回 "FAIL"
+解析规则(按优先级):
+1. "X叫我" / "X喊我" / "X叫我一下" / "X到点提醒":在当前小时的第 X 分钟提醒.但如果当前分钟数 > X,则自动推到下一个小时.
+   例:当前 14:35,用户说"26叫我" → 下一个 26 分是 15:26 → 返回当天 15:26
+   例:当前 14:10,用户说"26叫我" → 本小时 26 分是 14:26 → 返回当天 14:26
+2. "X分钟后":当前时间 + X 分钟.⚠️ X 始终是分钟数, 不是小时!
+   例:"2分钟后" → 当前时间+2分钟(不是+2小时).
+   例:"5分钟后" → 当前时间+5分钟.
+   例:"两分钟后" → 当前时间+2分钟(不是+120分钟).
+3. "半个小时" / "半小时后":当前时间 + 30 分钟.
+4. "X个小时后" / "X小时后":当前时间 + X 小时.(仅当用户明确说"小?时后"时才按小时算)
+   例:"2小时后" → 当前时间+2小时=120分钟.
+   例:"一小时后" → 当前时间+1小时.
+5. "明天X点" / "明天上午X点" / "明天下午X点":明天的对应时间.
+6. "下午X点" / "上午X点" / "晚上X点":当天的对应时间段.
+7. "X:XX" / "XX:XX":直接解析为当天时间.如果该时间已过,推到明天.
+8. ⚠️ 纠正文本(如"不是2分钟是5分钟"/"改成10分钟"):
+   提取纠正后的新时间,不要提取被否定的旧时间."不是X是Y"中的Y才是正确时间.
+   例:"不是两分钟是五分钟" → 提取5分钟(不是2分钟).
+9. 如果无法解析,返回 "FAIL"
 
-用户表达：{user_text}
-时间："""
+用户表达:{user_text}
+时间:"""
 
 
 def _parse_time_with_llm(user_text, current_time=None):
@@ -328,7 +336,7 @@ def _parse_time_with_llm(user_text, current_time=None):
         _debug_log(f"[LLM时间解析] 原始返回: {result!r}")
 
         # 清洗输出
-        result = result.strip('"\'`\n\r 。.，,')
+        result = result.strip('"\'`\n\r ..,,')
         if result.upper() == "FAIL" or not result:
             return None, None
 
@@ -345,7 +353,7 @@ def _parse_time_with_llm(user_text, current_time=None):
         _debug_log(f"[LLM时间解析] 无法从返回中提取时间: {result!r}")
 
     except Exception as e:
-        print(f"⚠️ LLM 时间解析失败（将降级处理）：{e}")
+        print(f"⚠️ LLM 时间解析失败(将降级处理):{e}")
 
     return None, None
 
@@ -366,9 +374,9 @@ def _add_event(title, date_str, time_str, repeat="none"):
     }
     events.append(event)
     _save_events(events)
-    repeat_msg = {"none": "", "daily": "（每天重复）", "weekly": "（每周重复）",
-                  "monthly": "（每月重复）"}.get(repeat, "")
-    return f"✅ 已添加日程：{title}（{date_str} {time_str}）{repeat_msg}"
+    repeat_msg = {"none": "", "daily": "(每天重复)", "weekly": "(每周重复)",
+                  "monthly": "(每月重复)"}.get(repeat, "")
+    return f"✅ 已添加日程:{title}({date_str} {time_str}){repeat_msg}"
 
 
 def _delete_event(event_id):
@@ -378,7 +386,7 @@ def _delete_event(event_id):
             title = e["title"]
             events.remove(e)
             _save_events(events)
-            return f"✅ 已删除日程：{title}"
+            return f"✅ 已删除日程:{title}"
     return f"❌ 未找到 ID 为 {event_id} 的日程"
 
 
@@ -390,7 +398,7 @@ def _list_events(date_str=None):
     if not today_events:
         return f"📅 {date_str} 没有日程安排"
     today_events.sort(key=lambda e: e.get("time", "00:00"))
-    lines = [f"📅 {date_str} 的日程："]
+    lines = [f"📅 {date_str} 的日程:"]
     for e in today_events:
         repeat_tag = {"none": "", "daily": " 🔄每天",
                       "weekly": " 🔄每周", "monthly": " 🔄每月"}.get(
@@ -416,13 +424,13 @@ def _add_todo(title, due_date="", due_time=""):
     _debug_log(f"[写入] _add_todo: title={title!r}, due_date={due_date!r}, due_time={due_time!r}")
     todos.append(todo)
     _save_todos(todos)
-    parts = [f"✅ 已添加待办：{title}"]
+    parts = [f"✅ 已添加待办:{title}"]
     if due_date and due_time:
-        parts.append(f"（到期：{due_date} {due_time}）")
+        parts.append(f"(到期:{due_date} {due_time})")
     elif due_date:
-        parts.append(f"（到期：{due_date}）")
+        parts.append(f"(到期:{due_date})")
     elif due_time:
-        parts.append(f"（到期时间：{due_time}）")
+        parts.append(f"(到期时间:{due_time})")
     return " ".join(parts)
 
 
@@ -433,7 +441,7 @@ def _delete_todo(todo_id):
             title = t["title"]
             todos.remove(t)
             _save_todos(todos)
-            return f"✅ 已删除待办：{title}"
+            return f"✅ 已删除待办:{title}"
     return f"❌ 未找到 ID 为 {todo_id} 的待办"
 
 
@@ -445,7 +453,7 @@ def _complete_todo(todo_id):
                 return f"ℹ️ 待办「{t['title']}」已经完成了"
             t["completed"] = True
             _save_todos(todos)
-            return f"✅ 已完成待办：{t['title']}"
+            return f"✅ 已完成待办:{t['title']}"
     return f"❌ 未找到 ID 为 {todo_id} 的待办"
 
 
@@ -465,7 +473,7 @@ def _list_todos(show_all=False):
 
     todos_sorted = sorted(todos, key=sort_key)
 
-    lines = ["📋 待办事项："]
+    lines = ["📋 待办事项:"]
     for t in todos_sorted:
         status = "✅" if t.get("completed") else "⬜"
         due = ""
@@ -496,7 +504,7 @@ def _safe_speak(msg):
     try:
         speak(msg)
     except Exception as e:
-        print(f"⚠️ 提醒语音播报失败：{e}")
+        print(f"⚠️ 提醒语音播报失败:{e}")
 
 
 # ===================== 配置加载 =====================
@@ -518,16 +526,16 @@ def _load_use_smart_reminder():
 
 # ===================== 智能提醒文案生成 =====================
 
-_SMART_REMINDER_PROMPT = """你是一个温暖、体贴的私人提醒助手。根据用户设置的提醒内容，生成一句简短、温暖、个性化的提醒播报。
+_SMART_REMINDER_PROMPT = """你是一个温暖、体贴的私人提醒助手.根据用户设置的提醒内容,生成一句简短、温暖、个性化的提醒播报.
 
-要求：
+要求:
 - 不超过 20 个字
-- 语气温暖自然，像朋友在提醒
+- 语气温暖自然,像朋友在提醒
 - 不要出现"提醒"二字
-- 只输出播报句子本身，不要任何解释
+- 只输出播报句子本身,不要任何解释
 
-原始提醒内容：{content}
-播报句子："""
+原始提醒内容:{content}
+播报句子:"""
 
 
 def _generate_smart_reminder(raw_msg, timeout=3):
@@ -546,7 +554,7 @@ def _generate_smart_reminder(raw_msg, timeout=3):
         return raw_msg
 
     # 提取提醒内容（去掉前缀标签）
-    content = re.sub(r'^[⏰📅📋]\s*(日程|待办|任务)?\s*提醒[：:]?\s*', '', raw_msg).strip()
+    content = re.sub(r'^[⏰📅📋]\s*(日程|待办|任务)?\s*提醒[::]?\s*', '', raw_msg).strip()
     if not content:
         return "您的提醒时间到了"
 
@@ -578,7 +586,7 @@ def _generate_smart_reminder(raw_msg, timeout=3):
             return result
 
     except Exception as e:
-        print(f"⚠️ 智能提醒生成失败（降级为通用文案）：{e}")
+        print(f"⚠️ 智能提醒生成失败(降级为通用文案):{e}")
 
     # 降级：返回通用文案
     return "您的提醒时间到了"
@@ -606,7 +614,7 @@ def _check_reminders():
                 and ev_time
                 and ev_time <= current_time
                 and not ev_notified):
-            triggered.append(f"⏰ 日程提醒：{event['title']}")
+            triggered.append(f"⏰ 日程提醒:{event['title']}")
             event["notified"] = True
             events_modified = True
 
@@ -641,7 +649,7 @@ def _check_reminders():
                 and td_due_time
                 and td_due_time <= current_time
                 and not td_notified):
-            triggered.append(f"⏰ 待办提醒：{todo['title']}")
+            triggered.append(f"⏰ 待办提醒:{todo['title']}")
             todo["notified"] = True
             todos_modified = True
     if todos_modified:
@@ -649,7 +657,7 @@ def _check_reminders():
 
     # ---- 播报 ----
     if triggered:
-        print(f"🔔 提醒触发 ({now.strftime('%H:%M')})：共 {len(triggered)} 条")
+        print(f"🔔 提醒触发 ({now.strftime('%H:%M')}):共 {len(triggered)} 条")
         with _lock:
             for msg in triggered:
                 print(msg)
@@ -662,21 +670,21 @@ def _check_reminders():
                         daemon=True, name="reminder-speak"
                     ).start()
                 except Exception as e:
-                    print(f"⚠️ 提醒语音播报线程启动失败：{e}")
+                    print(f"⚠️ 提醒语音播报线程启动失败:{e}")
     else:
         _debug_log(f"[提醒扫描] 暂无到期提醒")
 
 
 def _reminder_loop():
     """后台守护线程主循环：每 30 秒检查一次"""
-    _debug_log("[提醒线程] 后台提醒循环已启动，每30秒扫描一次")
+    _debug_log("[提醒线程] 后台提醒循环已启动,每30秒扫描一次")
     while True:
         try:
             time.sleep(30)
             _check_reminders()
         except Exception as e:
             import traceback
-            print(f"⚠️ 提醒检查出错：{e}")
+            print(f"⚠️ 提醒检查出错:{e}")
             traceback.print_exc()
             # 出错后短暂休眠，避免错误日志刷屏
             time.sleep(5)
@@ -705,21 +713,23 @@ start_reminder_thread()
 # ===================== 自然语言解析与入口 =====================
 
 _HELP_TEXT = """
-📋 日程模块使用说明：
+📋 日程模块使用说明:
 
-  📅 日程管理：
+  📅 日程管理:
     "添加会议明天下午3点"
     "添加每天9点起床"
     "删除日程1"
     "显示今天的日程"
 
-  📋 待办管理：
+  📋 待办管理:
     "添加任务买牛奶"
     "完成任务1"
     "删除任务1"
     "显示待办"
+    "删除泡咖啡那个提醒"      ← 按内容模糊删除
+    "把两个小时的定时删掉"     ← 按时间描述删除
 
-  ⏰ 提醒：
+  ⏰ 提醒:
     "提醒我5分钟后喝水"
     "提醒我下午5点打电话"
     "5分钟后叫我"
@@ -742,7 +752,7 @@ def _clean_title(raw_title):
         raw_title = raw_title.replace(w, "")
     # 移除残留的时间数字（单独的数字）
     raw_title = re.sub(r'\b\d+\s*[点时分]\b', '', raw_title)
-    raw_title = re.sub(r'\b\d{1,2}[:：]\d{2}\b', '', raw_title)
+    raw_title = re.sub(r'\b\d{1,2}[::]\d{2}\b', '', raw_title)
     raw_title = raw_title.strip()
     # 如果清理后为空，回退到原始输入中的关键词
     return raw_title
@@ -753,7 +763,7 @@ def _has_time_pattern(text):
     # 匹配各种时间格式（与 _parse_time 的正则保持一致）
     patterns = [
         r"(上午|下午|晚上|傍晚|凌晨|早上|中午)\s*\d+\s*点",
-        r"\d{1,2}[:：]\d{2}",
+        r"\d{1,2}[::]\d{2}",
         r"\d+\s*点\s*(半|\d+\s*分)",
         r"\d+\s*分[钟]?\s*(后|之后|以后)",   # 匹配 _parse_time 的 "X分钟后" 模式
         r"\d+\s*p\.?m",
@@ -827,12 +837,12 @@ def process_command(text):
                 title = "日程事件"
 
             if not time_str:
-                return "⚠️ 请提供时间，例如「添加会议明天下午3点」"
+                return "⚠️ 请提供时间,例如「添加会议明天下午3点」"
 
             return _add_event(title, date_str, time_str, repeat)
         elif not is_todo:
             # 非 todo 也非 event，给出提示
-            return "⚠️ 请明确是日程事件（如「添加会议明天3点」）还是待办任务（如「添加任务买牛奶」）"
+            return "⚠️ 请明确是日程事件(如「添加会议明天3点」)还是待办任务(如「添加任务买牛奶」)"
 
     # 删除事件：删除/移除/取消 日程/事件/会议 + 编号
     m = re.search(r"(删除|移除|取消)\s*(日程|事件|会议)\s*(\d+)", text)
@@ -865,12 +875,12 @@ def process_command(text):
             _debug_log(f"[解析] 正则时间解析成功: date={date_str}, time={time_str}")
         else:
             # 第 2 步：正则失败，尝试 LLM 时间解析
-            _debug_log(f"[解析] 正则解析失败，尝试 LLM 时间解析...")
+            _debug_log(f"[解析] 正则解析失败,尝试 LLM 时间解析...")
             llm_date, llm_time = _parse_time_with_llm(text)
             if llm_time:
                 time_str = llm_time
                 date_str = llm_date
-                after_time = text  # LLM 已消费全文，剩余文本用原文提取标题
+                after_time = text  # LLM 已消费全文,剩余文本用原文提取标题
                 _debug_log(f"[解析] LLM 时间解析成功: date={date_str}, time={time_str}")
             else:
                 # 第 3 步：降级兜底 — 当前时间 + 1 分钟，保证提醒不丢失
@@ -878,7 +888,7 @@ def process_command(text):
                 time_str = fallback.strftime("%H:%M")
                 date_str = fallback.strftime("%Y-%m-%d")
                 after_time = text
-                print(f"⚠️ 时间解析失败，使用 1 分钟后（{date_str} {time_str}）作为保底")
+                print(f"⚠️ 时间解析失败,使用 1 分钟后({date_str} {time_str})作为保底")
 
         if time_str:
             # 清理提醒关键词前缀（如 "提醒我喝水" → "喝水"）
@@ -897,7 +907,7 @@ def process_command(text):
             _debug_log(f"[解析] 最终标题: {title!r}, date={date_str}, time={time_str}")
             return _add_todo(title, date_str, time_str)
         else:
-            return "⚠️ 请提供提醒时间，例如「提醒我5分钟后喝水」或「5分钟后叫我」"
+            return "⚠️ 请提供提醒时间,例如「提醒我5分钟后喝水」或「5分钟后叫我」"
 
     # ==================== 待办事项 ====================
 
@@ -912,13 +922,23 @@ def process_command(text):
         if not title:
             title = _clean_title(raw)
         if not title:
-            return "⚠️ 请描述任务内容，例如「添加任务买牛奶」"
+            return "⚠️ 请描述任务内容,例如「添加任务买牛奶」"
         return _add_todo(title, due_date, due_time)
 
-    # 删除待办
+    # 删除待办（按序号）
     m = re.search(r"(删除|移除)\s*(任务|待办)\s*(\d+)", text)
     if m:
         return _delete_todo(int(m.group(3)))
+
+    # 删除提醒/待办（按内容描述，v3.2.0 新增）
+    # 匹配"把两个小时的那个定时删掉"、"删除泡咖啡"、"取消明天的会议" 等
+    DELETE_KW_RE = r"删除|移除|取消|去掉|删掉"
+    if re.search(DELETE_KW_RE, text):
+        # 排除已由上述数字 ID 模式处理的情况
+        has_numeric_id = bool(re.search(r"(?:日程|事件|会议|任务|待办)\s*\d+", text))
+        if not has_numeric_id:
+            _debug_log(f"[解析] 检测到模糊删除意图: {text!r}")
+            return delete_reminder_by_query(text)
 
     # 完成待办
     m = re.search(r"(完成|做完|搞定|勾掉|标记完成)\s*(任务|待办)\s*(\d+)", text)
@@ -968,12 +988,113 @@ def delete_last_reminder():
     return (title, date_str, time_str)
 
 
+# ===================== 按内容删除提醒（v3.2.0 新增）=====================
+
+
+def delete_reminder_by_query(query):
+    """
+    按自然语言描述删除提醒/待办。支持模糊匹配标题和时间描述。
+
+    参数:
+        query: str — 用户对提醒的描述（如"两个小时的那个定时"、"泡咖啡"、"明天的会议"）
+
+    返回:
+        str — 操作结果消息
+    """
+    todos = _load_todos()
+    if not todos:
+        return "📋 当前没有待办提醒可以删除"
+
+    # 只处理未完成的待办
+    active = [t for t in todos if not t.get("completed", False)]
+    if not active:
+        return "📋 当前没有未完成的待办提醒"
+
+    # 清洗查询：去掉噪声词
+    noise = r'删除|取消|去掉|删掉|移除|那个|这个|的|定时|提醒|任务|待办|把|给|我'
+    cleaned = re.sub(noise, '', query).strip()
+
+    # 尝试从清洗后的查询中提取时间描述（如"两个小时"、"5分钟"）
+    time_minutes = None
+    time_m = re.search(r'(\d+)\s*个?\s*小?时', cleaned)
+    if time_m:
+        time_minutes = int(time_m.group(1)) * 60  # 小时 → 分钟
+        cleaned = re.sub(r'\d+\s*个?\s*小?时', '', cleaned).strip()
+    else:
+        time_m = re.search(r'(\d+)\s*分[钟]?', cleaned)
+        if time_m:
+            time_minutes = int(time_m.group(1))
+            cleaned = re.sub(r'\d+\s*分[钟]?', '', cleaned).strip()
+
+    _debug_log(f"[模糊删除] query={query!r}, cleaned={cleaned!r}, time_minutes={time_minutes!r}")
+
+    # 为每个活跃待办打分
+    now = datetime.now()
+    scored = []
+    for t in active:
+        score = 0
+        title = t.get("title", "")
+        due_time = t.get("due_time", "")
+        due_date = t.get("due_date", "")
+
+        # 内容匹配
+        if cleaned and cleaned in title:
+            score += 10
+        elif cleaned and len(cleaned) >= 2:
+            # 逐字匹配
+            matched = sum(1 for c in cleaned if c in title)
+            if matched >= max(2, len(cleaned) * 0.5):
+                score += matched * 2
+
+        # 时间匹配：比较待办到期时间与查询中提取的时间偏移
+        if time_minutes is not None and due_time and due_date:
+            try:
+                due_dt = datetime.strptime(f"{due_date} {due_time}", "%Y-%m-%d %H:%M")
+                diff = int((due_dt - now).total_seconds() / 60)
+                if abs(diff - time_minutes) <= 5:
+                    score += 8
+                elif abs(diff - time_minutes) <= 15:
+                    score += 4
+            except (ValueError, TypeError):
+                pass
+
+        if score > 0:
+            scored.append((t, score))
+
+    if not scored:
+        return f"🔍 没有找到匹配「{query}」的提醒。试试「显示待办」查看所有提醒。"
+
+    # 按得分降序
+    scored.sort(key=lambda x: x[1], reverse=True)
+
+    if len(scored) == 1 or scored[0][1] >= scored[1][1] + 4:
+        # 唯一匹配或得分明显领先，直接删除
+        t, s = scored[0]
+        _debug_log(f"[模糊删除] 唯一匹配: [{t['id']}] {t['title']} (score={s})")
+        return _delete_todo(t["id"])
+    else:
+        # 多个候选，列出让用户选择
+        todos_list = _load_todos()
+        lines = [f"🔍 找到 {len(scored)} 个匹配的提醒，请告诉我序号:"]
+        for i, (t, _) in enumerate(scored[:5], 1):
+            due = ""
+            if t.get("due_date") and t.get("due_time"):
+                due = f" ⏰{t['due_date']} {t['due_time']}"
+            elif t.get("due_time"):
+                due = f" ⏰{t['due_time']}"
+            lines.append(f"  {i}. [{t['id']}] {t['title']}{due}")
+        return "\n".join(lines)
+
+
 def modify_last_reminder(new_params):
     """
-    修改最近创建的提醒：删除旧的，用新参数创建。
+    修改最近创建的提醒：删除旧的，从纠正文本中重新解析时间并以当前时间为基准创建新提醒。
 
-    用于路由层的 correct_reminder 动作：用户纠正提醒参数后，
-    删除旧提醒并以修正后的参数创建新提醒。
+    核心设计（v3.1.3 重写）：
+    - 不再盲目信任路由层解析的 time_offset / absolute_time
+    - 从 raw_text 重新解析时间，始终以 datetime.now() 为基准
+    - 操作是"替换"而非"追加"：先删旧的后建新的
+    - 无法提取时间时明确提示用户重新输入
 
     参数:
         new_params: dict，与 add_reminder_from_params 格式相同
@@ -981,21 +1102,119 @@ def modify_last_reminder(new_params):
     返回:
         str  操作结果消息
     """
+    now = datetime.now()
+
+    # ---- 第 1 步：删除最近一条未完成待办 ----
     old = delete_last_reminder()
-    if old is None:
-        # 没有旧的可删，直接当作新提醒创建
-        _debug_log("[修正] 无可删除的旧提醒，按新提醒创建")
-        return add_reminder_from_params(new_params)
+    old_title = old[0] if old else ""
+    old_date = old[1] if old else ""
+    old_time = old[2] if old else ""
 
-    old_title, old_date, old_time = old
-    old_desc = f"「{old_title}」"
-    if old_date and old_time:
-        old_desc += f"（{old_date} {old_time}）"
+    if old:
+        old_desc = f"「{old_title}」({old_date} {old_time})" if old_date and old_time else f"「{old_title}」"
+        _debug_log(f"[修正] 已删除旧提醒: {old_desc}")
+    else:
+        _debug_log("[修正] 无可删除的旧提醒,按新提醒创建")
 
-    # 用新参数创建
-    result = add_reminder_from_params(new_params)
-    _debug_log(f"[修正] 已完成修改: {old_desc} → 新提醒")
-    return f"已修改提醒：{old_desc} → {result}"
+    # ---- 第 2 步：从纠正文本中重新解析时间（以当前时间为基准） ----
+    raw_text = (new_params.get("raw_text") or "").strip()
+
+    time_str = ""
+    date_str = ""
+
+    if raw_text:
+        # 2a: LLM 优先（更擅长理解"不是X是Y"的语义，知道后一个数字才是正确值）
+        llm_date, llm_time = _parse_time_with_llm(raw_text, current_time=now)
+        if llm_time:
+            time_str = llm_time
+            date_str = llm_date or now.strftime("%Y-%m-%d")
+            _debug_log(f"[修正] LLM 时间重解析成功: {date_str} {time_str}")
+
+        # 2b: LLM 失败，尝试正则
+        if not time_str:
+            normalized = _normalize_chinese_numbers(raw_text)
+            time_str, after_time = _parse_time(normalized)
+            if time_str:
+                date_str, _ = _parse_date(normalized)
+                # 验证：正则可能在"不是2分钟是5分钟后"中误匹配到"2分钟"
+                # 额外检查确保提取的时间在未来（排除已过期的数字）
+                try:
+                    parsed_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                    if parsed_dt <= now:
+                        _debug_log(f"[修正] 正则解析结果已过期({date_str} {time_str}),尝试重新匹配")
+                        # 尝试只匹配"是X分钟"后面的数字（修正意图的标志）
+                        alt_m = re.search(r'是\s*(\d+)\s*分[钟]?\s*(后|之后|以后)', normalized)
+                        if alt_m:
+                            mins = int(alt_m.group(1))
+                            future = now + timedelta(minutes=max(1, mins))
+                            time_str = future.strftime("%H:%M")
+                            date_str = future.strftime("%Y-%m-%d")
+                            _debug_log(f"[修正] 从'是X'模式中提取: +{mins}分钟 → {date_str} {time_str}")
+                        else:
+                            time_str = ""
+                    else:
+                        _debug_log(f"[修正] 正则时间重解析成功: {date_str} {time_str}")
+                except ValueError:
+                    _debug_log(f"[修正] 正则解析结果验证失败,丢弃")
+                    time_str = ""
+
+    # 2c: 上述都失败，尝试路由层参数的 time_offset / absolute_time（始终以 now 为基准）
+    if not time_str:
+        time_offset = new_params.get("time_offset")
+        if time_offset is not None:
+            try:
+                time_offset = int(time_offset)
+                future = now + timedelta(minutes=max(1, time_offset))
+                time_str = future.strftime("%H:%M")
+                date_str = future.strftime("%Y-%m-%d")
+                _debug_log(f"[修正] 使用路由层 time_offset={time_offset}(now基准): {date_str} {time_str}")
+            except (ValueError, TypeError):
+                pass
+
+    if not time_str:
+        absolute_time = new_params.get("absolute_time")
+        if absolute_time and isinstance(absolute_time, str):
+            time_str = absolute_time.strip()
+            date_str = now.strftime("%Y-%m-%d")
+            try:
+                target_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                if target_dt <= now:
+                    target_dt += timedelta(days=1)
+                    date_str = target_dt.strftime("%Y-%m-%d")
+            except ValueError:
+                time_str = ""
+            if time_str:
+                _debug_log(f"[修正] 使用路由层 absolute_time(now基准): {date_str} {time_str}")
+
+    # ---- 第 3 步：无法提取时间 → 提示用户 ----
+    if not time_str:
+        _debug_log(f"[修正] 无法从 '{raw_text}' 中提取有效时间")
+        return "⚠️ 请重新输入正确的时间(如「5分钟后」或「下午3点」)"
+
+    # ---- 第 4 步：提取内容 ----
+    content = (new_params.get("content") or "").strip()
+    if not content or content == "提醒":
+        if raw_text:
+            # 去掉纠正模板: "不是X是Y" → 提取Y部分
+            cleaned = re.sub(r'不是.*?是\s*', '', raw_text)
+            cleaned = re.sub(r'说错了[，,]*\s*应该是\s*', '', cleaned)
+            cleaned = re.sub(r'改成|换个|应该是|不对[,，]*', '', cleaned)
+            cleaned = re.sub(
+                r'(提醒|记得|叫我|叫醒|叫醒我|喊我|通知|闹钟|叫我一下|到时提醒|到点提醒|到点叫我)\s*(我)?\s*',
+                '', cleaned
+            )
+            content = _clean_title(cleaned)
+        if not content:
+            content = old_title if old_title else "提醒事项"
+
+    # ---- 第 5 步：创建全新提醒（替换）- ---
+    result = _add_todo(content, date_str, time_str)
+
+    if old:
+        _debug_log(f"[修正] 已完成替换: {old_desc} → {content}({date_str} {time_str})")
+        return f"✅ 已修改提醒: {old_desc} → {result}"
+    else:
+        return result
 
 
 # ===================== 结构化参数入口（路由层直调） =====================
@@ -1055,9 +1274,9 @@ def add_reminder_from_params(params):
             if target_dt <= now:
                 target_dt += timedelta(days=1)
                 date_str = target_dt.strftime("%Y-%m-%d")
-                _debug_log(f"[结构化提醒] 时间已过，推到明天: {date_str} {time_str}")
+                _debug_log(f"[结构化提醒] 时间已过,推到明天: {date_str} {time_str}")
         except ValueError:
-            _debug_log(f"[结构化提醒] 时间格式异常: {time_str!r}，回退到 LLM 解析")
+            _debug_log(f"[结构化提醒] 时间格式异常: {time_str!r},回退到 LLM 解析")
             time_str = ""
             date_str = ""
 
@@ -1068,7 +1287,7 @@ def add_reminder_from_params(params):
 
     # ---- 第 2 步：时间解析失败时，尝试从 raw_text 降级解析 ----
     if not time_str:
-        _debug_log(f"[结构化提醒] 参数中无有效时间，尝试从 raw_text 解析...")
+        _debug_log(f"[结构化提醒] 参数中无有效时间,尝试从 raw_text 解析...")
         if raw_text:
             # 先尝试正则
             time_str, _ = _parse_time(_normalize_chinese_numbers(raw_text))
@@ -1088,7 +1307,7 @@ def add_reminder_from_params(params):
             fallback = now + timedelta(minutes=1)
             time_str = fallback.strftime("%H:%M")
             date_str = fallback.strftime("%Y-%m-%d")
-            print(f"⚠️ 结构化提醒时间解析失败，使用 1 分钟后（{date_str} {time_str}）作为保底")
+            print(f"⚠️ 结构化提醒时间解析失败,使用 1 分钟后({date_str} {time_str})作为保底")
 
     # ---- 第 3 步：内容兜底 ----
     if not content:
@@ -1106,10 +1325,167 @@ def add_reminder_from_params(params):
     return _add_todo(content, date_str, time_str)
 
 
+# ===================== 行为模式提炼（v3.3.0 新增）=====================
+
+
+def _cluster_values(values, window):
+    """
+    将一组数值按指定窗口大小聚类。
+    返回嵌套列表，每个子列表是窗口内的数值集合。
+    """
+    if not values:
+        return []
+    sorted_vals = sorted(values)
+    clusters = []
+    current = [sorted_vals[0]]
+    for v in sorted_vals[1:]:
+        if v - current[0] <= window:
+            current.append(v)
+        else:
+            clusters.append(current)
+            current = [v]
+    clusters.append(current)
+    return clusters
+
+
+def extract_patterns():
+    """
+    扫描所有待办和日程事件，提炼用户行为模式。
+
+    分析维度:
+    1. time_based  — 同一内容在相似时间段重复出现
+    2. interval    — 同一内容以固定间隔创建
+    3. association — 内容 A 之后频繁出现内容 B
+
+    返回:
+        list[dict]  提炼出的模式列表，按 confidence 降序排列
+    """
+    todos = _load_todos()
+    events = _load_events()
+
+    patterns = []
+
+    # ================================================================
+    # 1. time_based: 相同内容在相似时间段重复
+    # ================================================================
+    content_groups = {}  # key → [items]
+    for t in todos:
+        title = t.get("title", "").strip()
+        if not title:
+            continue
+        # 归一化：去掉"我"前缀，统一内容表达
+        key = re.sub(r'^我', '', title)
+        content_groups.setdefault(key, []).append(t)
+
+    # 同样处理事件
+    for e in events:
+        title = e.get("title", "").strip()
+        if not title:
+            continue
+        key = re.sub(r'^我', '', title)
+        content_groups.setdefault(key, []).append(e)
+
+    for key, items in content_groups.items():
+        if len(items) < 2:
+            continue
+
+        minutes_list = []
+        for item in items:
+            t_str = item.get("due_time") or item.get("time", "")
+            if t_str:
+                try:
+                    h, m = map(int, t_str.split(":"))
+                    minutes_list.append(h * 60 + m)
+                except ValueError:
+                    continue
+
+        if len(minutes_list) < 2:
+            continue
+
+        # 60 分钟窗口聚类
+        clusters = _cluster_values(minutes_list, 60)
+        for cluster in clusters:
+            if len(cluster) >= 2:
+                lo, hi = min(cluster), max(cluster)
+                time_range = f"{lo // 60:02d}:{lo % 60:02d}-{hi // 60:02d}:{hi % 60:02d}"
+                freq = len(cluster)
+                patterns.append({
+                    "type": "time_based",
+                    "content": key,
+                    "time_range": time_range,
+                    "frequency": freq,
+                    "confidence": round(min(0.95, 0.5 + freq * 0.1), 2),
+                })
+
+    # ================================================================
+    # 2. interval: 同一内容以固定间隔创建
+    # ================================================================
+    for key, items in content_groups.items():
+        if len(items) < 3:
+            continue
+
+        items_sorted = sorted(items, key=lambda x: x.get("created_at", ""))
+        intervals = []
+        for i in range(1, len(items_sorted)):
+            try:
+                t1 = datetime.strptime(items_sorted[i - 1]["created_at"], "%Y-%m-%dT%H:%M:%S")
+                t2 = datetime.strptime(items_sorted[i]["created_at"], "%Y-%m-%dT%H:%M:%S")
+                diff = (t2 - t1).total_seconds() / 60
+                if diff > 0:
+                    intervals.append(diff)
+            except (ValueError, KeyError):
+                continue
+
+        if len(intervals) < 2:
+            continue
+
+        # 检查间隔一致性（±25% 容差）
+        avg = sum(intervals) / len(intervals)
+        if avg <= 0:
+            continue
+        consistent = all(abs(i - avg) / avg <= 0.25 for i in intervals)
+        if consistent:
+            patterns.append({
+                "type": "interval",
+                "content": key,
+                "interval_minutes": round(avg),
+                "occurrences": len(items),
+                "confidence": round(min(0.95, 0.6 + len(items) * 0.05), 2),
+            })
+
+    # ================================================================
+    # 3. association: A 出现后频繁跟随 B
+    # ================================================================
+    all_items = todos + events
+    all_sorted = sorted(all_items, key=lambda x: x.get("created_at", ""))
+    pairs = {}
+    for i in range(1, len(all_sorted)):
+        a = (all_sorted[i - 1].get("title") or "").strip()
+        b = (all_sorted[i].get("title") or "").strip()
+        if a and b and a != b:
+            pairs[f"{a}→{b}"] = pairs.get(f"{a}→{b}", 0) + 1
+
+    for pair_key, count in pairs.items():
+        if count >= 2:
+            a, b = pair_key.split("→", 1)
+            patterns.append({
+                "type": "association",
+                "from": a,
+                "to": b,
+                "frequency": count,
+                "confidence": round(min(0.9, 0.4 + count * 0.15), 2),
+            })
+
+    # 按置信度降序
+    patterns.sort(key=lambda p: p.get("confidence", 0), reverse=True)
+    _debug_log(f"[模式提炼] 共发现 {len(patterns)} 条模式")
+    return patterns
+
+
 # ===================== 独立测试入口 =====================
 if __name__ == "__main__":
     print("🧪 日程模块测试模式")
-    print("输入命令测试日程功能，输入 exit 退出")
+    print("输入命令测试日程功能,输入 exit 退出")
     print(_HELP_TEXT)
     while True:
         try:

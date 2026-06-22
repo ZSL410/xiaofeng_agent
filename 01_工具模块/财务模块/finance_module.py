@@ -85,9 +85,9 @@ def process_command(text):
         data = load_data()
         data.append(new_record)
         save_data(data)
-        return f"✅ 已记录：{new_record}"
+        return f"✅ 已记录:{new_record}"
     else:
-        return "⚠️ 没听懂金额，请说清楚一点，比如'今天早上吃饭花了6元'"
+        return "⚠️ 没听懂金额,请说清楚一点,比如'今天早上吃饭花了6元'"
 
 # ===================== 独立运行入口 =====================
 if __name__ == "__main__":
