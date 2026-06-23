@@ -1,0 +1,33 @@
+{
+  "patterns": [
+    {
+      "type": "time_based",
+      "content": "喝水",
+      "time_range": "23:24-23:51",
+      "frequency": 3,
+      "confidence": 0.8,
+      "last_triggered": "2026-06-22",
+      "rejected": false
+    },
+    {
+      "type": "time_based",
+      "content": "喝水",
+      "time_range": "19:27-19:28",
+      "frequency": 2,
+      "confidence": 0.7,
+      "last_triggered": "2026-06-22",
+      "rejected": false
+    },
+    {
+      "type": "time_based",
+      "content": "泡了杯咖啡",
+      "time_range": "23:28-23:55",
+      "frequency": 2,
+      "confidence": 0.7,
+      "last_triggered": "2026-06-22",
+      "rejected": false
+    }
+  ],
+  "last_refined": "2026-06-23T14:54:31",
+  "last_decay": "2026-06-22"
+}
