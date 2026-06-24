@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "facts": [
+    {
+      "id": "fact_001",
+      "content": "用户喜欢冰美式咖啡",
+      "category": "偏好",
+      "source": "对话",
+      "pinned": true,
+      "created_at": "2026-06-24T23:42:35.927654",
+      "updated_at": "2026-06-24T23:42:35.927654",
+      "embedding": null,
+      "importance": 0.8
+    }
+  ],
+  "updated_at": "2026-06-24T23:42:35.927674"
+}

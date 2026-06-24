@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.6.0"
+VERSION = "3.7.0"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,8 +15,10 @@ from 器官.嘴巴 import speak
 from 器官.耳朵 import listen_once
 from 器官.手 import call_tool
 from 记忆.记忆引擎 import (load_short_term, save_short_term, load_long_term,
-                              decay_patterns, reject_pattern)
+                              decay_patterns, reject_pattern,
+                              build_injection_context, get_memory_stats)
 from 记忆.数据提炼 import refine
+from 记忆.衰减调度 import scheduler_check, manual_cleanup, get_decay_status
 
 # 加载配置
 with open(os.path.join(BASE_DIR, "模型.json"), "r", encoding="utf-8") as f:
@@ -359,12 +361,22 @@ def _describe_reminder(params):
 
 
 def chat_with_xiaofeng(user_input, history):
+    # v3.7.0: 注入记忆上下文
+    memory_context = ""
+    try:
+        memory_context = build_injection_context(user_input, max_tokens=2000)
+    except Exception:
+        pass  # 记忆注入失败不影响正常对话
+
     system_prompt = """
 你是晓风,一个温暖、体贴的私人助手.你的职责是:
 1. 与用户进行自然、流畅、让人放松的聊天.
 2. 只有当用户明确提出"记账"、"查账"或"帮我记一下"等指令时,才去处理财务问题.
 3. 请不要在日常对话中主动追问金额或消费细节,这会打扰用户的交流体验.
 """
+    if memory_context:
+        system_prompt += f"\n\n{memory_context}"
+
     messages = [{"role": "system", "content": system_prompt}]
     for turn in history[-10:]:
         messages.append(turn)
@@ -397,6 +409,30 @@ def _try_daily_refine(long_term):
     except Exception as e:
         # 提炼失败不影响正常启动
         print(f"⚠️ 每日数据提炼跳过: {e}")
+
+
+def _try_memory_scheduler():
+    """
+    记忆系统调度检查（v3.7.0 新增）。
+
+    调用衰减调度模块执行每日衰减检查，并显示记忆统计。
+    """
+    try:
+        result = scheduler_check()
+        if result.get("ran") and result.get("stats", {}).get("decayed", 0) > 0:
+            stats = result["stats"]
+            print(f"🧠 记忆衰减完成: {stats['decayed']} 条置信度降低, "
+                  f"{stats['archived']} 条归档, {stats['kept']} 条保留"
+                  + (f", {stats['formed']} 条习惯形成" if stats.get('formed', 0) > 0 else ""))
+
+        # 显示记忆统计摘要
+        stats = get_memory_stats()
+        if stats["facts_count"] > 0 or stats["active_patterns"] > 0:
+            print(f"🧠 记忆库: {stats['facts_count']} 条事实, "
+                  f"{stats['active_patterns']} 条活跃习惯"
+                  + (f" ({stats['archived_patterns']} 条已归档)" if stats['archived_patterns'] > 0 else ""))
+    except Exception as e:
+        print(f"⚠️ 记忆调度跳过: {e}")
 
 
 def _try_weekly_decay(long_term):
@@ -462,7 +498,7 @@ def main():
     # 每日数据提炼（v3.3.0）：启动时检查，每天最多执行一次
     # ============================================================
     _try_daily_refine(long_term)
-    _try_weekly_decay(long_term)
+    _try_memory_scheduler()  # v3.7.0 替代 _try_weekly_decay
 
     # 启动日程提醒后台线程（确保模块被导入，触发 daemon 线程启动）
     try:
@@ -529,6 +565,34 @@ def main():
             result = refine(verbose=True)
             print(result["message"])
             speak(result["message"])
+            continue
+
+        # ============================================================
+        # 记忆管理命令（v3.7.0 新增）
+        # ============================================================
+        MEMORY_CLEANUP_KW = ["整理记忆", "清理记忆", "记忆整理", "衰减检查"]
+        MEMORY_STATS_KW = ["记忆状态", "记忆统计", "查看记忆"]
+
+        if any(kw in user_input for kw in MEMORY_CLEANUP_KW):
+            print("🧹 正在整理记忆...")
+            result = manual_cleanup()
+            print(result["report"])
+            speak("记忆整理完成")
+            continue
+
+        if any(kw in user_input for kw in MEMORY_STATS_KW):
+            stats = get_memory_stats()
+            status = get_decay_status()
+            report = (
+                f"🧠 记忆系统状态:\n"
+                f"   - 事实: {stats['facts_count']} 条\n"
+                f"   - 活跃习惯: {stats['active_patterns']} 条\n"
+                f"   - 已归档: {stats['archived_patterns']} 条\n"
+                f"   - 上次衰减: {status['last_decay'][:10] if status['last_decay'] else '从未'}\n"
+                f"   - 面临衰减: {status['at_risk_count']} 条"
+            )
+            print(report)
+            speak("记忆状态已显示")
             continue
 
         # ============================================================
