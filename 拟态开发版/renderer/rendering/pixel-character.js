@@ -178,7 +178,7 @@
     const eyeOpen = M.eyeOpen !== false;
 
     // ── Pupil tracking offset (visible: shifts entire eye block) ──
-    const px = Math.round(Math.max(-1, Math.min(1, A.eyePupilX || 0)));
+    const px = Math.round(Math.max(-2, Math.min(2, A.eyePupilX || 0)));
     const py = Math.round(Math.max(-1, Math.min(1, A.eyePupilY || 0)));
 
     // ── Cheeks ─────────────────────────────────────────

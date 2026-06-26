@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════
-//  Mimic v2 — Body Part Click Reactions
+//  Mimic v3.7.1 — Body Part Click Reactions
 //
-//  Click head → smile + bounce + "好痒~"
-//  Click body → jump + "嘿！"
-//  Double-click → spin + "(*´▽`*)"
+//  Click head → happy state (bounce + smile) → 1.5s → idle
+//  Click body → surprised state (wide eyes + open mouth) → 1.5s → idle
+//  Double-click → spin + spark particles + 2.5s happy
 // ═══════════════════════════════════════════════════════════
 
 ;(function () {
@@ -96,11 +96,20 @@
   }
 
   function handleBodyClick(A) {
-    A.bobOffset = -6;
+    // v3.7.1: body click → surprised state (wide eyes + open mouth)
+    A.bobOffset = -4;
     A.bodySquash = -0.1;
     setTimeout(() => { A.bobOffset = 0; A.bodySquash = 0; }, 300);
     if (M.Audio) M.Audio.play('boing');
+    if (M.Particles) M.Particles.burst('spark', 4, { x: 8, y: 7 });
     M.Bubble.show('嘿！别戳我肚子！', { duration: 1500, thought: false });
+    // Transition to surprised, auto-recover after 1.5s
+    if (M.FSM.state === 'idle') {
+      M.FSM.transitionTo('surprised');
+      setTimeout(() => {
+        if (M.FSM.state === 'surprised') M.FSM.transitionTo('idle');
+      }, 1500);
+    }
   }
 
   function handleDoubleClick(A) {

@@ -14,7 +14,8 @@
       "related_to": [],
       "relation_types": [],
       "archived": false,
-      "last_trigger": "2026-06-22"
+      "last_trigger": "2026-06-22",
+      "_formed_logged": true
     },
     {
       "type": "time_based",
@@ -62,6 +63,6 @@
     }
   ],
   "_migrated_from": "长期记忆.json",
-  "updated_at": "2026-06-24T23:42:35.989208",
-  "last_decay": "2026-06-24"
+  "updated_at": "2026-06-26T23:59:19.424918",
+  "last_decay": "2026-06-26"
 }

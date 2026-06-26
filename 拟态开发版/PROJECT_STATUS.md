@@ -1,6 +1,6 @@
-# PROJECT_STATUS.md — 拟态 (Mimic) Desktop Pet v2.5.0
+# PROJECT_STATUS.md — 拟态 (Mimic) Desktop Pet v3.7.1
 
-> 最后更新：2026-06-16 | 版本：**v2.5.0** — 音乐自动检测版
+> 最后更新：2026-06-27 | 版本：**v3.7.1** — Phase 1 交互体验优化版
 
 ## 项目定位
 
@@ -105,6 +105,22 @@ cd /mnt/d/xiaofeng_agent/拟态开发版 && npm run start:wsl  # WSL2
 
 ## 变更日志
 
+### v3.7.1 (2026-06-27) — Phase 1 交互体验优化
+- 🎯 **眼球跟随鼠标增强**：`interaction/eye-tracking.js` 重写
+  - 基于角色头部中心（而非窗口中心）计算偏移量
+  - 眼珠移动范围扩大至 ±2 格水平、±1 格垂直（严格限制在头部区域内）
+  - 鼠标离开窗口时眼珠平滑回到中心
+  - 配合 `pixel-character.js` 支持浮点偏移渲染
+- 🖱️ **点击部位反馈升级**：`interaction/click.js` 增强
+  - 点击头部 → `happy` 状态（弹跳 + 微笑 + chirp 音效 + 心形粒子），1.5s 后恢复 idle
+  - 点击身体 → `surprised` 状态（眼睛睁大 + 嘴巴张开 + boing 音效 + 火花粒子），1.5s 后恢复 idle
+  - 双击 → 旋转弹跳 + 火花粒子 + 2.5s happy
+- 🔋 **低功耗空闲模式**：`app.js` 新增帧率控制
+  - 角色处于 `idle` 且连续 30 秒无鼠标移动 → 降至 15fps（通过帧计数跳过绘制）
+  - 鼠标移动立即恢复 60fps 全速绘制
+  - 切换体型时 `mousemove` 事件自动重置空闲计时器
+- 📋 版本号升至 v3.7.1
+
 ### v2.5.0 (2026-06-16)
 - 🆕 **音乐自动检测**：`main/music-detector.js` 后台进程轮询
   - 每 3 秒扫描系统进程列表（`tasklist` / `ps`），匹配配置的播放器名
@@ -187,8 +203,11 @@ cd /mnt/d/xiaofeng_agent/拟态开发版 && npm run start:wsl  # WSL2
 - 气泡系统 v2 + 消息队列 + 嘴边定位
 - 文件拖放 + 后端通知
 
-## 下一步 (v2.3+)
+## 下一步 (v3.8+)
 
+- [x] 眼球追踪增强（头部中心计算）✅ v3.7.1
+- [x] 点击身体→surprised 状态 ✅ v3.7.1
+- [x] 低功耗空闲模式（30s→15fps）✅ v3.7.1
 - [x] 点击穿透（setIgnoreMouseEvents）✅ v2.2.0
 - [x] 更多粒子形状（音符、雨滴）✅ v2.3.0
 - [ ] 情绪状态机扩展（无聊、兴奋）

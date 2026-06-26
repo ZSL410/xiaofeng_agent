@@ -13,7 +13,7 @@
   const http = require('http');
 
   // ── Version ──────────────────────────────────────────────
-  const VERSION = '2.5.0';
+  const VERSION = '3.7.1';
 
   // ── Config loader ────────────────────────────────────────
   let config = { targetDir: '../02_数据输入', backendUrl: 'http://127.0.0.1:5001', apiEnabled: false };
