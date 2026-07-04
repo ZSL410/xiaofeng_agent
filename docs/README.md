@@ -2,6 +2,8 @@
 
 > 项目定位：本地运行的模块化 AI 助手，支持语音/文字交互、日程管理、财务记账、记忆系统。
 > 当前版本：**v3.7.0**  |  技术栈：Python 3 + Ollama(qwen2.5:7b/3b) + Edge TTS + Vosk
+>
+> **📢 项目变更**：拟态（Electron 桌面桌宠前端）已分离为独立仓库 → [github.com/ZSL410/nitai](https://github.com/ZSL410/nitai)。前端通过 HTTP API（端口 5001）与本项目通信，独立开发维护。
 
 ## 快速导航
 
