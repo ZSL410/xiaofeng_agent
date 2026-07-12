@@ -1,5 +1,5 @@
 """
-耳朵.py — 语音识别模块  v2.6.0
+耳朵.py — 语音识别模块  v3.7.2
 
 录音后端优先级（自动检测）:
   1. parec (PulseAudio)     — WSL2 + WSLg 最可靠方案，零额外 Python 依赖
@@ -7,6 +7,12 @@
   3. mock                   — 所有后端不可用时的模拟回退
 
 Vosk 模型: 自动相对于本文件定位到 ../vosk-model-cn-0.22/
+
+v3.7.2 改进:
+  - VAD (Voice Activity Detection): 基于 RMS 能量的动态录音,不再使用固定 5s 时长
+  - 静音检测自动停止: 连续 SILENCE_DURATION 秒低于阈值则停止录音
+  - 最大录音时长保护: MAX_RECORD_SECONDS 超时强制停止,返回提示
+  - 流式录音: sounddevice 后端改用 InputStream 非阻塞流式采集,降低 CPU 占用
 
 v2.6.0 改进:
   - 录音数据严格校验:int16 类型、形状归一化、静音检测
@@ -30,7 +36,12 @@ from datetime import datetime
 # ============================================================================
 SAMPLE_RATE = 16000          # Vosk 离线模型要求 16 kHz
 CHANNELS = 1                 # 单声道
-RECORD_SECONDS = 5           # 默认录音时长
+
+# VAD (Voice Activity Detection) 配置
+SILENCE_THRESHOLD = 500      # RMS 能量阈值,低于此值视为静音 (可调整)
+SILENCE_DURATION = 1.5       # 连续静音多少秒后自动停止录音
+MAX_RECORD_SECONDS = 30      # 最大录音时长 (超时强制停止,避免挂死)
+CHUNK_DURATION = 0.1         # 每个音频块的时长 (秒),用于流式 VAD 检测
 
 # Vosk 模型路径 — 相对于器官/ → 00_核心主体/
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -238,14 +249,59 @@ def _detect_audio_backend():
 
 
 # ============================================================================
-# 后端 1: parec 录音
+# VAD (Voice Activity Detection) 工具
+# ============================================================================
+
+def _compute_rms(audio_bytes: bytes) -> float:
+    """
+    计算 PCM 音频数据的 RMS（均方根）能量值。
+
+    参数:
+        audio_bytes: s16le 原始 PCM 字节
+
+    返回:
+        float — RMS 值,用于与 SILENCE_THRESHOLD 比较
+    """
+    import numpy as np
+    samples = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float64)
+    if len(samples) == 0:
+        return 0.0
+    return float(np.sqrt(np.mean(samples ** 2)))
+
+
+def _rms_from_array(samples) -> float:
+    """
+    从 numpy 数组计算 RMS 能量值。
+
+    参数:
+        samples: numpy 数组 (int16)
+
+    返回:
+        float — RMS 值
+    """
+    import numpy as np
+    arr = np.asarray(samples, dtype=np.float64)
+    if arr.size == 0:
+        return 0.0
+    return float(np.sqrt(np.mean(arr ** 2)))
+
+
+# ============================================================================
+# 后端 1: parec 录音 (VAD 动态版)
 # ============================================================================
 
 def _record_parec():
     """
-    使用 parec 通过 WSLg PulseAudio 录制原始 PCM。
-    这是 WSL2 下最可靠的方案，因为 parec 直接与 PulseAudio 通信，
-    不需要 PortAudio 的 Pulse 后端支持。
+    使用 parec 通过 WSLg PulseAudio 录制原始 PCM（VAD 动态版）。
+
+    采用流式读取 + RMS 能量 VAD:
+    - 检测到语音时持续录音
+    - 连续 SILENCE_DURATION 秒静音后自动停止
+    - 超过 MAX_RECORD_SECONDS 秒强制停止
+
+    返回:
+        (audio_data: bytes | None, status: str)
+        status: "ok" | "timeout" | "no_audio" | "error"
     """
     pulse_server = os.environ.get("PULSE_SERVER", "")
     env = {**os.environ, "PULSE_SERVER": pulse_server}
@@ -263,7 +319,9 @@ def _record_parec():
 
     print("🎤 正在听,请说话...(说完自动停止)")
 
-    # parec 输出到 stdout（默认行为，无文件参数时写 stdout）
+    # 每个 chunk 的字节数: 0.1s @ 16kHz mono s16le = 3200 bytes
+    chunk_bytes = int(SAMPLE_RATE * 2 * CHUNK_DURATION)
+
     parec = subprocess.Popen(
         ["parec", "--format=s16le", "--rate=16000",
          "--channels=1", "--latency-msec=50"],
@@ -272,16 +330,41 @@ def _record_parec():
         env=env
     )
 
-    # 收集音频数据
     audio_data = b""
+    silence_frames = 0          # 连续静音帧计数
+    frames_per_silence = int(SILENCE_DURATION / CHUNK_DURATION)  # 需要连续多少帧静音才停止
+    max_frames = int(MAX_RECORD_SECONDS / CHUNK_DURATION)
+    total_frames = 0
+    has_speech = False          # 是否曾检测到语音
+
     start_time = time.time()
     try:
-        while time.time() - start_time < RECORD_SECONDS:
-            chunk = parec.stdout.read(640)   # ~20ms @ 16kHz 16-bit mono
-            if chunk:
-                audio_data += chunk
+        while total_frames < max_frames:
+            chunk = parec.stdout.read(chunk_bytes)
+            if not chunk:
+                break  # parec 进程结束
+
+            audio_data += chunk
+            total_frames += 1
+
+            # VAD: 计算当前 chunk 的 RMS
+            rms = _compute_rms(chunk)
+
+            if rms >= SILENCE_THRESHOLD:
+                # 检测到语音
+                silence_frames = 0
+                has_speech = True
+            else:
+                # 静音
+                silence_frames += 1
+
+            if has_speech and silence_frames >= frames_per_silence:
+                _log(f"VAD 检测到静音 ({silence_frames * CHUNK_DURATION:.1f}s), 停止录音")
+                break
+
             if parec.poll() is not None:
                 break
+
     finally:
         parec.terminate()
         try:
@@ -296,15 +379,25 @@ def _record_parec():
             parec.kill()
 
     actual_sec = len(audio_data) / (SAMPLE_RATE * 2)
-    _log(f"parec 录制: {len(audio_data)} bytes ({actual_sec:.1f}s)")
+    _log(f"parec 录制: {len(audio_data)} bytes ({actual_sec:.1f}s), "
+         f"frames={total_frames}, has_speech={has_speech}")
 
-    if len(audio_data) < SAMPLE_RATE * 2 * 1:   # 不足 1 秒 → 可能静音/未说话
-        _warn(f"录音数据过短 ({actual_sec:.1f}s).")
+    # 判断状态
+    if not has_speech:
+        _warn(f"未检测到有效语音 (录音 {actual_sec:.1f}s).")
         _warn("请检查 Windows 麦克风隐私设置是否允许桌面应用访问,")
         _warn("以及 WSLg 是否能监听麦克风.")
-        return None
+        return None, "no_audio"
 
-    return audio_data
+    if total_frames >= max_frames:
+        _warn(f"录音超时 ({MAX_RECORD_SECONDS}s), 强制停止.")
+        return audio_data, "timeout"
+
+    if len(audio_data) < SAMPLE_RATE * 2 * 1:   # 不足 1 秒
+        _warn(f"录音数据过短 ({actual_sec:.1f}s).")
+        return None, "no_audio"
+
+    return audio_data, "ok"
 
 
 # ============================================================================
@@ -313,13 +406,17 @@ def _record_parec():
 
 def _record_sounddevice():
     """
-    使用 sounddevice (PortAudio) 录音。
-    在原生 Linux / Windows 上效果最佳；
-    在 WSL2 中仅当 PortAudio 编译了 PulseAudio 后端时才可用。
+    使用 sounddevice (PortAudio) 进行 VAD 动态录音。
+
+    采用 sd.InputStream 非阻塞流式采集:
+    - 100ms 音频块 → 计算 RMS 能量
+    - RMS >= SILENCE_THRESHOLD → 检测到语音,持续录音
+    - 连续 SILENCE_DURATION 秒静音 → 自动停止
+    - 超过 MAX_RECORD_SECONDS → 强制停止
 
     返回:
-        bytes — int16 PCM 原始音频数据 (s16le, 16kHz, mono)
-        None  — 录音失败
+        (audio_data: bytes | None, status: str)
+        status: "ok" | "timeout" | "no_audio" | "error"
     """
     import sounddevice as sd
     import numpy as np
@@ -375,22 +472,64 @@ def _record_sounddevice():
     if device_idx is None:
         _warn("sounddevice: 未找到任何输入设备")
         _warn("请确认麦克风已连接并在 Windows 隐私设置中允许桌面应用访问麦克风.")
-        return None
+        return None, "error"
 
     print("🎤 正在听,请说话...(说完自动停止)")
     _log(f"录音参数: samplerate={SAMPLE_RATE}, channels={CHANNELS}, dtype=int16, "
-         f"duration={RECORD_SECONDS}s, device_idx={device_idx}")
+         f"device_idx={device_idx}, max={MAX_RECORD_SECONDS}s, "
+         f"vad_threshold={SILENCE_THRESHOLD}, silence_dur={SILENCE_DURATION}s")
+
+    # =========================================================================
+    # 流式录音 + VAD
+    # =========================================================================
+    audio_chunks = []           # 收集所有 int16 音频块
+    silence_frames = 0          # 连续静音帧计数
+    frames_per_silence = int(SILENCE_DURATION / CHUNK_DURATION)
+    max_frames = int(MAX_RECORD_SECONDS / CHUNK_DURATION)
+    total_frames = 0
+    has_speech = False
+    stream_error = None
+
+    # 每个 chunk 的采样数
+    chunk_samples = int(SAMPLE_RATE * CHUNK_DURATION)
+
+    def _audio_callback(indata, frames, time_info, status):
+        """InputStream 回调：每 CHUNK_DURATION 秒触发一次"""
+        nonlocal silence_frames, total_frames, has_speech, stream_error
+        if status:
+            _log(f"音频流状态: {status}")
+            if status.input_overflow:
+                _warn("音频缓冲区溢出,可能有数据丢失")
+        # 将当前帧加入缓冲区
+        audio_chunks.append(indata.copy())
+        total_frames += 1
+
+        # VAD: 计算 RMS
+        rms = _rms_from_array(indata)
+        if rms >= SILENCE_THRESHOLD:
+            silence_frames = 0
+            has_speech = True
+        else:
+            silence_frames += 1
+
+        # 检查停止条件
+        if has_speech and silence_frames >= frames_per_silence:
+            _log(f"VAD 静音检测触发 ({silence_frames * CHUNK_DURATION:.1f}s)")
+            raise sd.CallbackStop()
+        if total_frames >= max_frames:
+            _log(f"录音达到最大时长 ({MAX_RECORD_SECONDS}s)")
+            raise sd.CallbackStop()
 
     try:
-        recording = sd.rec(
-            int(RECORD_SECONDS * SAMPLE_RATE),
+        stream = sd.InputStream(
             samplerate=SAMPLE_RATE,
             channels=CHANNELS,
             dtype='int16',
             device=device_idx,
-            blocking=True
+            blocksize=chunk_samples,
+            callback=_audio_callback,
         )
-        sd.wait()
+        stream.start()
     except sd.PortAudioError as e:
         err_str = str(e).lower()
         _warn(f"sounddevice PortAudio 错误: {e}")
@@ -401,52 +540,78 @@ def _record_sounddevice():
             _warn(">>> Windows 用户请检查麦克风权限:")
             _warn("    设置 → 隐私和安全性 → 麦克风")
             _warn("    确保「麦克风访问」和「允许桌面应用访问麦克风」已开启.")
-        return None
+        return None, "error"
     except Exception as e:
-        _warn(f"sounddevice 录音失败: {e}")
-        return None
+        _warn(f"sounddevice 音频流创建失败: {e}")
+        return None, "error"
+
+    # 等待流结束（CallbackStop 或超时）
+    try:
+        while stream.active:
+            time.sleep(0.05)  # 50ms 轮询,低 CPU 占用
+    except KeyboardInterrupt:
+        _log("录音被用户中断")
+    finally:
+        try:
+            stream.stop()
+            stream.close()
+        except Exception:
+            pass
 
     # =========================================================================
-    # 数据格式校验与转换 — 确保与 Vosk 要求严格一致
-    #   Vosk 期望: s16le (signed 16-bit little-endian), 16kHz, mono
+    # 数据处理 — 合并所有 chunk 并转换为 PCM bytes
     # =========================================================================
+    if not audio_chunks:
+        _warn("录音未产生任何数据")
+        return None, "no_audio"
+
+    import numpy as np
+    recording = np.concatenate(audio_chunks, axis=0)
+
     original_shape = recording.shape
     original_dtype = recording.dtype
-    _log(f"录音原始数据: shape={original_shape}, dtype={original_dtype}")
+    _log(f"录音原始数据: shape={original_shape}, dtype={original_dtype}, "
+         f"chunks={len(audio_chunks)}")
 
     # 1) 确保数据类型为 int16
     if recording.dtype != np.int16:
         _log(f"数据类型从 {recording.dtype} 转换为 int16")
         if recording.dtype in (np.float32, np.float64):
-            # float [-1.0, 1.0] → int16 [-32768, 32767]
             recording = np.clip(recording * 32767, -32768, 32767)
         recording = recording.astype(np.int16)
 
-    # 2) 确保形状为 (samples,) — 单声道不需要 (samples, 1)
+    # 2) 确保形状为 (samples,)
     if recording.ndim == 2:
         if recording.shape[1] == 1:
             recording = recording.ravel()
             _log(f"形状从 {original_shape} ravel → {recording.shape}")
         elif recording.shape[1] > 1:
-            # 多声道 → 取第一声道
             _warn(f"录音为 {recording.shape[1]} 声道,仅取第一声道")
             recording = recording[:, 0].copy()
 
     # 3) 静音 / 信号强度检测
     peak = int(np.max(np.abs(recording)))
     rms = float(np.sqrt(np.mean(recording.astype(np.float64) ** 2)))
-    _log(f"音频统计: peak={peak}, rms={rms:.1f}, shape={recording.shape}, dtype={recording.dtype}")
+    actual_sec = len(recording) / SAMPLE_RATE
+    _log(f"音频统计: peak={peak}, rms={rms:.1f}, duration={actual_sec:.1f}s, "
+         f"has_speech={has_speech}")
 
     if peak < 10:
         _warn(f"录音信号极弱 (peak={peak}),可能麦克风静音、被占用或权限不足.")
         _warn("请检查 Windows 麦克风隐私设置和硬件静音开关.")
-        return None
+        return None, "no_audio"
 
     # 4) 转为原始 PCM 字节 (s16le, 16kHz, mono)
     audio_data = recording.tobytes()
-    actual_sec = len(audio_data) / (SAMPLE_RATE * 2)
     _log(f"sounddevice 录制完成: {len(audio_data)} bytes ({actual_sec:.1f}s)")
-    return audio_data
+
+    # 5) 判断状态
+    if not has_speech:
+        return audio_data, "no_audio"
+    if total_frames >= max_frames:
+        return audio_data, "timeout"
+
+    return audio_data, "ok"
 
 
 # ============================================================================
@@ -546,30 +711,43 @@ def _recognize_pcm(pcm_data):
 
 def listen_once():
     """
-    录制一段语音并返回识别文本。
+    录制一段语音并返回识别文本（VAD 动态录音版）。
 
     返回:
         str — 识别到的文字，或以下特殊值:
-        "模拟语音输入"   — 所有后端不可用或模型未加载
-        "录音失败"       — 录音过程出错
-        "语音识别失败"   — 录到了但未识别出有效语音
+        "模拟语音输入"    — 所有后端不可用或模型未加载
+        "录音失败"        — 录音过程出错
+        "语音识别失败"    — 录到了但未识别出有效语音
+        "录音超时,请缩短说话内容"  — 超过 MAX_RECORD_SECONDS 秒
+        "未检测到语音,请重试"     — VAD 未检测到有效语音
     """
     backend = _detect_audio_backend()
     _log(f"使用后端: {backend}")
 
     # ---- 录音 ----
     pcm_data = None
+    rec_status = "error"
 
     if backend == "parec":
-        pcm_data = _record_parec()
+        pcm_data, rec_status = _record_parec()
     elif backend == "sounddevice":
-        pcm_data = _record_sounddevice()
+        pcm_data, rec_status = _record_sounddevice()
     else:   # "mock" 或未知
         return "模拟语音输入"
 
-    if pcm_data is None:
+    # ---- 处理录音状态 ----
+    if pcm_data is None or rec_status == "error":
         _warn("录音失败 — 未获取到音频数据")
         return "录音失败"
+
+    if rec_status == "no_audio":
+        _log("VAD 未检测到有效语音")
+        return "未检测到语音,请重试"
+
+    if rec_status == "timeout":
+        _warn(f"录音超时 ({MAX_RECORD_SECONDS}s)")
+        # 超时时仍尝试识别已录内容
+        print(f"⚠️ 录音已达最大时长 {MAX_RECORD_SECONDS} 秒,请缩短说话内容")
 
     # ---- 识别 ----
     ok, text = _recognize_pcm(pcm_data)

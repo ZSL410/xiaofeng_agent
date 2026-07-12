@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.7.0"
+VERSION = "3.7.2"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -77,124 +77,45 @@ TOOLS = [
     },
 ]
 
-_ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器.分析用户输入,判断意图并提取结构化参数.
+_ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入，判断意图并提取结构化参数。
 
 当前时间:{current_time}
 
-{tool_descriptions}
+## 工具与规则
 
-## 意图分类与参数提取
+### 日程提醒(add_reminder)
+用户想在某个时间被提醒做某事。信号词:叫我/喊我/提醒我/通知我/叫醒我。语音容错:"教我"可能是"叫我"。即使无关键词，语义是"在某个时间做某事"也视为提醒。
+- time_offset: 相对分钟数。X分钟后→X，半小时后→30，X小时后→X×60。无则为null
+- absolute_time: 时钟时间。根据当前时间推断(如"38叫我"→当前小时:38，"明天8点"→08:00)。无则为null
+- content: 去时间词和信号词后的核心内容(≤10字)，仅"叫我"时默认"提醒"
+- raw_text: 用户原始输入
 
-### 1. 日程提醒(add_reminder)
-当用户表达了"在某个时间需要被提醒做某事"的意图:
+### 日程修正(correct_reminder)
+用户纠正上次提醒:模式如"不是X是Y"/"改成Z"/"说错了应该是W"/"X不对Y才对"。提取Y/Z/W的值，忽略被否定的X。时间基于当前时间计算。
 
-**信号词(含语音识别容错):**
-- 明确:"叫我"、"喊我"、"提醒我"、"叫醒我"、"通知我"、"叫一下"、"到点提醒"
-- ⚠️ 容错:"教我"(语音识别常把"叫"误识别为"教",如"5分钟教我"实际是"5分钟叫我")
-- 容错:"叫我"前只有数字(如"38叫我")→ 数字是分钟数,在当前小时触发
+### 日程删除(delete_reminder)
+用户删除提醒:"删除/取消/去掉+描述"。提取核心描述为query(去噪声词:那个/的/定时/提醒/把)。
 
-**时间表达:**
-- 相对:"X分钟后"、"半小时后"、"X小时后"、"X分钟之后"
-- 绝对:"明天X点"、"下午X点"、"晚上X点"、"X点X分"、"X:XX"
-- 隐含:纯数字+信号词(如"26喊我"→当前小时:26)
+### 日程管理(manage)
+查看/添加/完成任务等日程管理操作。
 
-**提取规则:**
-- time_offset: 明确的相对分钟数.⚠️ "X分钟后"的X始终是分钟("5分钟后"→5, "两分钟后"→2, "1分钟后"→1), 不是小时!
-  只有明确说"X小时后"/"X个小时后"才按小时转分钟("2小时后"→120, "一小时后"→60).
-  "半小时后"→30.否则 null
-- absolute_time: 明确的时钟时间.根据当前时间推断小时(如当前14:30,用户说"38叫我"→"14:38";说"明天8点"→"08:00"),否则 null
-- content: 去掉时间词和信号词后的核心内容(≤10字),如"泡咖啡"、"喝水"、"起床".如果只有"叫我"没其他内容,content="提醒"
-  ⚠️ 纠正文本("不是X是Y"/"改成Z")中,content取Y/Z部分的内容,不要取被否定的X部分
-- raw_text: 用户原始输入全文
+### 财务
+记账/查账/报销关键词，或金额+元。
 
-**即使没有明确的"提醒/叫/喊"关键词,只要整体语义是"在某个时间做某事",也视为提醒.**
+### 聊天
+其他对话、闲聊、问答、确认词(是/不是/对/不对)。
 
-### 2. 修正意图(correct_reminder) ⭐ 新增
-当用户表达对上次提醒的纠正,包含以下模式:
-- "不是X,是Y"、"不是X是Y"(如"不是两分钟,是五分钟"、"不是两分钟是五分钟冥想")
-- "说错了,应该是Z"、"说错了应该是Z"
-- "改成W"、"换成W"、"应该是W"、"不对,是W"
-- "X不对,Y才对"、"X错了,Y"
+## 置信度
+0.9-1.0:信号词清晰+时间明确+内容完整。0.7-0.85:时间有但信号词模糊。0.5-0.65:有歧义或内容残缺。explanation:判断依据(≤30字)。
 
-此时提取**修正后的新参数**(被纠正的值,不是被否定的旧值):
-  "不是X是Y" → time_offset/content 取 Y 的值,忽略 X
-  "改成Z" / "应该是Z" → time_offset/content 取 Z 的值
-  action 设为 "correct_reminder".
-⚠️ 时间始终基于当前时间计算,不要基于旧提醒的时间累加.
+## 输出格式(只输出一个JSON对象，无其他内容)
 
-修正意图通常置信度较高(≥0.85),因为用户明确在纠错.
-
-### 3. 删除提醒(delete_reminder) ⭐ v3.2.0 新增
-当用户表达删除/取消某个提醒或待办的意图,且没有指定数字序号:
-- "把两个小时的那个定时删掉"、"删除泡咖啡那个提醒"
-- "取消明天的会议"、"去掉那个喝水的提醒"、"把X的那个定时删掉"
-- "删掉5分钟那个"、"把提醒删了"
-
-提取规则:
-- query: 用户对目标提醒的核心描述,去掉"删除"/"取消"/"那个"/"的"/"定时"/"提醒"/"把"/"给"等噪声词
-  例:"把两个小时的那个定时删掉" → query="两个小时"
-  例:"删除泡咖啡那个提醒" → query="泡咖啡"
-  action 设为 "delete_reminder".
-
-### 4. 日程管理(manage)
-"显示日程"、"查看日程"、"添加会议"、"添加任务"、"显示待办"、"完成任务"、"删除日程"等
-
-### 5. 财务
-"记账"、"查账"、"花了"、"报销"、"帮我记"、金额+元
-
-### 6. 聊天
-其他日常对话、闲聊、问答;以及"是"/"不是"/"对"/"不对"等确认词(这些留给主循环处理)
-
-## 置信度(confidence) 评估标准
-
-置信度反映你对解析结果的确定程度(0-1 的浮点数):
-
-- **0.9-1.0**:完全明确.信号词清晰、时间表达无歧义、内容完整.
-  例:"5分钟后叫我喝水" → 0.95(明确信号词+明确时间+明确内容)
-  例:"不是两分钟,是五分钟冥想" → 0.95(明确纠错意图)
-
-- **0.7-0.85**:基本确定.有时间表达但信号词模糊,或内容需要推断.
-  例:"26叫我" → 0.8(信号词明确但内容缺失,需推断为"提醒")
-  例:"半个小时后洗衣服" → 0.8(缺少"叫我/提醒"但语义完整)
-
-- **0.5-0.65**:不太确定.时间模糊、内容残缺、或存在歧义.
-  例:"5分钟教我我泡一杯咖啡" → 0.6("教"可能是"叫"的误识别,时间明确但存在歧义)
-  例:"38"(只有数字无上下文)→ 0.3
-
-- **explanation**:一句话说明判断依据(≤30字),如"明确包含'X分钟后叫我'信号词"、"'教'推断为'叫'的语音误识别"
-
-## 输出格式
-
-⚠️ 所有输出都包含 confidence 和 explanation 字段!
-
-提醒(高置信度):
-{{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟叫我泡咖啡"}},"confidence":0.95,"explanation":"明确的'X分钟后叫我'信号词"}}
-
-提醒(低置信度,含语音容错):
-{{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟教我我泡一杯咖啡"}},"confidence":0.55,"explanation":"'教'可能是'叫'的语音误识别"}}
-
-修正:
-{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户明确纠正时间:2→5分钟"}}
-
-删除提醒:
-{{"tool":"日程","action":"delete_reminder","params":{{"query":"两个小时"}},"confidence":0.9,"explanation":"用户要删除特定描述的提醒"}}
-
-日程管理:
-{{"tool":"日程","action":"manage","params":null,"confidence":0.9,"explanation":"日程管理指令"}}
-
-财务:
-{{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"明确的记账/查账关键词"}}
-
-聊天(确认回复——留给主循环处理):
-{{"tool":"聊天","action":"confirm_response","params":null,"confidence":1.0,"explanation":"用户对确认问题的回复"}}
-
-聊天(其他):
-{{"tool":"聊天","action":null,"params":null,"confidence":0.9,"explanation":"日常闲聊"}}
-
-无法确定意图:
-{{"tool":"聊天","action":"ask_clarify","message":"请问你想设置什么提醒?","confidence":0.3,"explanation":"无法从输入中提取有效意图"}}
-
-⚠️ 只返回一个JSON对象,不要任何解释、标点或换行.
+提醒:{{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟叫我泡咖啡"}},"confidence":0.95,"explanation":"明确的X分钟后叫我"}}
+修正:{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户纠正时间"}}
+删除:{{"tool":"日程","action":"delete_reminder","params":{{"query":"两个小时"}},"confidence":0.9,"explanation":"删除提醒"}}
+管理:{{"tool":"日程","action":"manage","params":null,"confidence":0.9,"explanation":"日程管理"}}
+财务:{{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"记账查账"}}
+聊天:{{"tool":"聊天","action":null,"params":null,"confidence":0.9,"explanation":"日常闲聊"}}
 
 用户输入:{user_input}
 JSON:"""
@@ -208,14 +129,9 @@ def _route_intent(user_input, timeout=8):
     """
     from datetime import datetime
 
-    desc_lines = []
-    for t in TOOLS:
-        desc_lines.append(f"- {t['name']}({t['desc']})示例:{t['signals']}")
-
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
     prompt = _ROUTE_PROMPT_V2.format(
         current_time=current_time,
-        tool_descriptions="\n".join(desc_lines),
         user_input=user_input,
     )
 
