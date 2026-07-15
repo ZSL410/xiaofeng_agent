@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.7.6"
+VERSION = "3.7.7"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
