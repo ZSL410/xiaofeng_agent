@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ===================== 配置 =====================
 BASE_DIR = os.path.dirname(__file__)
@@ -88,6 +88,72 @@ def process_command(text):
         return f"✅ 已记录:{new_record}"
     else:
         return "⚠️ 没听懂金额,请说清楚一点,比如'今天早上吃饭花了6元'"
+
+
+def delete_by_scope(scope, keyword=None):
+    """
+    按指定范围批量删除财务记录（v3.7.4 新增）。
+
+    参数:
+        scope: str — "all" | "last_week" | "today" | "latest" | "keyword"
+        keyword: str — 当 scope="keyword" 时,用作来源/类型匹配词
+
+    返回:
+        str — 操作结果消息
+    """
+    data = load_data()
+    now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")
+
+    if not data:
+        return "💰 没有财务记录可以删除"
+
+    if scope == "all":
+        count = len(data)
+        save_data([])
+        return f"✅ 已清空全部 {count} 条财务记录"
+
+    elif scope == "last_week":
+        cutoff = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+        kept = [r for r in data if (r.get("date", "") or "") < cutoff]
+        removed = len(data) - len(kept)
+        if removed == 0:
+            return "💰 最近一周没有财务记录"
+        save_data(kept)
+        return f"✅ 已删除最近一周 {removed} 条财务记录"
+
+    elif scope == "today":
+        kept = [r for r in data if (r.get("date", "") or "") != today_str]
+        removed = len(data) - len(kept)
+        if removed == 0:
+            return "💰 今天没有财务记录"
+        save_data(kept)
+        return f"✅ 已删除今天 {removed} 条财务记录"
+
+    elif scope == "latest":
+        # 最后一条记录（列表末尾）
+        removed = data.pop()
+        save_data(data)
+        return f"✅ 已删除最新财务记录: {removed.get('source','?')} {removed.get('amount',0)}元"
+
+    elif scope == "keyword":
+        if not keyword:
+            return "⚠️ 请提供要删除的财务记录关键词"
+        # 按来源匹配
+        matched = [r for r in data if keyword in (r.get("source", "") or "")]
+        if not matched:
+            # 也尝试匹配类型
+            matched = [r for r in data if keyword in (r.get("type", "") or "")]
+        if not matched:
+            return f"🔍 没有找到匹配「{keyword}」的财务记录"
+        for r in matched:
+            data.remove(r)
+        save_data(data)
+        items = [f"{r.get('source','?')} {r.get('amount',0)}元" for r in matched]
+        return f"✅ 已删除 {len(matched)} 条匹配的财务记录: {', '.join(items[:5])}"
+
+    else:
+        return f"⚠️ 未知的删除范围: {scope}"
 
 # ===================== 独立运行入口 =====================
 if __name__ == "__main__":

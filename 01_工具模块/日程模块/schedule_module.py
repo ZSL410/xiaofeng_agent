@@ -1086,6 +1086,116 @@ def delete_reminder_by_query(query):
         return "\n".join(lines)
 
 
+def delete_by_scope(scope, keyword=None):
+    """
+    按指定范围批量删除提醒和日程（v3.7.4 新增）。
+
+    参数:
+        scope: str — "all" | "last_week" | "today" | "latest" | "keyword"
+        keyword: str — 当 scope="keyword" 时,用作内容匹配词；未提供则回退到原始 query
+
+    返回:
+        str — 操作结果消息
+    """
+    todos = _load_todos()
+    events = _load_events()
+    now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")
+
+    if scope == "all":
+        # 删除所有未完成待办和所有日程事件
+        active_todos = [t for t in todos if not t.get("completed", False)]
+        count_t = len(active_todos)
+        count_e = len(events)
+        # 保留已完成的待办
+        completed = [t for t in todos if t.get("completed", False)]
+        _save_todos(completed)
+        _save_events([])
+        total = count_t + count_e
+        if total == 0:
+            return "📋 没有需要删除的数据"
+        parts = []
+        if count_t > 0:
+            parts.append(f"{count_t} 条待办")
+        if count_e > 0:
+            parts.append(f"{count_e} 条日程")
+        return f"✅ 已清空全部数据: {'、'.join(parts)}"
+
+    elif scope == "last_week":
+        # 删除最近 7 天内创建的未完成待办和日程
+        cutoff = (now - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S")
+        old_t = [t for t in todos if not t.get("completed", False)
+                 and (t.get("created_at", "") >= cutoff)]
+        old_e = [e for e in events if e.get("created_at", "") >= cutoff]
+        count_t = len(old_t)
+        count_e = len(old_e)
+        # 保留不在范围内的
+        kept_t = [t for t in todos if t not in old_t]
+        kept_e = [e for e in events if e not in old_e]
+        _save_todos(kept_t)
+        _save_events(kept_e)
+        total = count_t + count_e
+        if total == 0:
+            return "📋 最近一周没有需要删除的数据"
+        parts = []
+        if count_t > 0:
+            parts.append(f"{count_t} 条待办")
+        if count_e > 0:
+            parts.append(f"{count_e} 条日程")
+        return f"✅ 已删除最近一周数据: {'、'.join(parts)}"
+
+    elif scope == "today":
+        # 删除今天创建的未完成待办和日程
+        cutoff_start = today_str + "T00:00:00"
+        cutoff_end = today_str + "T23:59:59"
+        old_t = [t for t in todos if not t.get("completed", False)
+                 and cutoff_start <= (t.get("created_at", "") or "") <= cutoff_end]
+        old_e = [e for e in events if cutoff_start <= (e.get("created_at", "") or "") <= cutoff_end]
+        count_t = len(old_t)
+        count_e = len(old_e)
+        kept_t = [t for t in todos if t not in old_t]
+        kept_e = [e for e in events if e not in old_e]
+        _save_todos(kept_t)
+        _save_events(kept_e)
+        total = count_t + count_e
+        if total == 0:
+            return "📋 今天没有需要删除的数据"
+        parts = []
+        if count_t > 0:
+            parts.append(f"{count_t} 条待办")
+        if count_e > 0:
+            parts.append(f"{count_e} 条日程")
+        return f"✅ 已删除今天数据: {'、'.join(parts)}"
+
+    elif scope == "latest":
+        # 删除最新一条未完成待办（优先）或日程
+        active_todos = [t for t in todos if not t.get("completed", False)]
+        if active_todos:
+            latest = max(active_todos, key=lambda x: x.get("created_at", ""))
+            title = latest.get("title", "")
+            todos.remove(latest)
+            _save_todos(todos)
+            return f"✅ 已删除最新待办: {title}"
+        elif events:
+            latest = max(events, key=lambda x: x.get("created_at", ""))
+            title = latest.get("title", "")
+            events.remove(latest)
+            _save_events(events)
+            return f"✅ 已删除最新日程: {title}"
+        else:
+            return "📋 没有可删除的数据"
+
+    elif scope == "keyword":
+        # 按内容关键词删除: 用 keyword 作为查询文本，复用模糊删除逻辑
+        if keyword:
+            return delete_reminder_by_query(keyword)
+        else:
+            return "⚠️ 请提供要删除的内容关键词"
+
+    else:
+        return f"⚠️ 未知的删除范围: {scope}"
+
+
 def modify_last_reminder(new_params):
     """
     修改最近创建的提醒：删除旧的，从纠正文本中重新解析时间并以当前时间为基准创建新提醒。

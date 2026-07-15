@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.7.2"
+VERSION = "3.7.6"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -81,6 +81,15 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 当前时间:{current_time}
 
+## ⚠️ 优先级规则（必须遵守）
+
+1. **删除意图优先**: 当文字同时包含删除关键词(删除/删掉/去掉/清空/清除)和模块词(财务/日程/记忆)时，删除意图优先，不要路由到财务、日程管理或聊天。
+   例: "删除之前的财务数据" → ask_clarify(不是财务!)
+   例: "清空所有记账" → ask_clarify(不是财务!)
+   例: "删掉记忆" → ask_clarify(不是聊天!)
+
+2. **先判断是否为删除，再判断模块归属**: 是删除→判断目标是否明确→若无明确目标则 ask_clarify，target_type 和 message 根据下文规则动态生成。
+
 ## 工具与规则
 
 ### 日程提醒(add_reminder)
@@ -94,16 +103,50 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 用户纠正上次提醒:模式如"不是X是Y"/"改成Z"/"说错了应该是W"/"X不对Y才对"。提取Y/Z/W的值，忽略被否定的X。时间基于当前时间计算。
 
 ### 日程删除(delete_reminder)
-用户删除提醒:"删除/取消/去掉+描述"。提取核心描述为query(去噪声词:那个/的/定时/提醒/把)。
+用户删除日程提醒，必须有明确目标(如id编号、具体内容描述"泡咖啡"、或时间描述"两小时后的那个")。仅当目标可识别时返回此意图。
+- query: 提取核心描述为query(去噪声词:那个/的/定时/提醒/把/删掉/删除)
 
 ### 日程管理(manage)
-查看/添加/完成任务等日程管理操作。
+查看/添加/完成任务等日程管理操作。⚠️ 含"删除"关键词的文字不路由到此。
 
 ### 财务
-记账/查账/报销关键词，或金额+元。
+记账/查账/报销/花了，或金额+元。⚠️ 仅当文字中不含删除/清空关键词时才路由到此。
+
+### 澄清问询(ask_clarify)
+用户发出删除/清空指令但缺少明确目标（没有具体id、内容关键词或时间描述）。
+
+**target_type 推断规则（按优先级）:**
+- 含 "财务"/"记账"/"账单"/"消费"/"收入"/"支出" → "finance"
+- 含 "日程"/"提醒"/"待办"/"任务"/"事件" → "schedule"
+- 含 "记忆"/"记住"/"记忆数据" → "memory"
+- 仅含"数据"/"之前"/"全部"/"所有"，无模块词 → "unknown"
+
+**message 动态生成规则（根据 target_type 选择措辞）:**
+- finance: "你想删除全部财务记录，还是最近一周的？还是最新一条？"
+- schedule: "你想删除全部日程/待办，还是最近一周的？还是最新一条？"
+- memory: "你想删除全部记忆数据，还是最近一周的？还是最新一条？"
+- unknown: "你想删除哪种数据？是财务记录、日程待办、还是记忆数据？"
+  对于"清空所有"/"全部删了"等无类型表达也用此模板，把"删除"替换为"清空"。
+
+**典型示例:**
+- "删除财务数据" → ask_clarify(target_type="finance", message="你想删除全部财务记录，还是最近一周的？还是最新一条？")
+- "删除日程" → ask_clarify(target_type="schedule", message="你想删除全部日程/待办，还是最近一周的？还是最新一条？")
+- "删除记忆" → ask_clarify(target_type="memory", message="你想删除全部记忆数据，还是最近一周的？还是最新一条？")
+- "删除数据" → ask_clarify(target_type="unknown", message="你想删除哪种数据？是财务记录、日程待办、还是记忆数据？")
+- "清空所有" → ask_clarify(target_type="unknown", message="你想清空哪种数据？是财务记录、日程待办、还是记忆数据？")
+- "全部删了" → ask_clarify(target_type="unknown", message="你想删除哪种数据？是财务记录、日程待办、还是记忆数据？")
 
 ### 聊天
 其他对话、闲聊、问答、确认词(是/不是/对/不对)。
+
+## 关键判断规则
+
+删除类意图的决策链:
+1. 先检查: 文字是否含删除关键词(删除/删掉/去掉/清空/清除)?
+2. 是 → 判断目标是否明确(有具体id/内容/时间)?
+   - 明确 → delete_reminder(仅日程)
+   - 模糊 → ask_clarify，按上述规则动态推断 target_type 并生成对应 message
+3. 否 → 继续判断其他意图(财务/日程/聊天等)
 
 ## 置信度
 0.9-1.0:信号词清晰+时间明确+内容完整。0.7-0.85:时间有但信号词模糊。0.5-0.65:有歧义或内容残缺。explanation:判断依据(≤30字)。
@@ -112,9 +155,13 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 提醒:{{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟叫我泡咖啡"}},"confidence":0.95,"explanation":"明确的X分钟后叫我"}}
 修正:{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户纠正时间"}}
-删除:{{"tool":"日程","action":"delete_reminder","params":{{"query":"两个小时"}},"confidence":0.9,"explanation":"删除提醒"}}
+删除:{{"tool":"日程","action":"delete_reminder","params":{{"query":"泡咖啡"}},"confidence":0.9,"explanation":"删除提醒-有明确内容"}}
 管理:{{"tool":"日程","action":"manage","params":null,"confidence":0.9,"explanation":"日程管理"}}
 财务:{{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"记账查账"}}
+澄清-日程:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"schedule","message":"你想删除全部日程/待办，还是最近一周的？还是最新一条？"}},"confidence":0.95,"explanation":"模糊删除日程-需确认范围"}}
+澄清-财务:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"finance","message":"你想删除全部财务记录，还是最近一周的？还是最新一条？"}},"confidence":0.95,"explanation":"模糊删除财务-需确认范围"}}
+澄清-记忆:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"memory","message":"你想删除全部记忆数据，还是最近一周的？还是最新一条？"}},"confidence":0.95,"explanation":"模糊删除记忆-需确认范围"}}
+澄清-未知:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"unknown","message":"你想删除哪种数据？是财务记录、日程待办、还是记忆数据？"}},"confidence":0.95,"explanation":"无类型关键词-先确认数据类型"}}
 聊天:{{"tool":"聊天","action":null,"params":null,"confidence":0.9,"explanation":"日常闲聊"}}
 
 用户输入:{user_input}
@@ -165,13 +212,19 @@ def _route_intent(user_input, timeout=8):
             parsed = json.loads(result)
             if isinstance(parsed, dict):
                 tool = parsed.get("tool")
-                if tool in ("日程", "财务", "聊天"):
+                if tool in ("日程", "财务", "聊天", "ask_clarify"):
                     intent = {"tool": tool}
                     action = parsed.get("action")
                     if action:
                         intent["action"] = action
                     params = parsed.get("params")
-                    if action in ("add_reminder", "correct_reminder") and isinstance(params, dict):
+                    if tool == "ask_clarify":
+                        # ask_clarify: 提取 params(message, target_type)
+                        if isinstance(params, dict):
+                            params.setdefault("target_type", "schedule")
+                            params.setdefault("message", "请明确要删除的范围（全部/最近一周/今天/最新一条）")
+                            intent["params"] = params
+                    elif action in ("add_reminder", "correct_reminder") and isinstance(params, dict):
                         params.setdefault("time_offset", None)
                         params.setdefault("absolute_time", None)
                         params.setdefault("content", "")
@@ -199,7 +252,7 @@ def _route_intent(user_input, timeout=8):
             pass
 
         # 降级：正则提取
-        m = re.search(r'"tool"\s*:\s*"(日程|财务|聊天)"', result)
+        m = re.search(r'"tool"\s*:\s*"(日程|财务|聊天|ask_clarify)"', result)
         if m:
             tool = m.group(1)
             intent = {"tool": tool, "confidence": 0.4, "explanation": "JSON损坏-正则提取"}
@@ -210,7 +263,11 @@ def _route_intent(user_input, timeout=8):
             if params_m:
                 try:
                     params = json.loads(params_m.group(1))
-                    if intent.get("action") in ("add_reminder", "correct_reminder"):
+                    if tool == "ask_clarify":
+                        params.setdefault("target_type", "schedule")
+                        params.setdefault("message", "请明确要删除的范围（全部/最近一周/今天/最新一条）")
+                        intent["params"] = params
+                    elif intent.get("action") in ("add_reminder", "correct_reminder"):
                         params.setdefault("time_offset", None)
                         params.setdefault("absolute_time", None)
                         params.setdefault("content", "")
@@ -384,6 +441,57 @@ def _try_weekly_decay(long_term):
         print(f"⚠️ 规律衰减跳过: {e}")
 
 
+def _parse_delete_scope(text):
+    """
+    解析用户对删除范围澄清的回复，返回 (scope, target_type_override)。
+
+    scope 取值:
+        "cancel"  — 用户取消删除
+        "all"     — 删除全部
+        "last_week" — 删除最近一周
+        "today"   — 删除今天的
+        "latest"  — 删除最新一条
+        "keyword" — 按内容关键词删除
+
+    target_type_override:
+        "schedule" / "finance" / None — 用户在回复中指定的目标类型
+    """
+    text = text.strip()
+
+    target_type = None
+    if any(kw in text for kw in ["财务", "记账", "账单", "消费", "收入", "支出"]):
+        target_type = "finance"
+    elif any(kw in text for kw in ["日程", "提醒", "待办", "任务", "事件"]):
+        target_type = "schedule"
+    elif any(kw in text for kw in ["记忆", "记住", "记忆数据"]):
+        target_type = "memory"
+
+    # 取消
+    if text in ("算了", "取消", "不删了", "不用了", "不要了", "不删", "不了"):
+        return "cancel", target_type
+
+    # 全部
+    if any(kw in text for kw in ["全部", "所有", "一切", "都删", "全删", "清空", "全都"]):
+        return "all", target_type
+
+    # 最近一周
+    if any(kw in text for kw in ["最近一周", "这一周", "最近7天", "一周的", "这周", "上周",
+                                   "近一周", "一周内", "过去一周"]):
+        return "last_week", target_type
+
+    # 今天
+    if any(kw in text for kw in ["今天", "今日", "今天的", "今日的"]):
+        return "today", target_type
+
+    # 最新一条
+    if any(kw in text for kw in ["最新", "最后", "最近", "最新一条", "最后一条",
+                                   "最近那个", "最近一条", "最近那个", "最新的"]):
+        return "latest", target_type
+
+    # 默认：按内容关键词
+    return "keyword", target_type
+
+
 def main():
     print("=" * 50)
     print(f"🧠 晓风主体 · 模块化版 v{VERSION} 已启动")
@@ -426,6 +534,9 @@ def main():
 
     # ---- 确认状态机（v3.1.1）----
     _pending_confirmation = None  # 暂存低置信度意图，等待用户确认
+
+    # ---- 澄清状态机（v3.7.4）----
+    _pending_clarification = None  # 暂存模糊删除澄清请求，等待用户指定范围
 
     while True:
         user_input = input("\n你: ").strip()
@@ -509,6 +620,59 @@ def main():
             )
             print(report)
             speak("记忆状态已显示")
+            continue
+
+        # ============================================================
+        # 状态机：检查是否有待澄清的模糊删除（v3.7.4 / v3.7.6 两步增强）
+        # ============================================================
+        if _pending_clarification is not None:
+            pending = _pending_clarification
+            _pending_clarification = None
+
+            scope_text = user_input.strip()
+            scope, type_override = _parse_delete_scope(scope_text)
+
+            if scope == "cancel":
+                print("👌 好的，已取消删除操作。")
+                continue
+
+            target_type = type_override or pending.get("target_type", "schedule")
+            original_target = pending.get("target_type", "schedule")
+
+            # 两步澄清（v3.7.6）：上一轮是 unknown，用户本轮只指定了类型未指定范围
+            if original_target == "unknown" and scope == "keyword" and type_override:
+                type_messages = {
+                    "finance": "你想删除全部财务记录，还是最近一周的？还是最新一条？",
+                    "schedule": "你想删除全部日程/待办，还是最近一周的？还是最新一条？",
+                    "memory": "你想删除全部记忆数据，还是最近一周的？还是最新一条？",
+                }
+                message = type_messages.get(target_type,
+                    f"你想删除全部{target_type}数据，还是最近一周的？还是最新一条？")
+                print(f"🤔 {message}")
+                speak(message)
+                _pending_clarification = {
+                    "target_type": target_type,
+                    "message": message,
+                }
+                continue
+
+            # 正常执行删除
+            print(f"🔧 正在按「{scope}」范围删除{target_type}数据...")
+            if target_type == "finance":
+                if scope == "keyword":
+                    result = call_tool("财务", scope, scope_text, _func="delete_by_scope")
+                else:
+                    result = call_tool("财务", scope, _func="delete_by_scope")
+            elif target_type == "memory":
+                result = ("⚠️ 记忆数据删除暂不支持直接操作。"
+                          "你可以对我说「清理记忆」或「整理记忆」来管理记忆数据。")
+            else:
+                if scope == "keyword":
+                    result = call_tool("日程", scope, scope_text, _func="delete_by_scope")
+                else:
+                    result = call_tool("日程", scope, _func="delete_by_scope")
+            print(result)
+            speak(result)
             continue
 
         # ============================================================
@@ -606,7 +770,38 @@ def main():
                            "叫我", "教", "叫醒", "喊我", "通知", "闹钟", "分钟后"]
             CORRECTION_KW = ["不是", "说错了", "改成", "应该是", "不对", "换个"]
             DELETE_KW = ["删掉", "删", "删除", "取消", "去掉", "移除"]
-            if any(kw in user_input for kw in FINANCE_KW):
+            # 删除关键词优先（v3.7.5 / v3.7.6 增强）：在检查财务/日程之前先判断删除意图
+            if any(kw in user_input for kw in DELETE_KW):
+                # 推断目标类型 → 动态生成澄清消息
+                FINANCE_CTX_KW = ["财务", "记账", "账单", "消费", "收入", "记录", "支出"]
+                SCHEDULE_CTX_KW = ["日程", "提醒", "待办", "任务", "事件"]
+                MEMORY_CTX_KW = ["记忆", "记住"]
+                if any(kw in user_input for kw in FINANCE_CTX_KW):
+                    intent = {"tool": "ask_clarify", "action": "delete_scope",
+                              "params": {"target_type": "finance",
+                                         "message": "你想删除全部财务记录，还是最近一周的？还是最新一条？"},
+                              "confidence": 0.6, "explanation": "降级删除+财务→澄清"}
+                elif any(kw in user_input for kw in SCHEDULE_CTX_KW):
+                    intent = {"tool": "ask_clarify", "action": "delete_scope",
+                              "params": {"target_type": "schedule",
+                                         "message": "你想删除全部日程/待办，还是最近一周的？还是最新一条？"},
+                              "confidence": 0.6, "explanation": "降级删除+日程→澄清"}
+                elif any(kw in user_input for kw in MEMORY_CTX_KW):
+                    intent = {"tool": "ask_clarify", "action": "delete_scope",
+                              "params": {"target_type": "memory",
+                                         "message": "你想删除全部记忆数据，还是最近一周的？还是最新一条？"},
+                              "confidence": 0.6, "explanation": "降级删除+记忆→澄清"}
+                elif any(kw in user_input for kw in ["全部", "所有", "清空", "数据"]):
+                    # 无类型关键词 → 先确认类型
+                    intent = {"tool": "ask_clarify", "action": "delete_scope",
+                              "params": {"target_type": "unknown",
+                                         "message": "你想删除哪种数据？是财务记录、日程待办、还是记忆数据？"},
+                              "confidence": 0.6, "explanation": "降级删除无类型→先确认"}
+                else:
+                    intent = {"tool": "日程", "action": "delete_reminder",
+                              "params": {"query": user_input},
+                              "confidence": 0.6, "explanation": "降级删除关键词匹配"}
+            elif any(kw in user_input for kw in FINANCE_KW):
                 intent = {"tool": "财务", "confidence": 0.5,
                           "explanation": "降级关键词匹配"}
             elif any(kw in user_input for kw in CORRECTION_KW):
@@ -640,12 +835,31 @@ def main():
                 print(f"[路由] → LLM 判定: 删除提醒 "
                       f"(query={intent.get('params',{}).get('query','?')!r}, "
                       f"confidence={conf:.2f}, {expl})")
+            elif action == "delete_scope":
+                print(f"[路由] → LLM 判定: 澄清问询 "
+                      f"(target={intent.get('params',{}).get('target_type','?')}, "
+                      f"confidence={conf:.2f}, {expl})")
             else:
                 print(f"[路由] → LLM 判定: {intent['tool']} (confidence={conf:.2f})")
 
         tool = intent["tool"]
         action = intent.get("action")
         confidence = intent.get("confidence", 0.7)
+
+        # ============================================================
+        # ask_clarify 拦截: 模糊删除需要澄清范围（v3.7.4）
+        # ============================================================
+        if tool == "ask_clarify":
+            params = intent.get("params", {})
+            message = params.get("message", "请明确要删除的范围（全部/最近一周/今天/最新一条）")
+            target_type = params.get("target_type", "schedule")
+            print(f"🤔 {message}")
+            speak(message)
+            _pending_clarification = {
+                "target_type": target_type,
+                "message": message,
+            }
+            continue
 
         # ============================================================
         # 低置信度拦截（v3.1.1）：add_reminder 且 confidence < 0.6
