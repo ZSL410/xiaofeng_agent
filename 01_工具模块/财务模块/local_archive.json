@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "日常消费",
+    "date": "2026-07-22",
+    "category": "生活",
+    "time_ref": "今天",
+    "original_text": "今天瓷碗花了十元"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "饭",
+    "date": "2026-07-22",
+    "category": "餐饮",
+    "time_ref": "今天",
+    "original_text": "今天吃饭花十元"
+  }
+]

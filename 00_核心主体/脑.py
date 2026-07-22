@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.7.7"
+VERSION = "3.8.4"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +73,7 @@ TOOLS = [
     {
         "name": "财务",
         "desc": "记账、查账、财务管理",
-        "signals": "记账午餐30元、查账这个月、帮我记一下打车25块、花了多少钱、报销、花了",
+        "signals": "记账午餐30元、查账这个月、帮我记一下打车25块、花了多少钱、报销、花了、查看今天记录、统计这个月、最近吃饭花了多少",
     },
 ]
 
@@ -81,14 +81,51 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 当前时间:{current_time}
 
+## 🚨 删除关键词优先规则（最高优先级，v3.8.4，覆盖所有其他意图）
+
+**一旦用户输入中包含 "删除" / "删掉" / "清空" / "清除" / "去掉" 中的任意一个，该输入的意图必须判定为删除相关，不再判断财务/日程/聊天等其他意图。**
+
+即使同时出现 "财务" / "日程" / "记账" / "查看" / "花了" / "多少" 等其他模块关键词，删除关键词的优先级高于一切。
+
+判断逻辑（按顺序）:
+1. 先检查否定词：如果有"不/不是/不要/别"否定"删除" → 否定词规则生效（见下节），排除删除 → 走其他意图
+2. 无否定词 + 含删除关键词 → **直接进入删除流程**，跳过所有财务/日程判断
+3. 完全不含删除关键词 → 才进入后面的优先级规则
+
+**关键示例（必须严格遵守）**:
+- "删除今天的财务数据" → **删除意图**（含"删除"关键词！虽然有"财务"但删除优先。走 ask_clarify 确认删除范围）
+- "把今天这笔的金额删除" → **删除意图**（含"删除"！虽然有"金额"但不是记账。走删除流程）
+- "删除数据" → **删除意图**（含"删除"，走 ask_clarify 确认删除哪种数据）
+- "查看所有财务数据" → 财务查询（不含删除关键词，正常判断）
+- "今天吃饭花了十元" → 记账（不含删除关键词，正常判断）
+- "不要删除数据" → 否定词+删除 → 排除删除 → 其他意图
+
+## ⚠️ 否定词规则（v3.8.2）
+
+当用户句子中包含否定词时，这些词会**反转或取消**其后跟随的意图关键词。
+
+**否定词列表**: 不 / 没 / 别 / 不是 / 并非 / 不要 / 不用 / 无需 / 没有想 / 不想
+
+**处理流程**:
+1. 首先检查句子中是否有否定词
+2. 如果有否定词，标记被否定的意图关键词（否定词后面紧跟的动作词）
+3. 被否定的意图 → **排除该意图**，重新按其他规则判断
+
+**关键示例**:
+- "查看所有数据不是删除" → 包含"不是" + "删除" → **排除删除意图** → 判断为查询 → confidence 0.9+
+- "不要删除这条" → 包含"不要" + "删除" → **排除删除意图** → 判断为其他意图 → confidence 0.9+
+- "不是想删除，是想看看" → 包含"不是" + "删除" → **排除删除意图** → "看看" → 查询 → confidence 0.9+
+- "删除昨天的记录" → 无否定词 → 正常判断为删除
+
+**⚠️ 注意**: 否定词必须紧邻或修饰意图动词才生效。远距离否定（如"不是很好，删除吧"→"不是"修饰"好"，不修饰"删除"）视为无否定。
+
 ## ⚠️ 优先级规则（必须遵守）
 
-1. **删除意图优先**: 当文字同时包含删除关键词(删除/删掉/去掉/清空/清除)和模块词(财务/日程/记忆)时，删除意图优先，不要路由到财务、日程管理或聊天。
-   例: "删除之前的财务数据" → ask_clarify(不是财务!)
-   例: "清空所有记账" → ask_clarify(不是财务!)
-   例: "删掉记忆" → ask_clarify(不是聊天!)
+1. **🚨 删除关键词无条件优先（最高优先级）**: 见顶部"删除关键词优先规则"。含删除关键词 → 无条件走删除流程。**禁止**因为同时出现"财务"/"记账"/"查看"等词而路由到其他意图。
 
-2. **先判断是否为删除，再判断模块归属**: 是删除→判断目标是否明确→若无明确目标则 ask_clarify，target_type 和 message 根据下文规则动态生成。
+2. **否定词规则**: 先检查否定词 → 如果否定了"删除"则排除删除意图 → 再进入下面的判断。
+
+3. **先判断是否为删除，再判断模块归属**: 是删除→判断目标是否明确→若无明确目标则 ask_clarify，target_type 和 message 根据下文规则动态生成。
 
 ## 工具与规则
 
@@ -109,8 +146,41 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 ### 日程管理(manage)
 查看/添加/完成任务等日程管理操作。⚠️ 含"删除"关键词的文字不路由到此。
 
-### 财务
-记账/查账/报销/花了，或金额+元。⚠️ 仅当文字中不含删除/清空关键词时才路由到此。
+### 财务（⚠️ 删除意图优先：含"删除/清空"关键词先走删除流程，不路由到此）
+
+当意图判定为"财务"时，必须进一步区分 action。按以下规则逐条判断：
+
+**📌 查询意图 (action: "query")** — 用户在"看/问"，不是"记"
+
+触发词（任一命中即判定为查询）:
+"查看"、"查询"、"显示"、"列出"、"统计"、"看看"、"看一下"、"有没有"、"多少"、"花了多少"、"一共"、"最大"、"最贵"、"最少"、"列表"、"查一下"、"看一看"
+
+示例:
+- "查看所有财务数据" → action:"query"（命中"查看"）
+- "今天的支出是多少" → action:"query"（命中"多少"）
+- "看一下上个月的记录" → action:"query"（命中"看一下"）
+- "统计本月开销" → action:"query"（命中"统计"）
+- "最近花了多少钱" → action:"query"（命中"花了多少"）
+
+**📌 记账意图 (action: "record")** — 用户在"记"，有明确消费行为
+
+触发词（任一命中 + 含金额数字）才判定为 record:
+"花了"、"付了"、"消费"、"支出"、"买了"、"花费"、"用了"、"记账"
+
+⚠️ **必须包含金额数字**（阿拉伯数字或中文数字均可），无金额则**不是** record。
+
+示例:
+- "今天吃饭花了十元" → action:"record"（命中"花了"+含金额"十"）
+- "买了一瓶水三块钱" → action:"record"（命中"买了"+含金额"三"）
+- "午餐花了25" → action:"record"（命中"花了"+含金额"25"）
+
+**📌 默认行为（当以上两类触发词都不命中时）**:
+- 文本中有金额数字 → 默认视为 record
+- 文本中无金额、无触发词 → **走 ask_clarify**，不要默认 record！
+
+常见误判纠正:
+- "查看所有财务数据" → query（不是 record！"查看"是查询词）
+- "删除昨天的记录" → ask_clarify 删除流程（不是财务！删除优先）
 
 ### 澄清问询(ask_clarify)
 用户发出删除/清空指令但缺少明确目标（没有具体id、内容关键词或时间描述）。
@@ -141,12 +211,17 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 ## 关键判断规则
 
-删除类意图的决策链:
-1. 先检查: 文字是否含删除关键词(删除/删掉/去掉/清空/清除)?
-2. 是 → 判断目标是否明确(有具体id/内容/时间)?
-   - 明确 → delete_reminder(仅日程)
-   - 模糊 → ask_clarify，按上述规则动态推断 target_type 并生成对应 message
-3. 否 → 继续判断其他意图(财务/日程/聊天等)
+意图决策链（按顺序执行，不可跳跃）:
+1. **🚨 先检查删除关键词**: 文字中是否含"删除/删掉/清空/清除/去掉"?
+   - 是 + 无否定词否定删除 → **无条件走删除流程**。即使含"财务"/"查看"/"记账"也不动摇。判断目标是否明确 → ask_clarify 或 delete_reminder。**禁止路由到财务！**
+   - 是 + 有否定词否定删除 → 排除删除意图 → 继续步骤2
+   - 否 → 继续步骤2
+2. **再检查其他否定词**: 有无否定词否定其他意图?
+   - 是 → 排除被否定意图 → **confidence 0.9+**
+3. **判断财务/日程/聊天**: 不含删除时，才进入模块判断
+   - 财务 → 按"财务意图细分规则"区分 action（query / record / ask_clarify）
+   - 日程 → 按对应规则处理
+   - 其他 → 聊天
 
 ## 置信度
 0.9-1.0:信号词清晰+时间明确+内容完整。0.7-0.85:时间有但信号词模糊。0.5-0.65:有歧义或内容残缺。explanation:判断依据(≤30字)。
@@ -157,7 +232,9 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 修正:{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户纠正时间"}}
 删除:{{"tool":"日程","action":"delete_reminder","params":{{"query":"泡咖啡"}},"confidence":0.9,"explanation":"删除提醒-有明确内容"}}
 管理:{{"tool":"日程","action":"manage","params":null,"confidence":0.9,"explanation":"日程管理"}}
-财务:{{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"记账查账"}}
+财务记录:{{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"花了XX元-记账"}}
+财务查询:{{"tool":"财务","action":"query","params":null,"confidence":0.9,"explanation":"查看/查询/统计"}}
+财务无金额:{{"tool":"ask_clarify","action":null,"params":null,"confidence":0.6,"explanation":"财务意图但无金额无查询词"}}
 澄清-日程:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"schedule","message":"你想删除全部日程/待办，还是最近一周的？还是最新一条？"}},"confidence":0.95,"explanation":"模糊删除日程-需确认范围"}}
 澄清-财务:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"finance","message":"你想删除全部财务记录，还是最近一周的？还是最新一条？"}},"confidence":0.95,"explanation":"模糊删除财务-需确认范围"}}
 澄清-记忆:{{"tool":"ask_clarify","action":"delete_scope","params":{{"target_type":"memory","message":"你想删除全部记忆数据，还是最近一周的？还是最新一条？"}},"confidence":0.95,"explanation":"模糊删除记忆-需确认范围"}}
@@ -331,6 +408,47 @@ def _describe_reminder(params):
         return f"{' '.join(parts)}后提醒「{content}」"
     else:
         return f"{' '.join(parts)}后提醒"
+
+
+def _generate_tool_reply(result, prefix="好的"):
+    """
+    根据工具模块返回的结构化结果，生成面向用户的自然语言回复（v3.8.0 新增）。
+
+    架构定位：这是回复层的集中入口。各工具模块只返回结构化数据，
+    不负责拼装用户可见的字符串。所有模块共享同一套回复模板，
+    后续可升级为 LLM 驱动而无需修改各个工具模块。
+
+    参数:
+        result: dict — 工具模块返回的结构化结果
+            {"status": "success"/"error", "type": "...", "data": {...}, "summary": "..."}
+            或 {"status": "error", "message": "..."}
+        prefix: str — 成功回复的前缀词，按场景可传入"好的"/"明白了"等
+
+    返回:
+        str — 面向用户的自然语言回复
+    """
+    if not isinstance(result, dict):
+        # 兼容旧版字符串返回值（其他模块尚未迁移到结构化返回）
+        return str(result)
+
+    if result.get("status") == "error":
+        return result.get("message", "处理失败，请重试")
+
+    # 成功：根据类型生成自然语言回复
+    rtype = result.get("type", "")
+    summary = result.get("summary", "")
+
+    if rtype == "delete":
+        return f"{prefix}，已{summary}"
+    elif rtype == "query":
+        # 查询结果摘要已包含完整描述，直接返回
+        return summary
+    elif rtype in ("expense", "income"):
+        # summary 格式如 "记录今天饭10元"，直接拼接前缀即可
+        return f"{prefix}，已{summary}"
+    else:
+        # 兜底：直接用 summary
+        return f"{prefix}，已{summary}" if summary else f"{prefix}，操作完成"
 
 
 def chat_with_xiaofeng(user_input, history):
@@ -672,7 +790,9 @@ def main():
                 else:
                     result = call_tool("日程", scope, _func="delete_by_scope")
             print(result)
-            speak(result)
+            # v3.8.0: 使用集中回复层包装，兼容旧版字符串和新版结构化返回
+            reply = _generate_tool_reply(result, prefix="明白了")
+            speak(reply)
             continue
 
         # ============================================================
@@ -802,7 +922,13 @@ def main():
                               "params": {"query": user_input},
                               "confidence": 0.6, "explanation": "降级删除关键词匹配"}
             elif any(kw in user_input for kw in FINANCE_KW):
-                intent = {"tool": "财务", "confidence": 0.5,
+                # v3.8.1: 区分记录和查询意图
+                QUERY_KW = ["查看", "查一下", "查", "显示", "统计", "花了多少",
+                            "一共", "列表", "最大", "有没有", "多少"]
+                is_query = any(kw in user_input for kw in QUERY_KW)
+                intent = {"tool": "财务",
+                          "action": "query" if is_query else None,
+                          "confidence": 0.5,
                           "explanation": "降级关键词匹配"}
             elif any(kw in user_input for kw in CORRECTION_KW):
                 # 修正关键词 → 尝试作为修正意图
@@ -878,10 +1004,17 @@ def main():
         # 正常执行
         # ============================================================
         if tool == "财务":
-            print("🔧 正在处理财务指令...")
-            result = call_tool("财务", user_input)
-            print(result)
-            speak(result)
+            if action == "query":
+                print("🔧 正在查询财务记录...")
+                query_params = intent.get("params")
+                result = call_tool("财务", user_input, query_params,
+                                   _func="query_finance")
+            else:
+                print("🔧 正在处理财务指令...")
+                result = call_tool("财务", user_input)
+            reply = _generate_tool_reply(result)
+            print(reply)
+            speak(reply)
 
         elif tool == "日程":
             if action == "add_reminder" and intent.get("params"):
