@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.8.4"
+VERSION = "3.8.7"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -63,69 +63,34 @@ def _ollama_chat(messages, model=None):
 
 # ===================== LLM 意图路由 =====================
 
-# 工具注册表：LLM 据此判断用户意图
-TOOLS = [
-    {
-        "name": "日程",
-        "desc": "日程事件、待办事项、定时提醒",
-        "signals": "26叫我、38喊我、半个小时洗衣服、提醒我5分钟后喝水、明天8点叫醒我、添加会议明天3点、显示待办、完成任务1、一小时后提醒我开会",
-    },
-    {
-        "name": "财务",
-        "desc": "记账、查账、财务管理",
-        "signals": "记账午餐30元、查账这个月、帮我记一下打车25块、花了多少钱、报销、花了、查看今天记录、统计这个月、最近吃饭花了多少",
-    },
-]
-
 _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入，判断意图并提取结构化参数。
 
 当前时间:{current_time}
 
-## 🚨 删除关键词优先规则（最高优先级，v3.8.4，覆盖所有其他意图）
+## 🚨 删除关键词优先规则（最高优先级）
 
-**一旦用户输入中包含 "删除" / "删掉" / "清空" / "清除" / "去掉" 中的任意一个，该输入的意图必须判定为删除相关，不再判断财务/日程/聊天等其他意图。**
+一旦用户输入中包含 "删除"/"删掉"/"清空"/"清除"/"去掉" 中的任意一个，**必须判定为删除意图**，不再判断财务/日程/聊天等其他意图。即使同时出现 "财务"/"记账"/"查看"/"花了" 等词，删除优先。
 
-即使同时出现 "财务" / "日程" / "记账" / "查看" / "花了" / "多少" 等其他模块关键词，删除关键词的优先级高于一切。
+例外：当否定词（不/不是/不要/别/并非/无需）修饰"删除"时，排除删除意图，重新判断。
+- "删除今天的财务数据" → 删除意图（有"删除"，虽然有"财务"）
+- "把今天这笔的金额删除" → 删除意图（有"删除"，虽然有"金额"）
+- "不要删除数据" → 否定词修饰"删除" → 排除删除 → 重新判断
+- "查看所有财务数据" → 无"删除" → 正常判断
 
-判断逻辑（按顺序）:
-1. 先检查否定词：如果有"不/不是/不要/别"否定"删除" → 否定词规则生效（见下节），排除删除 → 走其他意图
-2. 无否定词 + 含删除关键词 → **直接进入删除流程**，跳过所有财务/日程判断
-3. 完全不含删除关键词 → 才进入后面的优先级规则
+## ⚠️ 否定词规则
 
-**关键示例（必须严格遵守）**:
-- "删除今天的财务数据" → **删除意图**（含"删除"关键词！虽然有"财务"但删除优先。走 ask_clarify 确认删除范围）
-- "把今天这笔的金额删除" → **删除意图**（含"删除"！虽然有"金额"但不是记账。走删除流程）
-- "删除数据" → **删除意图**（含"删除"，走 ask_clarify 确认删除哪种数据）
-- "查看所有财务数据" → 财务查询（不含删除关键词，正常判断）
-- "今天吃饭花了十元" → 记账（不含删除关键词，正常判断）
-- "不要删除数据" → 否定词+删除 → 排除删除 → 其他意图
+否定词列表: 不 / 没 / 别 / 不是 / 并非 / 不要 / 不用 / 无需 / 没有想 / 不想
 
-## ⚠️ 否定词规则（v3.8.2）
+否定词会反转或取消其修饰的意图关键词，被否定的意图 → 排除该意图 → 按其他规则重新判断。否定词必须紧邻或修饰意图动词才生效（如"不是很好，删除吧"→"不是"修饰"好"，不修饰"删除"，仍为删除意图）。
 
-当用户句子中包含否定词时，这些词会**反转或取消**其后跟随的意图关键词。
+- "查看数据不是删除" → "不是"+删除 → 排除删除 → 判断为查询
+- "不是想删除，是想看看" → "不是"+删除 → 排除删除 → "看看" → 查询
 
-**否定词列表**: 不 / 没 / 别 / 不是 / 并非 / 不要 / 不用 / 无需 / 没有想 / 不想
+## 优先级规则
 
-**处理流程**:
-1. 首先检查句子中是否有否定词
-2. 如果有否定词，标记被否定的意图关键词（否定词后面紧跟的动作词）
-3. 被否定的意图 → **排除该意图**，重新按其他规则判断
-
-**关键示例**:
-- "查看所有数据不是删除" → 包含"不是" + "删除" → **排除删除意图** → 判断为查询 → confidence 0.9+
-- "不要删除这条" → 包含"不要" + "删除" → **排除删除意图** → 判断为其他意图 → confidence 0.9+
-- "不是想删除，是想看看" → 包含"不是" + "删除" → **排除删除意图** → "看看" → 查询 → confidence 0.9+
-- "删除昨天的记录" → 无否定词 → 正常判断为删除
-
-**⚠️ 注意**: 否定词必须紧邻或修饰意图动词才生效。远距离否定（如"不是很好，删除吧"→"不是"修饰"好"，不修饰"删除"）视为无否定。
-
-## ⚠️ 优先级规则（必须遵守）
-
-1. **🚨 删除关键词无条件优先（最高优先级）**: 见顶部"删除关键词优先规则"。含删除关键词 → 无条件走删除流程。**禁止**因为同时出现"财务"/"记账"/"查看"等词而路由到其他意图。
-
-2. **否定词规则**: 先检查否定词 → 如果否定了"删除"则排除删除意图 → 再进入下面的判断。
-
-3. **先判断是否为删除，再判断模块归属**: 是删除→判断目标是否明确→若无明确目标则 ask_clarify，target_type 和 message 根据下文规则动态生成。
+1. 先应用🚨删除规则（见顶部）
+2. 再应用否定词规则（见上节）
+3. 剩余 → 进入模块判断（财务/日程/聊天），按各自细分规则区分 action
 
 ## 工具与规则
 
@@ -144,43 +109,22 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 - query: 提取核心描述为query(去噪声词:那个/的/定时/提醒/把/删掉/删除)
 
 ### 日程管理(manage)
-查看/添加/完成任务等日程管理操作。⚠️ 含"删除"关键词的文字不路由到此。
+查看/添加/完成任务等日程管理操作。含"删除"关键词的文字不路由到此。
 
-### 财务（⚠️ 删除意图优先：含"删除/清空"关键词先走删除流程，不路由到此）
+### 财务
 
-当意图判定为"财务"时，必须进一步区分 action。按以下规则逐条判断：
+当意图判定为"财务"时，按以下规则区分 action：
 
-**📌 查询意图 (action: "query")** — 用户在"看/问"，不是"记"
-
-触发词（任一命中即判定为查询）:
+**查询 (action: "query")** — 触发词（任一命中即判定为查询）:
 "查看"、"查询"、"显示"、"列出"、"统计"、"看看"、"看一下"、"有没有"、"多少"、"花了多少"、"一共"、"最大"、"最贵"、"最少"、"列表"、"查一下"、"看一看"
+例: "查看所有财务数据"、"统计本月开销"、"最近花了多少钱"
 
-示例:
-- "查看所有财务数据" → action:"query"（命中"查看"）
-- "今天的支出是多少" → action:"query"（命中"多少"）
-- "看一下上个月的记录" → action:"query"（命中"看一下"）
-- "统计本月开销" → action:"query"（命中"统计"）
-- "最近花了多少钱" → action:"query"（命中"花了多少"）
-
-**📌 记账意图 (action: "record")** — 用户在"记"，有明确消费行为
-
-触发词（任一命中 + 含金额数字）才判定为 record:
+**记账 (action: "record")** — 触发词 + 含金额数字:
 "花了"、"付了"、"消费"、"支出"、"买了"、"花费"、"用了"、"记账"
+⚠️ 必须包含金额数字（阿拉伯或中文），无金额则不是 record。
+例: "今天吃饭花了十元"、"午餐花了25"
 
-⚠️ **必须包含金额数字**（阿拉伯数字或中文数字均可），无金额则**不是** record。
-
-示例:
-- "今天吃饭花了十元" → action:"record"（命中"花了"+含金额"十"）
-- "买了一瓶水三块钱" → action:"record"（命中"买了"+含金额"三"）
-- "午餐花了25" → action:"record"（命中"花了"+含金额"25"）
-
-**📌 默认行为（当以上两类触发词都不命中时）**:
-- 文本中有金额数字 → 默认视为 record
-- 文本中无金额、无触发词 → **走 ask_clarify**，不要默认 record！
-
-常见误判纠正:
-- "查看所有财务数据" → query（不是 record！"查看"是查询词）
-- "删除昨天的记录" → ask_clarify 删除流程（不是财务！删除优先）
+**默认**: 有金额→record，无金额且无查询触发词→ask_clarify
 
 ### 澄清问询(ask_clarify)
 用户发出删除/清空指令但缺少明确目标（没有具体id、内容关键词或时间描述）。
@@ -211,17 +155,10 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 ## 关键判断规则
 
-意图决策链（按顺序执行，不可跳跃）:
-1. **🚨 先检查删除关键词**: 文字中是否含"删除/删掉/清空/清除/去掉"?
-   - 是 + 无否定词否定删除 → **无条件走删除流程**。即使含"财务"/"查看"/"记账"也不动摇。判断目标是否明确 → ask_clarify 或 delete_reminder。**禁止路由到财务！**
-   - 是 + 有否定词否定删除 → 排除删除意图 → 继续步骤2
-   - 否 → 继续步骤2
-2. **再检查其他否定词**: 有无否定词否定其他意图?
-   - 是 → 排除被否定意图 → **confidence 0.9+**
-3. **判断财务/日程/聊天**: 不含删除时，才进入模块判断
-   - 财务 → 按"财务意图细分规则"区分 action（query / record / ask_clarify）
-   - 日程 → 按对应规则处理
-   - 其他 → 聊天
+决策链（按顺序，不可跳跃）:
+1. 🚨 含删除关键词 → 删除流程（ask_clarify 或 delete_reminder），否定词修饰"删除"时例外
+2. 含其他否定词 → 排除被否定意图 → 重判
+3. 剩余 → 财务(query/record细分) / 日程 / 聊天
 
 ## 置信度
 0.9-1.0:信号词清晰+时间明确+内容完整。0.7-0.85:时间有但信号词模糊。0.5-0.65:有歧义或内容残缺。explanation:判断依据(≤30字)。
@@ -268,9 +205,10 @@ def _route_intent(user_input, timeout=8):
             "options": {"num_predict": 256, "temperature": 0},
         }, ensure_ascii=False).encode("utf-8")
 
+        host = OLLAMA_HOST if OLLAMA_HOST else "http://127.0.0.1:11434"
+        url = f"{host.rstrip('/')}/api/generate"
         req = urllib.request.Request(
-            "http://127.0.0.1:11434/api/generate",
-            data=body,
+            url, data=body,
             headers={"Content-Type": "application/json"},
         )
 
@@ -296,11 +234,12 @@ def _route_intent(user_input, timeout=8):
                         intent["action"] = action
                     params = parsed.get("params")
                     if tool == "ask_clarify":
-                        # ask_clarify: 提取 params(message, target_type)
-                        if isinstance(params, dict):
-                            params.setdefault("target_type", "schedule")
-                            params.setdefault("message", "请明确要删除的范围（全部/最近一周/今天/最新一条）")
-                            intent["params"] = params
+                        # ask_clarify: 确保 params 存在并设置默认值
+                        if not isinstance(params, dict):
+                            params = {}
+                        params.setdefault("target_type", "schedule")
+                        params.setdefault("message", "请明确要删除的范围（全部/最近一周/今天/最新一条）")
+                        intent["params"] = params
                     elif action in ("add_reminder", "correct_reminder") and isinstance(params, dict):
                         params.setdefault("time_offset", None)
                         params.setdefault("absolute_time", None)
@@ -322,8 +261,6 @@ def _route_intent(user_input, timeout=8):
                         intent["confidence"] = 0.7
                     explanation = parsed.get("explanation", "")
                     intent["explanation"] = str(explanation) if explanation else ""
-                    if action == "ask_clarify" and parsed.get("message"):
-                        intent["message"] = parsed["message"]
                     return intent
         except json.JSONDecodeError:
             pass
@@ -524,39 +461,6 @@ def _try_memory_scheduler():
                   + (f" ({stats['archived_patterns']} 条已归档)" if stats['archived_patterns'] > 0 else ""))
     except Exception as e:
         print(f"⚠️ 记忆调度跳过: {e}")
-
-
-def _try_weekly_decay(long_term):
-    """
-    每周规律衰减检查（v3.5.0 新增）。
-
-    检查 长期记忆.json 中的 last_decay 字段:
-    - 距上次衰减 < 7 天 → 跳过
-    - 从未衰减或 ≥ 7 天 → 执行 decay_patterns()
-    """
-    from datetime import date
-
-    last_decay = long_term.get("last_decay", "") if isinstance(long_term, dict) else ""
-    today_str = date.today().isoformat()
-
-    if last_decay:
-        try:
-            last_date = date.fromisoformat(last_decay)
-            if (date.today() - last_date).days < 7:
-                return  # 本周已衰减，跳过
-        except (ValueError, TypeError):
-            pass  # 日期格式异常，执行衰减
-
-    try:
-        result = decay_patterns()
-        removed = result.get("removed", 0)
-        decayed = result.get("decayed", 0)
-        kept = result.get("kept", 0)
-        if removed > 0 or decayed > 0:
-            print(f"🧠 规律衰减完成: {decayed} 条置信度降低, "
-                  f"{removed} 条已遗忘, 保留 {kept} 条")
-    except Exception as e:
-        print(f"⚠️ 规律衰减跳过: {e}")
 
 
 def _parse_delete_scope(text):
@@ -935,11 +839,6 @@ def main():
                 intent = {"tool": "日程", "action": "correct_reminder",
                           "params": {"raw_text": user_input},
                           "confidence": 0.5, "explanation": "降级修正关键词匹配"}
-            elif any(kw in user_input for kw in DELETE_KW):
-                # 删除关键词 → 模糊删除
-                intent = {"tool": "日程", "action": "delete_reminder",
-                          "params": {"query": user_input},
-                          "confidence": 0.6, "explanation": "降级删除关键词匹配"}
             elif any(kw in user_input for kw in SCHEDULE_KW):
                 intent = {"tool": "日程", "confidence": 0.5,
                           "explanation": "降级关键词匹配"}
@@ -988,17 +887,26 @@ def main():
             continue
 
         # ============================================================
-        # 低置信度拦截（v3.1.1）：add_reminder 且 confidence < 0.6
+        # 低置信度拦截（v3.1.1，v3.8.7 扩展到财务/删除）
         # ============================================================
-        if (tool == "日程" and action == "add_reminder"
-                and intent.get("params") and confidence < 0.6):
-            desc = _describe_reminder(intent["params"])
-            print(f'🤔 你是想说「{desc}」吗？(回复"是"或"不是")')
-            _pending_confirmation = {
-                "intent": intent,
-                "raw_input": user_input,
-            }
-            continue
+        if confidence < 0.6:
+            if tool == "日程" and action == "add_reminder" and intent.get("params"):
+                desc = _describe_reminder(intent["params"])
+                print(f'🤔 你是想说「{desc}」吗？(回复"是"或"不是")')
+                _pending_confirmation = {
+                    "intent": intent,
+                    "raw_input": user_input,
+                }
+                continue
+            if tool == "财务":
+                print("🤔 不太确定你的意思，请再说清楚一点"
+                      "（比如'今天吃饭花了20元'或'查看今天的记录'）")
+                speak("不太确定你的意思，请再说清楚一点")
+                continue
+            if tool == "日程" and action in ("delete_reminder", "manage"):
+                print("🤔 不太确定你的意思，请再说清楚一点")
+                speak("不太确定你的意思，请再说清楚一点")
+                continue
 
         # ============================================================
         # 正常执行
