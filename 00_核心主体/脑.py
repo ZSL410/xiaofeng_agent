@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.2"
+VERSION = "3.9.5"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -186,7 +186,7 @@ JSON:"""
 _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断意图并提取参数。只输出JSON，不输出任何解释。
 
 当前时间:{current_time}
-
+{context_section}
 ## 输出格式
 {{"intent":"record|query|delete|remind|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null"}},"confidence":0.0~1.0}}
 
@@ -202,10 +202,11 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 ### query（查询）
 - 查看数据，不修改
-- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共
-- 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week）
+- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共、看
+- 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week，"本月/这个月"→this_month）
 - amount必须为null（查询场景不提取金额）
 - target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/叫我→schedule，记忆/记住→memory
+- ⚠️ 上下文延续规则：如果当前输入省略了主题词（如只说"看这个月的"、"那本周呢"），有上下文时沿用上一轮的target和意图
 - 当target=schedule时，根据输入填充scope或time（如"今天的待办"→scope:"today"，"本周任务"→time:"this_week"）
 
 ### delete（删除）
@@ -267,6 +268,15 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 输入：显示今天的待办
 输出：{{"intent":"query","target":"schedule","params":{{"amount":null,"time":"today","source":null,"scope":"today","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入（上一轮在看日程）：看这个月的
+输出：{{"intent":"query","target":"schedule","params":{{"amount":null,"time":"this_month","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
+
+输入（上一轮在看日程）：那上周呢
+输出：{{"intent":"query","target":"schedule","params":{{"amount":null,"time":"last_week","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
+
+输入（上一轮在查财务）：那本周呢
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_week","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
 
 输入：你好
 输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
@@ -448,18 +458,31 @@ def _call_ollama_3b(prompt, timeout=3):
         return None
 
 
-def _route_with_3b(user_input):
+def _route_with_3b(user_input, context=None):
     """
-    使用 qwen2.5:3b + _ROUTE_PROMPT_3B 进行意图路由（v3.9.0）。
+    使用 qwen2.5:3b + _ROUTE_PROMPT_3B 进行意图路由（v3.9.5: +上下文）。
     成功返回 {"intent", "target", "params", "confidence"}，失败返回 None。
-    区别于 _route_intent（7b→3b→关键词链），本函数只使用 3b + 紧凑 prompt，
-    目标是快速（<3s）完成语义路由。
+
+    参数:
+        user_input: str — 当前用户输入
+        context: str | None — 上一轮用户输入，用于推断省略的主题词
     """
     from datetime import datetime
+
+    # v3.9.5: 构建上下文段落，帮助 3b 在输入不完整时延续上一轮主题
+    context_section = ""
+    if context:
+        context_section = (
+            f'## 上下文信息\n'
+            f'上一轮用户输入: "{context}"\n'
+            f'如果当前输入缺少明确的主题词（如只说"看这个月的"、"那本周呢"、"再往前一周"），'
+            f'应沿用上一轮的模块主题（日程/财务/记忆），时间词如有变化则更新。\n'
+        )
 
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
     prompt = _ROUTE_PROMPT_3B.format(
         current_time=current_time,
+        context_section=context_section,
         user_input=user_input,
     )
 
@@ -1010,7 +1033,14 @@ def main():
             speak(reply)
             continue
 
-        result_3b = _route_with_3b(user_input)
+        # v3.9.5: 提取上一轮用户输入作为上下文，帮助 3b 推断省略的主题词
+        last_user_context = None
+        for turn in reversed(short_term):
+            if turn.get("role") == "user":
+                last_user_context = turn.get("content", "")
+                break
+
+        result_3b = _route_with_3b(user_input, context=last_user_context)
         if result_3b is not None and result_3b.get("confidence", 0) >= 0.6:
             intent_3b = result_3b["intent"]
             target_3b = result_3b.get("target")
@@ -1034,16 +1064,16 @@ def main():
             elif intent_3b == "query":
                 if target_3b == "finance":
                     print("🔧 正在查询财务记录（3b路由）...")
-                    result = call_tool("财务", params_3b, _func="query_finance")
+                    # v3.9.3: 同时传入原始输入和结构化参数，让 query_finance 走 Mode B
+                    result = call_tool("财务", user_input, params_3b, _func="query_finance")
                 elif target_3b == "schedule":
                     print("🔧 正在查询日程（3b路由）...")
-                    # schedule_module 无独立 query_schedule；
-                    # process_command 已内置 NLU 列表/查看逻辑
-                    result = call_tool("日程", user_input)
+                    # v3.9.4: 使用 query_schedule 支持结构化时间/范围参数
+                    result = call_tool("日程", user_input, params_3b, _func="query_schedule")
                 else:
                     # target 不明确时默认查财务
                     print("🔧 正在查询财务记录（3b路由，默认finance）...")
-                    result = call_tool("财务", params_3b, _func="query_finance")
+                    result = call_tool("财务", user_input, params_3b, _func="query_finance")
 
                 reply = _generate_tool_reply(result)
                 print(reply)

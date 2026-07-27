@@ -462,6 +462,20 @@ def _execute_query(params):
     else:
         date_range = ""
 
+    # v3.9.3: 映射 3b router 的 "time" 字段到 date_range
+    # 当 date_range 未设置时，从 3b 路由的 time 字段推断
+    if not date_range:
+        time_field = params.get("time", "")
+        if time_field and isinstance(time_field, str):
+            TIME_TO_RANGE = {
+                "today": "today",
+                "yesterday": "yesterday",
+                "this_week": "this_week",
+                "this_month": "this_month",
+                "last_week": "last_week",
+            }
+            date_range = TIME_TO_RANGE.get(time_field.strip().lower(), "")
+
     date_start = None
     label_date = ""
 
@@ -616,9 +630,17 @@ def query_finance(query_text, params=None):
     if not query_text:
         return {"status": "error", "message": "请提供查询条件"}
 
-    # Mode B: 有结构化参数
+    # Mode B: 有结构化参数（v3.9.3: 仅当参数含非空字段时才走结构化路径，
+    # 避免 3b router 返回全 null params 时跳过 LLM 解析导致遗漏默认逻辑）
     if params and isinstance(params, dict) and params:
-        query_params = params
+        has_meaningful = any(
+            v for v in params.values()
+            if v is not None and v != ""
+        )
+        if has_meaningful:
+            query_params = params
+        else:
+            query_params = _parse_query_nl(query_text)
     else:
         # Mode C: LLM 解析自然语言查询
         query_params = _parse_query_nl(query_text)

@@ -963,6 +963,141 @@ def process_command(text):
 # ===================== 最近提醒操作（修正机制用） =====================
 
 
+def query_schedule(user_input, params=None):
+    """
+    查询日程/待办（v3.9.4 新增）。
+    支持来自 3b router 的结构化参数和自然语言兜底。
+
+    参数:
+        user_input: str — 用户原始输入
+        params: dict | None — 3b router 的结构化查询参数（time / scope）
+
+    返回:
+        dict — {"status": "success", "type": "query", "data": {...}, "summary": "..."}
+        或 str — 兜底字符串（兼容旧版 process_command 返回格式）
+    """
+    time_filter = None
+    scope = None
+    if params and isinstance(params, dict):
+        time_filter = params.get("time")
+        scope = params.get("scope")
+
+    # ---- 推断日期过滤 ----
+    now = datetime.now()
+    today = now.strftime("%Y-%m-%d")
+    date_start = None
+    date_end = None
+    label = ""
+
+    if time_filter == "today":
+        date_start = today
+        date_end = today
+        label = "今天"
+    elif time_filter in ("yesterday", "昨天"):
+        date_start = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        date_end = date_start
+        label = "昨天"
+    elif time_filter in ("this_week", "本周"):
+        monday = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d")
+        sunday = (now + timedelta(days=(6 - now.weekday()))).strftime("%Y-%m-%d")
+        date_start = monday
+        date_end = sunday
+        label = "本周"
+    elif time_filter in ("last_week", "上周"):
+        days_since_monday = now.weekday()
+        last_monday = (now - timedelta(days=days_since_monday + 7))
+        last_sunday = last_monday + timedelta(days=6)
+        date_start = last_monday.strftime("%Y-%m-%d")
+        date_end = last_sunday.strftime("%Y-%m-%d")
+        label = "上周"
+    elif time_filter in ("this_month", "本月"):
+        date_start = now.strftime("%Y-%m") + "-01"
+        # 月末: 下月 1 号 - 1 天
+        if now.month == 12:
+            next_month = datetime(now.year + 1, 1, 1)
+        else:
+            next_month = datetime(now.year, now.month + 1, 1)
+        date_end = (next_month - timedelta(days=1)).strftime("%Y-%m-%d")
+        label = "本月"
+
+    # scope="all" 或未指定时间 → 不过滤日期
+    if scope == "all" and not time_filter:
+        date_start = None
+
+    # ---- 查询待办 ----
+    todos = _load_todos()
+    active_todos = [t for t in todos if not t.get("completed", False)]
+
+    if date_start:
+        filtered_todos = []
+        for t in active_todos:
+            due = t.get("due_date", "") or ""
+            if not due:
+                # 无到期日的待办视为通用，始终包含
+                filtered_todos.append(t)
+            elif date_end and due >= date_start and due <= date_end:
+                filtered_todos.append(t)
+            elif not date_end and due >= date_start:
+                filtered_todos.append(t)
+        active_todos = filtered_todos
+
+    # ---- 查询事件 ----
+    events = _load_events()
+    if date_start:
+        filtered_events = []
+        for e in events:
+            edate = e.get("date", "") or ""
+            if date_end:
+                if date_start <= edate <= date_end:
+                    filtered_events.append(e)
+            else:
+                if edate >= date_start:
+                    filtered_events.append(e)
+        events = filtered_events
+
+    # ---- 构建响应 ----
+    lines = []
+    time_prefix = f"{label}" if label else ""
+
+    if events:
+        events.sort(key=lambda e: (e.get("date", ""), e.get("time", "00:00")))
+        header = f"📅 {time_prefix}的日程:" if time_prefix else "📅 日程安排:"
+        lines.append(header)
+        for e in events:
+            repeat_tag = {"none": "", "daily": " 🔄每天",
+                          "weekly": " 🔄每周", "monthly": " 🔄每月"}.get(
+                e.get("repeat", "none"), "")
+            lines.append(f"  [{e['id']}] {e.get('date','?')} {e.get('time','')} {e['title']}{repeat_tag}")
+
+    if active_todos:
+        active_todos.sort(key=lambda t: (t.get("due_date", "") or "9999", t.get("due_time", "") or "99:99"))
+        header = f"📋 {time_prefix}的待办:" if time_prefix else "📋 待办事项:"
+        lines.append(header)
+        for t in active_todos:
+            due = ""
+            if t.get("due_date") and t.get("due_time"):
+                due = f" ⏰{t['due_date']} {t['due_time']}"
+            elif t.get("due_date"):
+                due = f" ⏰{t['due_date']}"
+            elif t.get("due_time"):
+                due = f" ⏰{t['due_time']}"
+            status = "✅" if t.get("completed") else "⬜"
+            lines.append(f"  {status} [{t['id']}] {t['title']}{due}")
+
+    if not lines:
+        if time_prefix:
+            return f"📅 {time_prefix}没有日程安排，也没有待办事项 🎉"
+        return "📋 没有日程安排和待办事项 🎉"
+
+    summary = "\n".join(lines)
+    return {
+        "status": "success",
+        "type": "query",
+        "data": {"events": len(events), "todos": len(active_todos)},
+        "summary": summary,
+    }
+
+
 def delete_last_reminder():
     """
     删除最近创建的一条未完成的待办提醒（按 created_at 时间戳排序）。

@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "type": "expense",
+    "amount": 1,
+    "source": "饭",
+    "date": "2026-07-27",
+    "category": "餐饮",
+    "time_ref": "",
+    "original_text": "上一周吃饭花了十元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "饭",
+    "date": "2026-07-27",
+    "category": "餐饮",
+    "time_ref": "昨天",
+    "original_text": "昨天吃饭花了五元"
+  }
+]
