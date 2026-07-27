@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.8.7"
+VERSION = "3.9.1"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -181,6 +181,102 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 用户输入:{user_input}
 JSON:"""
 
+# ===================== 3b 紧凑路由（v3.9.0） =====================
+
+_ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断意图并提取参数。只输出JSON，不输出任何解释。
+
+当前时间:{current_time}
+
+## 输出格式
+{{"intent":"record|query|delete|remind|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null"}},"confidence":0.0~1.0}}
+
+## 意图判定规则
+
+### record（记账）
+- 必须包含金额（数字或中文数字） + 花费关键词
+- 触发词：花了、付了、买了、消费、支出、花费、用了、记账
+- amount提取为数字，"十元"→10，"三块五"→3.5
+- 同时提取source（吃饭/购物/交通等）和time（默认today）
+- target固定为finance
+- ⚠️ 只有record意图才提取amount，其他意图amount一律为null
+
+### query（查询）
+- 查看数据，不修改
+- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共
+- 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week）
+- amount必须为null（查询场景不提取金额）
+- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/叫我→schedule，记忆/记住→memory
+- 当target=schedule时，根据输入填充scope或time（如"今天的待办"→scope:"today"，"本周任务"→time:"this_week"）
+
+### delete（删除）
+- 🚨最高优先级：含删除/删掉/清空/清除/去掉 → delete
+- ⚠️否定规则：当用户说"不要删除"、"不是删除"、"别删"时，意图必须标记为chat或clarify，不触发删除。否定词与"删除"之间可以隔着少量内容（如"不要删除财务数据"仍是否定删除，"不想删"也判定为否定）
+- 提取scope：含"全部/所有/清空"→all，含"今天"→today，含"最近一周"→last_week
+- amount必须为null（删除场景不提取金额）
+- target按被删除对象推断："财务数据/记账/账单"→finance，"日程/提醒/待办"→schedule，"记忆"→memory
+
+### remind（提醒）
+- 用户想在某个时间被提醒做某事
+- 触发词：提醒、叫我、喊我、通知、闹钟、叫醒、X分钟后、X小时后
+- time_offset：相对分钟数（"一分钟后"→1，"半小时后"→30，"两小时后"→120）
+- absolute_time：具体时刻（"8点"→"08:00"，"明天8点"→"08:00"），结合当前时间推断
+- content：去掉时间词和触发词后的核心内容（≤15字），如无明确内容则填"提醒"
+- target固定为schedule
+- amount必须为null
+
+### chat（聊天）
+- 无工具意图的日常对话
+- 问候、闲聊、确认词（是/对/好）、简单问答、否定删除的语句
+- target为null，所有params字段为null
+
+### clarify（澄清）
+- 输入模糊不完整，无法确定意图
+- "处理一下"/"那个"/"帮我弄一下" 缺少具体内容
+- 或同时包含矛盾指令
+- target为null，所有params字段为null
+
+## target推断优先级
+1. 含 财务/记账/花了/消费/收入/支出/账单 → finance
+2. 含 日程/提醒/待办/任务/事件/叫我/闹钟 → schedule
+3. 含 记忆/记住 → memory
+4. chat、clarify和remind → 按规则自动确定（remind→schedule）
+5. 仅含"数据"/"记录"无模块词 → null
+
+## 置信度指南
+- 0.9-1.0：意图明确 + 参数完整（如"今天吃饭花了20元"）
+- 0.7-0.85：意图清晰但部分参数模糊（如"查一下"）
+- 0.5-0.65：有歧义或参数残缺（如"那个删了"）
+- <0.5：纯猜测，不应出现
+
+## 示例
+
+输入：今天吃饭花了二十元
+输出：{{"intent":"record","target":"finance","params":{{"amount":20,"time":"today","source":"吃饭","scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：查看本月所有开销
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_month","source":null,"scope":"all","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：删除昨天的财务记录
+输出：{{"intent":"delete","target":"finance","params":{{"amount":null,"time":"yesterday","source":null,"scope":"today","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：不要删除数据
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
+
+输入：一分钟后提醒我喝水
+输出：{{"intent":"remind","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":1,"absolute_time":null,"content":"喝水"}},"confidence":0.95}}
+
+输入：显示今天的待办
+输出：{{"intent":"query","target":"schedule","params":{{"amount":null,"time":"today","source":null,"scope":"today","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：你好
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：处理一下
+输出：{{"intent":"clarify","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.6}}
+
+用户输入:{user_input}
+JSON:"""
+
 
 def _route_intent(user_input, timeout=8):
     """
@@ -324,6 +420,79 @@ def _route_intent(user_input, timeout=8):
         print(f"⚠️ qwen2.5:3b 路由也失败({e}),降级为关键词匹配")
 
     return None
+
+
+# ===================== 3b 紧凑路由函数（v3.9.0） =====================
+
+def _call_ollama_3b(prompt, timeout=3):
+    """调用 qwen2.5:3b 进行路由判断，返回原始响应文本，失败返回 None。"""
+    body = json.dumps({
+        "model": "qwen2.5:3b",
+        "prompt": prompt,
+        "stream": False,
+        "options": {"num_predict": 256, "temperature": 0.1},
+    }, ensure_ascii=False).encode("utf-8")
+
+    host = OLLAMA_HOST if OLLAMA_HOST else "http://127.0.0.1:11434"
+    url = f"{host.rstrip('/')}/api/generate"
+    req = urllib.request.Request(
+        url, data=body,
+        headers={"Content-Type": "application/json"},
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return (data.get("response", "") or "").strip()
+    except Exception:
+        return None
+
+
+def _route_with_3b(user_input):
+    """
+    使用 qwen2.5:3b + _ROUTE_PROMPT_3B 进行意图路由（v3.9.0）。
+    成功返回 {"intent", "target", "params", "confidence"}，失败返回 None。
+    区别于 _route_intent（7b→3b→关键词链），本函数只使用 3b + 紧凑 prompt，
+    目标是快速（<3s）完成语义路由。
+    """
+    from datetime import datetime
+
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+    prompt = _ROUTE_PROMPT_3B.format(
+        current_time=current_time,
+        user_input=user_input,
+    )
+
+    result = _call_ollama_3b(prompt)
+    if not result:
+        return None
+
+    # 清洗：去掉可能的 markdown 代码块
+    result = re.sub(r'^```(?:json)?\s*', '', result)
+    result = re.sub(r'\s*```$', '', result)
+    result = result.strip()
+
+    try:
+        parsed = json.loads(result)
+        if not isinstance(parsed, dict):
+            return None
+
+        intent = parsed.get("intent")
+        if intent not in ("record", "query", "delete", "remind", "chat", "clarify"):
+            return None
+
+        params = parsed.get("params", {})
+        if not isinstance(params, dict):
+            params = {}
+
+        return {
+            "intent": intent,
+            "target": parsed.get("target"),
+            "params": params,
+            "confidence": float(parsed.get("confidence", 0.7)),
+        }
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return None
 
 
 def _describe_reminder(params):
@@ -488,8 +657,9 @@ def _parse_delete_scope(text):
     elif any(kw in text for kw in ["记忆", "记住", "记忆数据"]):
         target_type = "memory"
 
-    # 取消
-    if text in ("算了", "取消", "不删了", "不用了", "不要了", "不删", "不了"):
+    # 取消（v3.9.1 增强：含否定删除模式如"不要删除数据"/"别删财务"等）
+    CANCEL_EXACT = ("算了", "取消", "不删了", "不用了", "不要了", "不删", "不了")
+    if text in CANCEL_EXACT or _is_deletion_negated(text):
         return "cancel", target_type
 
     # 全部
@@ -512,6 +682,34 @@ def _parse_delete_scope(text):
 
     # 默认：按内容关键词
     return "keyword", target_type
+
+
+def _is_deletion_negated(user_input):
+    """
+    v3.9.1: 检测用户是否在否定删除请求（如"不要删除数据"）。
+    返回 True 表示用户明确拒绝删除，应阻断所有删除流程。
+
+    匹配策略：否定词（不要/不是/别/不想/不）+ 删除词（删除/删/清空/清除）。
+    前缀匹配，不要求后续有数据关键词——任何"不要删除*"都应阻断。
+    """
+    NEGATION_PATTERNS = [
+        r'不要删',       # 不要删除/不要删掉/不要删数据/不要删除记录 ...
+        r'不是删',       # 不是删除/不是删数据 ...
+        r'别删',         # 别删/别删除/别删数据 ...
+        r'不想删',       # 不想删除/不想删数据 ...
+        r'不删',         # 不删/不删除/不删了 ...
+        r'不要清空',     # 不要清空/不要清空数据 ...
+        r'不想清空',     # 不想清空/不想清空数据 ...
+        r'别清空',       # 别清空 ...
+        r'不是清空',     # 不是清空 ...
+        r'不要清除',     # 不要清除 ...
+        r'不想清除',     # 不想清除 ...
+        r'别清除',       # 别清除 ...
+    ]
+    for pat in NEGATION_PATTERNS:
+        if re.search(pat, user_input):
+            return True
+    return False
 
 
 def main():
@@ -642,6 +840,21 @@ def main():
             )
             print(report)
             speak("记忆状态已显示")
+            continue
+
+        # ============================================================
+        # v3.9.1: 删除否定检查（最高优先级，在所有状态机之前）
+        # 用户说"不要删除数据"/"别删"等时，无论是否有待处理的状态机，
+        # 一律立即确认不删除并跳过所有后续流程。
+        # ============================================================
+        if _is_deletion_negated(user_input):
+            print("🛡️ 检测到删除否定，已阻断所有删除路径")
+            reply = "好的，不会删除任何数据。如果你需要查看或修改数据，可以告诉我。"
+            print(f"晓风: {reply}")
+            speak(reply)
+            # 清除任何挂起的删除澄清/确认状态
+            _pending_clarification = None
+            _pending_confirmation = None
             continue
 
         # ============================================================
@@ -782,9 +995,141 @@ def main():
                 break
 
         # ============================================================
-        # 正常路由流程
+        # v3.9.0: 3b 紧凑路由优先（快速语义分类，<3s）
         # ============================================================
         print(f"[路由] 收到输入: {user_input!r}")
+
+        # ============================================================
+        # v3.9.1: 删除否定检查 —— 用户说"不要删除数据"时直接阻断
+        # 在所有路由/工具调用之前拦截，防止 3b 误判或降级路径意外触发删除
+        # ============================================================
+        if _is_deletion_negated(user_input):
+            print("🛡️ 检测到删除否定，已阻断删除路径")
+            reply = "好的，不会删除任何数据。如果你需要查看或修改数据，可以告诉我。"
+            print(f"晓风: {reply}")
+            speak(reply)
+            continue
+
+        result_3b = _route_with_3b(user_input)
+        if result_3b is not None and result_3b.get("confidence", 0) >= 0.6:
+            intent_3b = result_3b["intent"]
+            target_3b = result_3b.get("target")
+            params_3b = result_3b.get("params", {})
+            conf_3b = result_3b["confidence"]
+
+            print(f"[路由] → 3b 判定: {intent_3b}"
+                  + (f" (target={target_3b})" if target_3b else "")
+                  + f" confidence={conf_3b:.2f}")
+
+            # ---- record: 记账 ----
+            if intent_3b == "record":
+                print("🔧 正在处理财务指令（3b路由）...")
+                result = call_tool("财务", user_input)
+                reply = _generate_tool_reply(result)
+                print(reply)
+                speak(reply)
+                continue
+
+            # ---- query: 查询 ----
+            elif intent_3b == "query":
+                if target_3b == "finance":
+                    print("🔧 正在查询财务记录（3b路由）...")
+                    result = call_tool("财务", params_3b, _func="query_finance")
+                elif target_3b == "schedule":
+                    print("🔧 正在查询日程（3b路由）...")
+                    # schedule_module 无独立 query_schedule；
+                    # process_command 已内置 NLU 列表/查看逻辑
+                    result = call_tool("日程", user_input)
+                else:
+                    # target 不明确时默认查财务
+                    print("🔧 正在查询财务记录（3b路由，默认finance）...")
+                    result = call_tool("财务", params_3b, _func="query_finance")
+
+                reply = _generate_tool_reply(result)
+                print(reply)
+                speak(reply)
+                continue
+
+            # ---- delete: 删除 ----
+            elif intent_3b == "delete":
+                scope = params_3b.get("scope", "keyword") if isinstance(params_3b, dict) else "keyword"
+                keyword = params_3b.get("keyword") if isinstance(params_3b, dict) else None
+
+                if target_3b == "finance":
+                    message = "你想删除全部财务记录，还是最近一周的？还是最新一条？"
+                    print(f"🤔 {message}")
+                    speak(message)
+                    _pending_clarification = {
+                        "target_type": "finance",
+                        "message": message,
+                    }
+                elif target_3b == "memory":
+                    message = "你想删除全部记忆数据，还是最近一周的？还是最新一条？"
+                    print(f"🤔 {message}")
+                    speak(message)
+                    _pending_clarification = {
+                        "target_type": "memory",
+                        "message": message,
+                    }
+                elif target_3b == "schedule":
+                    print("🔧 正在按范围删除日程（3b路由）...")
+                    if scope == "keyword" and keyword:
+                        result = call_tool("日程", scope, keyword,
+                                          _func="delete_by_scope")
+                    else:
+                        result = call_tool("日程", scope,
+                                          _func="delete_by_scope")
+                    reply = _generate_tool_reply(result, prefix="明白了")
+                    print(reply)
+                    speak(reply)
+                else:
+                    # target 不明确，先确认类型
+                    message = "你想删除哪种数据？是财务记录、日程待办、还是记忆数据？"
+                    print(f"🤔 {message}")
+                    speak(message)
+                    _pending_clarification = {
+                        "target_type": "unknown",
+                        "message": message,
+                    }
+                continue
+
+            # ---- remind: 设置提醒 ----
+            elif intent_3b == "remind":
+                print("🔧 正在处理日程提醒（3b路由）...")
+                result = call_tool("日程", params_3b,
+                                  _func="add_reminder_from_params")
+                print(result)
+                speak(result)
+                continue
+
+            # ---- chat: 交给 7b 对话 ----
+            elif intent_3b == "chat":
+                # v3.9.1: 如果用户输入包含删除否定，直接确认而非走普通对话
+                if _is_deletion_negated(user_input):
+                    print("🛡️ 检测到删除否定（chat路由），已阻断")
+                    reply = "好的，不会删除任何数据。如果你需要查看或修改数据，可以告诉我。"
+                    print(f"晓风: {reply}")
+                    speak(reply)
+                    continue
+                print("[路由] → 3b 判定为聊天，转交 7b 对话")
+                short_term.append({"role": "user", "content": user_input})
+                response = chat_with_xiaofeng(user_input, short_term)
+                print(f"晓风: {response}")
+                speak(response)
+                short_term.append({"role": "assistant", "content": response})
+                save_short_term(short_term)
+                continue
+
+            # ---- clarify: 请求澄清 ----
+            elif intent_3b == "clarify":
+                print("🤔 不太确定你的意思，请再说清楚一点"
+                      "（比如'今天吃饭花了20元'或'查看今天的记录'）")
+                speak("不太确定你的意思，请再说清楚一点")
+                continue
+
+        # ============================================================
+        # 降级：使用原有路由逻辑（7b → 3b → 关键词匹配）
+        # ============================================================
         intent = _route_intent(user_input)
 
         # LLM 路由失败时降级为关键词匹配
@@ -795,7 +1140,8 @@ def main():
             CORRECTION_KW = ["不是", "说错了", "改成", "应该是", "不对", "换个"]
             DELETE_KW = ["删掉", "删", "删除", "取消", "去掉", "移除"]
             # 删除关键词优先（v3.7.5 / v3.7.6 增强）：在检查财务/日程之前先判断删除意图
-            if any(kw in user_input for kw in DELETE_KW):
+            # v3.9.1: 排除否定删除（如"不要删除数据"），防止降级路径误触发删除
+            if any(kw in user_input for kw in DELETE_KW) and not _is_deletion_negated(user_input):
                 # 推断目标类型 → 动态生成澄清消息
                 FINANCE_CTX_KW = ["财务", "记账", "账单", "消费", "收入", "记录", "支出"]
                 SCHEDULE_CTX_KW = ["日程", "提醒", "待办", "任务", "事件"]
