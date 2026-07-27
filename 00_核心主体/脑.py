@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.1"
+VERSION = "3.9.2"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1056,13 +1056,35 @@ def main():
                 keyword = params_3b.get("keyword") if isinstance(params_3b, dict) else None
 
                 if target_3b == "finance":
-                    message = "你想删除全部财务记录，还是最近一周的？还是最新一条？"
-                    print(f"🤔 {message}")
-                    speak(message)
-                    _pending_clarification = {
-                        "target_type": "finance",
-                        "message": message,
-                    }
+                    # v3.9.2: 如果已有时限或范围，直接执行，不反问
+                    time = params_3b.get("time") if isinstance(params_3b, dict) else None
+                    scope_from_params = params_3b.get("scope") if isinstance(params_3b, dict) else None
+
+                    # 可直接映射到 delete_by_scope 的范围值
+                    DIRECT_SCOPES = ("all", "today", "latest", "last_week")
+
+                    if scope_from_params in DIRECT_SCOPES:
+                        print(f"🔧 正在按范围删除财务记录（scope={scope_from_params}，3b路由）...")
+                        result = call_tool("财务", scope_from_params, _func="delete_by_scope")
+                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(reply)
+                        speak(reply)
+                    elif time in DIRECT_SCOPES:
+                        # time 字段可直接用作 scope（如 today / last_week）
+                        print(f"🔧 正在按时间删除财务记录（time={time}，3b路由）...")
+                        result = call_tool("财务", time, _func="delete_by_scope")
+                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(reply)
+                        speak(reply)
+                    else:
+                        # 无明确时间/范围 → 进入澄清流程
+                        message = "你想删除全部财务记录，还是最近一周的？还是最新一条？"
+                        print(f"🤔 {message}")
+                        speak(message)
+                        _pending_clarification = {
+                            "target_type": "finance",
+                            "message": message,
+                        }
                 elif target_3b == "memory":
                     message = "你想删除全部记忆数据，还是最近一周的？还是最新一条？"
                     print(f"🤔 {message}")
