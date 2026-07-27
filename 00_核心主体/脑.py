@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.5"
+VERSION = "3.9.6"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -458,20 +458,37 @@ def _call_ollama_3b(prompt, timeout=3):
         return None
 
 
-def _route_with_3b(user_input, context=None):
+def _route_with_3b(user_input, context=None, last_result=None):
     """
-    使用 qwen2.5:3b + _ROUTE_PROMPT_3B 进行意图路由（v3.9.5: +上下文）。
+    使用 qwen2.5:3b + _ROUTE_PROMPT_3B 进行意图路由（v3.9.6: +结构化上下文）。
     成功返回 {"intent", "target", "params", "confidence"}，失败返回 None。
 
     参数:
         user_input: str — 当前用户输入
-        context: str | None — 上一轮用户输入，用于推断省略的主题词
+        context: str | None — 上一轮用户输入原文
+        last_result: dict | None — 上一轮路由结果 {"intent", "target"}
     """
     from datetime import datetime
 
-    # v3.9.5: 构建上下文段落，帮助 3b 在输入不完整时延续上一轮主题
+    # v3.9.6: 构建结构化上下文，包含上一轮的 intent+target
     context_section = ""
-    if context:
+    if last_result and last_result.get("intent"):
+        last_intent = last_result.get("intent", "")
+        last_target = last_result.get("target", "")
+        ctx_lines = [
+            f'## 上下文信息（当前输入省略主题词时使用）',
+            f'上一轮路由结果: intent={last_intent}, target={last_target}',
+        ]
+        if context:
+            ctx_lines.append(f'上一轮用户输入: "{context}"')
+        ctx_lines.append(
+            f'如果当前输入缺少明确的主题词（如只说"昨天的呢"、"这个月的呢"），'
+            f'且上一轮 target 明确（如 schedule/finance/memory），'
+            f'则沿用上一轮的 target={last_target} 和 intent={last_intent}，时间词如有变化则更新。'
+        )
+        context_section = '\n'.join(ctx_lines) + '\n'
+    elif context:
+        # v3.9.5 fallback: 仅有用户输入上下文，无结构化路由结果
         context_section = (
             f'## 上下文信息\n'
             f'上一轮用户输入: "{context}"\n'
@@ -781,6 +798,9 @@ def main():
     # ---- 澄清状态机（v3.7.4）----
     _pending_clarification = None  # 暂存模糊删除澄清请求，等待用户指定范围
 
+    # ---- 路由上下文（v3.9.6）----
+    _last_router_result = None  # 存储上一轮路由结果 {"intent", "target"}，用于上下文延续
+
     while True:
         user_input = input("\n你: ").strip()
         if user_input == "退出":
@@ -1033,14 +1053,15 @@ def main():
             speak(reply)
             continue
 
-        # v3.9.5: 提取上一轮用户输入作为上下文，帮助 3b 推断省略的主题词
+        # v3.9.6: 提取上一轮用户输入 + 上一轮路由结果作为结构化上下文
         last_user_context = None
         for turn in reversed(short_term):
             if turn.get("role") == "user":
                 last_user_context = turn.get("content", "")
                 break
 
-        result_3b = _route_with_3b(user_input, context=last_user_context)
+        result_3b = _route_with_3b(user_input, context=last_user_context,
+                                   last_result=_last_router_result)
         if result_3b is not None and result_3b.get("confidence", 0) >= 0.6:
             intent_3b = result_3b["intent"]
             target_3b = result_3b.get("target")
@@ -1050,6 +1071,9 @@ def main():
             print(f"[路由] → 3b 判定: {intent_3b}"
                   + (f" (target={target_3b})" if target_3b else "")
                   + f" confidence={conf_3b:.2f}")
+
+            # v3.9.6: 存储路由结果供下一轮上下文延续
+            _last_router_result = {"intent": intent_3b, "target": target_3b}
 
             # ---- record: 记账 ----
             if intent_3b == "record":
@@ -1268,6 +1292,21 @@ def main():
         tool = intent["tool"]
         action = intent.get("action")
         confidence = intent.get("confidence", 0.7)
+
+        # v3.9.6: 存储路由结果供下一轮上下文延续（标准化为 3b 格式）
+        if tool == "财务":
+            _last_router_result = {"intent": "query" if action == "query" else "record", "target": "finance"}
+        elif tool == "日程":
+            act_map = {"add_reminder": "remind", "delete_reminder": "delete",
+                       "correct_reminder": "remind", "manage": "query"}
+            _last_router_result = {"intent": act_map.get(action, "query"), "target": "schedule"}
+        elif tool == "聊天":
+            _last_router_result = {"intent": "chat", "target": None}
+        elif tool == "ask_clarify":
+            target_type = intent.get("params", {}).get("target_type")
+            _last_router_result = {"intent": "delete", "target": target_type}
+        else:
+            _last_router_result = {"intent": None, "target": None}
 
         # ============================================================
         # ask_clarify 拦截: 模糊删除需要澄清范围（v3.7.4）

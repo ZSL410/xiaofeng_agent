@@ -16,5 +16,14 @@
     "category": "餐饮",
     "time_ref": "昨天",
     "original_text": "昨天吃饭花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 50,
+    "source": "日常消费",
+    "date": "2026-07-28",
+    "category": "生活",
+    "time_ref": "昨天",
+    "original_text": "昨天花了五十"
   }
 ]
