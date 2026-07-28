@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.6"
+VERSION = "3.9.8"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -96,7 +96,7 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 ### 日程提醒(add_reminder)
 用户想在某个时间被提醒做某事。信号词:叫我/喊我/提醒我/通知我/叫醒我。语音容错:"教我"可能是"叫我"。即使无关键词，语义是"在某个时间做某事"也视为提醒。
-- time_offset: 相对分钟数。X分钟后→X，半小时后→30，X小时后→X×60。无则为null
+- time_offset: 分钟数(绝对不能是小时)。一分钟后→1(不是60)，两分钟后→2，五分钟后→5，半小时后→30。只有明确说"小时"时才×60:一小时后→60，两小时后→120。无则为null
 - absolute_time: 时钟时间。根据当前时间推断(如"38叫我"→当前小时:38，"明天8点"→08:00)。无则为null
 - content: 去时间词和信号词后的核心内容(≤10字)，仅"叫我"时默认"提醒"
 - raw_text: 用户原始输入
@@ -165,8 +165,10 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 ## 输出格式(只输出一个JSON对象，无其他内容)
 
-提醒:{{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟叫我泡咖啡"}},"confidence":0.95,"explanation":"明确的X分钟后叫我"}}
+提醒:{{"tool":"日程","action":"add_reminder","params":{{"time_offset":1,"absolute_time":null,"content":"提醒","raw_text":"一分钟后叫我"}},"confidence":0.95,"explanation":"一分钟后→1分钟不是60"}}
+提醒(分钟):{{"tool":"日程","action":"add_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"泡咖啡","raw_text":"5分钟叫我泡咖啡"}},"confidence":0.95,"explanation":"明确的X分钟后叫我"}}
 修正:{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":5,"absolute_time":null,"content":"冥想","raw_text":"不是两分钟是五分钟冥想"}},"confidence":0.95,"explanation":"用户纠正时间"}}
+修正(分钟vs小时):{{"tool":"日程","action":"correct_reminder","params":{{"time_offset":1,"absolute_time":null,"content":null,"raw_text":"我说的是一分钟不是一个小时"}},"confidence":0.95,"explanation":"提取正确值1分钟"}}
 删除:{{"tool":"日程","action":"delete_reminder","params":{{"query":"泡咖啡"}},"confidence":0.9,"explanation":"删除提醒-有明确内容"}}
 管理:{{"tool":"日程","action":"manage","params":null,"confidence":0.9,"explanation":"日程管理"}}
 财务记录:{{"tool":"财务","action":null,"params":null,"confidence":0.95,"explanation":"花了XX元-记账"}}
@@ -188,7 +190,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 当前时间:{current_time}
 {context_section}
 ## 输出格式
-{{"intent":"record|query|delete|remind|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null"}},"confidence":0.0~1.0}}
+{{"intent":"record|query|delete|remind|correct|recall|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null"}},"confidence":0.0~1.0}}
 
 ## 意图判定规则
 
@@ -219,11 +221,33 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 ### remind（提醒）
 - 用户想在某个时间被提醒做某事
 - 触发词：提醒、叫我、喊我、通知、闹钟、叫醒、X分钟后、X小时后
-- time_offset：相对分钟数（"一分钟后"→1，"半小时后"→30，"两小时后"→120）
+- ⚠️ time_offset严格规则（相对分钟数，最重要！）：
+  "一分钟后"→1（绝对不是60！），"两分钟后"→2，"五分钟后"→5，"十分钟后"→10
+  "半小时后"→30，"一个小时/一小时"才是60（只有明确说"小时"才乘60）
+  "一个半小时后"→90，"两小时后"→120
+  规则总结：中文"X分钟"=X分钟，中文"X小时"=X×60分钟，中文"半小时"=30分钟
 - absolute_time：具体时刻（"8点"→"08:00"，"明天8点"→"08:00"），结合当前时间推断
 - content：去掉时间词和触发词后的核心内容（≤15字），如无明确内容则填"提醒"
 - target固定为schedule
 - amount必须为null
+
+### correct（修正）
+- 🚨 用户纠正上一个操作（提醒时间或内容）。这是第2高优先级（仅次于delete），因为修正意图必须优先于普通聊天。
+- 触发模式："不是X是Y"、"说错了"、"改一下"、"应该是"、"不对"、"X不对Y才对"、"我说的是一分钟不是一小时"、"不是半小时是十分钟"
+- time_offset：提取正确的时间（忽略被否定的X，取Y的值）。"不是X分钟是Y分钟"→time_offset=Y。"我说的是一分钟不是一小时"→time_offset=1
+- absolute_time：如果修正的是绝对时间（"不是8点是9点"→"09:00"），提取正确值
+- content：如果修正的是提醒内容（"不是喝水是泡咖啡"→content:"泡咖啡"），提取正确内容
+- raw_text可存储原始输入
+- target固定为schedule（修正主要针对提醒）
+- amount必须为null
+- confidence一般为0.85-0.95（修正模式语义明确）
+
+### recall（回顾）
+- 用户询问刚才做了什么、说过什么、最近的操作记录
+- 触发词："刚才干了什么"、"刚才我说了什么"、"我刚才做了什么"、"之前我说了什么"、"我刚才的操作"、"回顾一下"、"刚才发生了什么"、"最近干了什么"
+- 没有参数需要提取，所有params字段为null
+- target为null
+- confidence一般为0.85-0.95（回顾意图明确）
 
 ### chat（聊天）
 - 无工具意图的日常对话
@@ -240,7 +264,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 1. 含 财务/记账/花了/消费/收入/支出/账单 → finance
 2. 含 日程/提醒/待办/任务/事件/叫我/闹钟 → schedule
 3. 含 记忆/记住 → memory
-4. chat、clarify和remind → 按规则自动确定（remind→schedule）
+4. chat、clarify、correct、recall和remind → 按规则自动确定（remind→schedule, correct→schedule, recall→null）
 5. 仅含"数据"/"记录"无模块词 → null
 
 ## 置信度指南
@@ -265,6 +289,21 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 输入：一分钟后提醒我喝水
 输出：{{"intent":"remind","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":1,"absolute_time":null,"content":"喝水"}},"confidence":0.95}}
+
+输入：半小时后提醒我喝水
+输出：{{"intent":"remind","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":30,"absolute_time":null,"content":"喝水"}},"confidence":0.95}}
+
+输入：我说的是一分钟不是一个小时
+输出：{{"intent":"correct","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":1,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：不是半小时，是十分钟
+输出：{{"intent":"correct","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":10,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：我刚才干了什么事
+输出：{{"intent":"recall","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：我之前说了什么
+输出：{{"intent":"recall","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
 
 输入：显示今天的待办
 输出：{{"intent":"query","target":"schedule","params":{{"amount":null,"time":"today","source":null,"scope":"today","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
@@ -518,7 +557,7 @@ def _route_with_3b(user_input, context=None, last_result=None):
             return None
 
         intent = parsed.get("intent")
-        if intent not in ("record", "query", "delete", "remind", "chat", "clarify"):
+        if intent not in ("record", "query", "delete", "remind", "correct", "recall", "chat", "clarify"):
             return None
 
         params = parsed.get("params", {})
@@ -610,6 +649,16 @@ def chat_with_xiaofeng(user_input, history):
 1. 与用户进行自然、流畅、让人放松的聊天.
 2. 只有当用户明确提出"记账"、"查账"或"帮我记一下"等指令时,才去处理财务问题.
 3. 请不要在日常对话中主动追问金额或消费细节,这会打扰用户的交流体验.
+
+当用户问"你能干什么"、"介绍一下你自己"、"你有什么功能"、"你能做什么"等问题时，
+请用温暖的语气介绍以下4项能力（每项一行，格式如下）：
+
+💰 财务记录：帮你记账、查账、删除记录、统计开销
+📅 日程管理：添加提醒、修改提醒、查询待办、删除待办
+🧠 记忆系统：记住你的偏好和习惯，回顾历史记录
+💬 自然对话：陪你闲聊、回答问题、给你建议
+
+介绍完能力后可以加一句温暖的话，如"有什么需要我帮忙的吗？"
 """
     if memory_context:
         system_prompt += f"\n\n{memory_context}"
@@ -1178,6 +1227,85 @@ def main():
                 speak(result)
                 continue
 
+            # ---- correct: 修正提醒 ----
+            elif intent_3b == "correct":
+                print("🔧 正在修正提醒（3b路由）...")
+                result = call_tool("日程", params_3b,
+                                  _func="modify_last_reminder")
+                print(result)
+                speak(result)
+                continue
+
+            # ---- recall: 回顾最近操作 ----
+            elif intent_3b == "recall":
+                print("🔍 正在回顾最近操作（3b路由）...")
+                # 从短期记忆中提取最近几轮对话
+                recent_turns = []
+                for turn in short_term[-8:]:  # 最近 8 轮（最多 4 组对话）
+                    role = turn.get("role", "")
+                    content = turn.get("content", "")
+                    if role == "user":
+                        recent_turns.append(f"你说：{content}")
+                    elif role == "assistant":
+                        recent_turns.append(f"晓风回复：{content}")
+                if not recent_turns:
+                    reply = "刚才我们还没有对话记录。"
+                else:
+                    # 用 7b 模型总结最近操作
+                    summary_prompt = (
+                        "下面是用户和助手最近的对话记录。请用一句话（不超过40字）总结用户刚才做了什么，"
+                        "语气温暖自然。如果涉及提醒/记账/删除等操作，重点说明操作类型和内容。"
+                        "只输出总结句子，不要任何解释。\n\n"
+                        + "\n".join(recent_turns[-6:])
+                        + "\n\n总结："
+                    )
+                    try:
+                        body = json.dumps({
+                            "model": "qwen2.5:7b",
+                            "prompt": summary_prompt,
+                            "stream": False,
+                            "options": {"num_predict": 60, "temperature": 0.3},
+                        }, ensure_ascii=False).encode("utf-8")
+                        host = OLLAMA_HOST if OLLAMA_HOST else "http://127.0.0.1:11434"
+                        url = f"{host.rstrip('/')}/api/generate"
+                        req = urllib.request.Request(
+                            url, data=body,
+                            headers={"Content-Type": "application/json"},
+                        )
+                        with urllib.request.urlopen(req, timeout=3) as resp:
+                            data = json.loads(resp.read().decode("utf-8"))
+                            summary = (data.get("response", "") or "").strip()
+                        if summary:
+                            reply = summary
+                        else:
+                            reply = "刚才我们聊了一些事情，不过我没有记录下具体内容。"
+                    except Exception:
+                        # LLM 调用失败，用规则生成摘要
+                        actions = []
+                        for line in recent_turns:
+                            if "提醒" in line or "叫我" in line:
+                                actions.append("设置了提醒")
+                            elif "记账" in line or "花了" in line or "财务" in line:
+                                actions.append("记录了财务")
+                            elif "删除" in line or "删掉" in line:
+                                actions.append("删除了数据")
+                            elif "查询" in line or "查看" in line or "显示" in line:
+                                actions.append("查询了信息")
+                            elif "修改" in line or "改正" in line or "更正" in line:
+                                actions.append("修改了内容")
+                        if actions:
+                            unique = list(dict.fromkeys(actions))  # 去重保持顺序
+                            reply = f"你刚才{'、'.join(unique)}。"
+                        else:
+                            reply = "刚才我们聊了一些日常话题。"
+                print(f"晓风: {reply}")
+                speak(reply)
+                # 将回顾的回复也保存到短期记忆
+                short_term.append({"role": "user", "content": user_input})
+                short_term.append({"role": "assistant", "content": reply})
+                save_short_term(short_term)
+                continue
+
             # ---- chat: 交给 7b 对话 ----
             elif intent_3b == "chat":
                 # v3.9.1: 如果用户输入包含删除否定，直接确认而非走普通对话
@@ -1298,7 +1426,7 @@ def main():
             _last_router_result = {"intent": "query" if action == "query" else "record", "target": "finance"}
         elif tool == "日程":
             act_map = {"add_reminder": "remind", "delete_reminder": "delete",
-                       "correct_reminder": "remind", "manage": "query"}
+                       "correct_reminder": "correct", "manage": "query"}
             _last_router_result = {"intent": act_map.get(action, "query"), "target": "schedule"}
         elif tool == "聊天":
             _last_router_result = {"intent": "chat", "target": None}

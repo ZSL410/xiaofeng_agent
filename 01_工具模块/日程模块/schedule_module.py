@@ -538,14 +538,14 @@ _SMART_REMINDER_PROMPT = """你是一个温暖、体贴的私人提醒助手.根
 播报句子:"""
 
 
-def _generate_smart_reminder(raw_msg, timeout=3):
+def _generate_smart_reminder(raw_msg, timeout=1.5):
     """
     调用本地 Ollama 模型生成个性化提醒文案。
     超时或失败则降级为通用文案。
 
     参数:
         raw_msg: 原始提醒消息，如 "⏰ 日程提醒：泡咖啡"
-        timeout: HTTP 请求超时秒数
+        timeout: HTTP 请求超时秒数（v3.9.8 降至 1.5s，避免阻塞提醒播报）
     返回:
         人性化播报字符串，不超过 20 字
     """
@@ -556,7 +556,7 @@ def _generate_smart_reminder(raw_msg, timeout=3):
     # 提取提醒内容（去掉前缀标签）
     content = re.sub(r'^[⏰📅📋]\s*(日程|待办|任务)?\s*提醒[::]?\s*', '', raw_msg).strip()
     if not content:
-        return "您的提醒时间到了"
+        return raw_msg  # v3.9.8: 不回退到通用文案，改用原始消息
 
     prompt = _SMART_REMINDER_PROMPT.format(content=content)
 
@@ -586,10 +586,10 @@ def _generate_smart_reminder(raw_msg, timeout=3):
             return result
 
     except Exception as e:
-        print(f"⚠️ 智能提醒生成失败(降级为通用文案):{e}")
+        print(f"⚠️ 智能提醒生成失败(降级为原始提醒):{e}")
 
-    # 降级：返回通用文案
-    return "您的提醒时间到了"
+    # v3.9.8: 降级返回带标题的友好文案，而非生硬的"您的提醒时间到了"
+    return f"提醒：{content}"
 
 
 def _check_reminders():
@@ -661,12 +661,22 @@ def _check_reminders():
         with _lock:
             for msg in triggered:
                 print(msg)
-                # 生成智能提醒文案（用于语音播报）
-                smart_msg = _generate_smart_reminder(msg)
+                # v3.9.8: 提取标题生成基本提醒文案，避免 LLM 调用阻塞播报
+                # msg 格式如 "⏰ 日程提醒:泡咖啡" 或 "⏰ 待办提醒:喝水"
+                title = re.sub(r'^[⏰📅📋]\s*(日程|待办|任务)?\s*提醒[::]?\s*', '', msg).strip()
+                basic_msg = f"提醒：{title}" if title else msg
+                # 如果启用了智能提醒且 LLM 可用，异步生成智能文案覆盖
+                if _load_use_smart_reminder():
+                    try:
+                        smart_msg = _generate_smart_reminder(msg)
+                        if smart_msg and smart_msg != basic_msg:
+                            basic_msg = smart_msg
+                    except Exception:
+                        pass  # 智能生成失败，使用基本文案
                 # 在独立线程中调用 speak()，避免阻塞提醒检查循环
                 try:
                     threading.Thread(
-                        target=_safe_speak, args=(smart_msg,),
+                        target=_safe_speak, args=(basic_msg,),
                         daemon=True, name="reminder-speak"
                     ).start()
                 except Exception as e:
@@ -1507,6 +1517,30 @@ def add_reminder_from_params(params):
         date_str = future.strftime("%Y-%m-%d")
         time_str = future.strftime("%H:%M")
         _debug_log(f"[结构化提醒] 相对时间: +{time_offset}分钟 → {date_str} {time_str}")
+
+        # v3.9.7: 防御性检查——检测 LLM 是否误将"X分钟"解析为"X小时"
+        # 现象：time_offset很大（≥50）但 raw_text 中只有"分钟"没有"小时"
+        if time_offset >= 50 and raw_text:
+            has_minute = bool(re.search(r'(\d+|[一二两三四五六七八九])\s*分[钟]?', raw_text))
+            has_hour = bool(re.search(r'(\d+|[一二两三四五六七八九])\s*[个]?\s*小?时', raw_text))
+            if has_minute and not has_hour:
+                _debug_log(f"[结构化提醒] ⚠️ 检测到疑似LLM时间误判: "
+                           f"time_offset={time_offset}但raw_text含分钟不含小时,尝试重新解析")
+                parsed_time, _ = _parse_time(_normalize_chinese_numbers(raw_text))
+                if parsed_time:
+                    # 重新计算: 正则解析的结果是绝对的HH:MM,需要转为相对偏移
+                    try:
+                        parsed_dt = datetime.strptime(
+                            f"{now.strftime('%Y-%m-%d')} {parsed_time}", "%Y-%m-%d %H:%M")
+                        new_offset = int((parsed_dt - now).total_seconds() / 60)
+                        if new_offset < time_offset and new_offset > 0:
+                            _debug_log(f"[结构化提醒] ✅ 时间修正: {time_offset}→{new_offset}分钟")
+                            time_offset = new_offset
+                            future = now + timedelta(minutes=new_offset)
+                            date_str = future.strftime("%Y-%m-%d")
+                            time_str = future.strftime("%H:%M")
+                    except (ValueError, TypeError):
+                        pass
 
     elif absolute_time and isinstance(absolute_time, str):
         # 绝对时钟时间
