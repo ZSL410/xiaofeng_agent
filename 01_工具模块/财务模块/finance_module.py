@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import urllib.request
 from datetime import datetime, timedelta
 
 # ===================== 配置 =====================
@@ -28,6 +29,297 @@ CATEGORY_MAP = {
     "工资": "薪资", "奖金": "薪资", "红包": "收入",
     "日常消费": "生活", "收入来源": "收入", "其他": "其他",
 }
+
+# ---- v3.9.13: 星期几映射（供 _parse_relative_date 和 _parse_date_with_llm 使用）----
+_WEEKDAY_CN_MAP = {
+    '周一': 0, '星期一': 0, '礼拜一': 0,
+    '周二': 1, '星期二': 1, '礼拜二': 1,
+    '周三': 2, '星期三': 2, '礼拜三': 2,
+    '周四': 3, '星期四': 3, '礼拜四': 3,
+    '周五': 4, '星期五': 4, '礼拜五': 4,
+    '周六': 5, '星期六': 5, '礼拜六': 5,
+    '周日': 6, '星期天': 6, '星期日': 6, '礼拜天': 6, '礼拜日': 6, '周天': 6,
+}
+_WEEKDAY_NAMES = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+
+
+def _find_weekday_in_text(s):
+    """在字符串中查找星期几表达，返回 (weekday_index 0=周一, matched_name) 或 None。"""
+    for name, idx in sorted(_WEEKDAY_CN_MAP.items(), key=lambda x: -len(x[0])):
+        if name in s:
+            return idx, name
+    return None
+
+
+def _compute_weekday_date(now, week_offset, target_weekday):
+    """
+    计算指定周偏移和星期几的日期。
+    week_offset: 0=本周, -1=上周, -2=上上周
+    target_weekday: 0=周一 ... 6=周日
+    返回 datetime 对象。
+    """
+    this_monday = now - timedelta(days=now.weekday())
+    target_monday = this_monday + timedelta(weeks=week_offset)
+    return target_monday + timedelta(days=target_weekday)
+
+
+def _parse_relative_date(text, now=None):
+    """
+    v3.9.13: 从文本中提取相对时间词并返回对应的实际日期。
+    支持：今天、昨天、前天、大前天、上周X、上上周X、周X、这个月的X号、上个月。
+    如果同时也提供了显式日期（如"7月25日"），显式日期优先。
+
+    返回:
+        (date_str, label) — 如 ("2026-07-27", "昨天")；无匹配返回 (None, "")
+    """
+    if now is None:
+        now = datetime.now()
+
+    today = now.strftime("%Y-%m-%d")
+    text_clean = text.strip()
+
+    # 先检查显式日期格式（优先级最高）
+    # 2026-07-27 / 2026/07/27
+    m = re.search(r'(\d{4})[-/](\d{1,2})[-/](\d{1,2})', text_clean)
+    if m:
+        d = f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
+        return d, d
+
+    # X月X日 / X月X号
+    m = re.search(r'(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]', text_clean)
+    if m:
+        month = int(m.group(1))
+        day = int(m.group(2))
+        year = now.year
+        # 如果月份已过（跨年场景），用下一年
+        if month < now.month:
+            year += 1
+        d = f"{year}-{month:02d}-{day:02d}"
+        return d, f"{month}月{day}日"
+
+    # ---- v3.9.14: 中文数字转换后的文本，用于匹配"这个月的X号"等 ----
+    text_cn = _chinese_to_number(text_clean)
+
+    # ---- v3.9.14: "这个月的X号/日" / "本月的X号/日"（必须在通用"本月"之前检查）----
+    # 统一正则：匹配 这个月/本月 + 可选的"的" + 数字 + 号/日
+    m = re.search(r'(?:这个月|本月)(?:的)?\s*(\d{1,2})\s*[号日]', text_cn)
+    if m:
+        day = int(m.group(1))
+        # 基本合法性检查：日期范围 1-31
+        if 1 <= day <= 31:
+            try:
+                d = datetime(now.year, now.month, day).strftime("%Y-%m-%d")
+                if os.environ.get("DEBUG", "") == "1":
+                    print(f"[日期解析] 本月X号: text={text_clean!r} → cn={text_cn!r} → day={day} → {d}")
+                return d, f"本月{day}号"
+            except ValueError:
+                pass  # 无效日期（如 2月30日），继续降级
+        elif os.environ.get("DEBUG", "") == "1":
+            print(f"[日期解析] 本月X号: day={day} 超出范围 1-31，跳过")
+
+    # 相对时间词（简单天数偏移）
+    if "大前天" in text_clean:
+        d = (now - timedelta(days=3)).strftime("%Y-%m-%d")
+        return d, "大前天"
+    if "前天" in text_clean:
+        d = (now - timedelta(days=2)).strftime("%Y-%m-%d")
+        return d, "前天"
+    if "昨天" in text_clean:
+        d = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        return d, "昨天"
+    if "今天" in text_clean:
+        return today, "今天"
+
+    # ---- v3.9.13: "上上周X"（必须在"上周X"之前检查，避免子串误匹配）----
+    if "上上周" in text_clean:
+        wd = _find_weekday_in_text(text_clean)
+        if wd:
+            target_wd, wd_name = wd
+            target_date = _compute_weekday_date(now, -2, target_wd)
+            d = target_date.strftime("%Y-%m-%d")
+            return d, f"上上周{wd_name}"
+        else:
+            # 无具体星期几，回退到上上周一
+            target_date = _compute_weekday_date(now, -2, 0)
+            d = target_date.strftime("%Y-%m-%d")
+            return d, "上上周"
+
+    # ---- v3.9.13: "上周X"（提取具体星期几，而非总是上周一）----
+    if "上周" in text_clean:
+        wd = _find_weekday_in_text(text_clean)
+        if wd:
+            target_wd, wd_name = wd
+            target_date = _compute_weekday_date(now, -1, target_wd)
+            d = target_date.strftime("%Y-%m-%d")
+            return d, f"上周{wd_name}"
+        else:
+            # Fallback: 上周一
+            target_date = _compute_weekday_date(now, -1, 0)
+            d = target_date.strftime("%Y-%m-%d")
+            return d, "上周"
+
+    if "上个月" in text_clean:
+        # 上个月第一天
+        first_this_month = datetime(now.year, now.month, 1)
+        last_month = first_this_month - timedelta(days=1)
+        d = last_month.strftime("%Y-%m") + "-01"
+        return d, "上个月"
+    if "本周" in text_clean or "这周" in text_clean:
+        wd = _find_weekday_in_text(text_clean)
+        if wd:
+            target_wd, wd_name = wd
+            target_date = _compute_weekday_date(now, 0, target_wd)
+            d = target_date.strftime("%Y-%m-%d")
+            return d, f"本周{wd_name}"
+        else:
+            target_date = _compute_weekday_date(now, 0, 0)
+            d = target_date.strftime("%Y-%m-%d")
+            return d, "本周"
+
+    # ---- v3.9.13: 裸"周X"（本周的星期几，如"周二花五元"）----
+    wd = _find_weekday_in_text(text_clean)
+    if wd:
+        target_wd, wd_name = wd
+        target_date = _compute_weekday_date(now, 0, target_wd)
+        d = target_date.strftime("%Y-%m-%d")
+        return d, wd_name
+
+    if "本月" in text_clean or "这个月" in text_clean:
+        d = now.strftime("%Y-%m") + "-01"
+        return d, "本月"
+
+    return None, ""
+
+
+# ===================== LLM 日期解析（v3.9.13） =====================
+
+_DATE_PARSE_PROMPT = """你是一个日期解析器。从用户输入中提取日期信息，返回 YYYY-MM-DD 格式。
+
+当前日期：{current_date}，{weekday_cn}
+
+用户输入：{user_input}
+
+请根据用户输入提取具体日期。规则：
+- "上周三" → 上周周三的具体日期
+- "上上周二" → 两周前周二的具体日期
+- "周二" → 本周周二的具体日期
+- "这个月的二十三号" → 本月23号的具体日期
+- "昨天" → 昨天的日期
+- "今天" → 今天的日期
+- 如果用户没有指定日期，返回 "null"
+
+只返回日期字符串 YYYY-MM-DD 或 "null"，不要任何其他内容。"""
+
+
+def _parse_date_with_llm(text, current_time=None, model="qwen2.5:3b"):
+    """
+    v3.9.13: 使用 LLM 解析用户输入中的日期表达。
+    支持复杂的相对日期（如"上上周周二"、"上周三"等），
+    这些是正则 _parse_relative_date 的补充（v3.9.13 正则也已增强）。
+
+    参数:
+        text: str — 用户原始输入
+        current_time: datetime — 当前时间（默认 now）
+        model: str — 使用的 Ollama 模型（默认 qwen2.5:3b，快速响应）
+
+    返回:
+        (date_str, label) — 如 ("2026-07-22", "上周三")；失败返回 (None, None)
+    """
+    if current_time is None:
+        current_time = datetime.now()
+
+    # 构建提示词：包含当前日期 + 中文星期几
+    wd_idx = current_time.weekday()  # 0=周一
+    weekday_cn = _WEEKDAY_NAMES[wd_idx]
+    now_str = current_time.strftime("%Y-%m-%d")
+    prompt = _DATE_PARSE_PROMPT.format(
+        current_date=now_str,
+        weekday_cn=weekday_cn,
+        user_input=text,
+    )
+
+    # 读取 Ollama 配置
+    try:
+        config_path = os.path.join(
+            os.path.dirname(__file__), "..", "..",
+            "00_核心主体", "模型.json"
+        )
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
+
+    host = config.get("ollama_host", "http://localhost:11434")
+
+    debug = os.environ.get("DEBUG", "") == "1"
+
+    try:
+        body = json.dumps({
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"num_predict": 20, "temperature": 0},
+        }, ensure_ascii=False).encode("utf-8")
+
+        url = f"{host.rstrip('/')}/api/generate"
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": "application/json"},
+        )
+
+        # v3.9.13: 超时从 2s 增加到 5s，给 3b 模型更多响应时间
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            result = (data.get("response", "") or "").strip()
+
+        if debug:
+            print(f"[日期解析LLM] 输入: {text!r}")
+            print(f"[日期解析LLM] 提示词: 当前={now_str} {weekday_cn}")
+            print(f"[日期解析LLM] 原始响应: {result!r}")
+
+        # 清洗输出：去掉可能的引号、换行、空白
+        result = result.strip('"\'"\n\r .,，。')
+
+        if not result or result.lower() == "null" or result == "":
+            if debug:
+                print("[日期解析LLM] 结果: null（无日期）")
+            return None, None
+
+        # 验证是否为有效的 YYYY-MM-DD 格式
+        m = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', result)
+        if m:
+            try:
+                year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3))
+                datetime(year, month, day)
+                if debug:
+                    print(f"[日期解析LLM] 解析成功: {result}")
+                return result, "LLM日期解析"
+            except ValueError:
+                if debug:
+                    print(f"[日期解析LLM] 无效日期: {result}")
+                return None, None
+
+        # 尝试从输出中提取日期（有些模型可能输出额外文字）
+        m = re.search(r'(\d{4}-\d{2}-\d{2})', result)
+        if m:
+            try:
+                date_str = m.group(1)
+                datetime.strptime(date_str, "%Y-%m-%d")
+                if debug:
+                    print(f"[日期解析LLM] 从响应中提取日期: {date_str}")
+                return date_str, "LLM日期解析"
+            except ValueError:
+                pass
+
+        if debug:
+            print(f"[日期解析LLM] 无法解析响应: {result!r}")
+
+    except Exception as e:
+        if debug:
+            print(f"[日期解析LLM] 调用失败: {e}")
+
+    return None, None
+
 
 def _extract_time_ref(text):
     """从原文中提取时间参照词，用于生成摘要。"""
@@ -175,11 +467,50 @@ def parse_user_input(text):
     # 时间参照词
     time_ref = _extract_time_ref(original_text)
 
-    # 支持小数金额（如"十二块五"→12.5）
-    numbers = re.findall(r'\d+\.?\d*', text)
+    # v3.9.12: LLM 优先解析日期（支持"上周三"、"上上周周二"等复杂表达）
+    # 失败时降级到正则 _parse_relative_date，最后默认 today
+    now = datetime.now()
+    parsed_date, date_label = _parse_date_with_llm(original_text, now)
+    if not parsed_date:
+        # 降级：正则相对日期解析（不依赖 LLM，保证可用性）
+        parsed_date, date_label = _parse_relative_date(original_text, now)
+    if parsed_date:
+        record_date = parsed_date
+        # 如果有相对时间词标签但 time_ref 未捕获，补充
+        if not time_ref and date_label:
+            time_ref = date_label
+    else:
+        record_date = now.strftime("%Y-%m-%d")
+
+    # v3.9.11: 金额提取 — 使用语义模式而非盲目取首个数字。
+    # 避免将日期中的数字（如"上周一"的一、"7月25日"的7/25）误判为金额。
+    amount = 0
+    numbers = re.findall(r'\d+\.?\d*', text) if text else []
+
     if numbers:
-        num_str = numbers[0]
-        amount = float(num_str) if '.' in num_str else int(num_str)
+        # 策略 1: 匹配金额附近的货币词（元/块/钱/角/毛），最可靠
+        currency_match = re.search(r'(\d+\.?\d*)\s*[元块钱角毛]', text)
+        if currency_match:
+            num_str = currency_match.group(1)
+            amount = float(num_str) if '.' in num_str else int(num_str)
+        else:
+            # 策略 2: 匹配消费动词后的数字（消费N / 花了N / 用了N / 买了N）
+            verb_match = re.search(
+                r'(?:消费|花了?|用了?|买了?|付了?)\s*(\d+\.?\d*)', text
+            )
+            if verb_match:
+                num_str = verb_match.group(1)
+                amount = float(num_str) if '.' in num_str else int(num_str)
+            else:
+                # 策略 3: 兜底 — 取最大数值（金额通常比日期数字大）
+                amounts = []
+                for n in numbers:
+                    try:
+                        amounts.append(float(n) if '.' in n else int(n))
+                    except ValueError:
+                        continue
+                if amounts:
+                    amount = max(amounts)
     else:
         amount = 0
 
@@ -187,7 +518,7 @@ def parse_user_input(text):
         "type": data_type,
         "amount": amount,
         "source": source,
-        "date": datetime.now().strftime("%Y-%m-%d"),
+        "date": record_date,
         "category": category,
         "time_ref": time_ref,
         "original_text": original_text,

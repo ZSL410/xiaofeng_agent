@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.8"
+VERSION = "3.9.14"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -595,6 +595,16 @@ def _describe_reminder(params):
         return f"{' '.join(parts)}后提醒"
 
 
+def _record_tool_operation(short_term, user_input, reply_text):
+    """
+    v3.9.9: 将工具操作记录到短期记忆，使 recall 能回顾非聊天操作。
+    存储格式与 chat 一致：user → assistant 交替，便于 recall 函数统一读取。
+    """
+    short_term.append({"role": "user", "content": user_input})
+    short_term.append({"role": "assistant", "content": reply_text})
+    save_short_term(short_term)
+
+
 def _generate_tool_reply(result, prefix="好的"):
     """
     根据工具模块返回的结构化结果，生成面向用户的自然语言回复（v3.8.0 新增）。
@@ -1002,6 +1012,7 @@ def main():
             # v3.8.0: 使用集中回复层包装，兼容旧版字符串和新版结构化返回
             reply = _generate_tool_reply(result, prefix="明白了")
             speak(reply)
+            _record_tool_operation(short_term, scope_text, reply)
             continue
 
         # ============================================================
@@ -1023,16 +1034,19 @@ def main():
                                        _func="add_reminder_from_params")
                     print(result)
                     speak(result)
+                    _record_tool_operation(short_term, pending["raw_input"], result)
                 elif action == "correct_reminder" and intent.get("params"):
                     print("🔧 正在修正提醒...")
                     result = call_tool("日程", intent["params"],
                                        _func="modify_last_reminder")
                     print(result)
                     speak(result)
+                    _record_tool_operation(short_term, pending["raw_input"], result)
                 else:
                     result = call_tool(intent["tool"], pending["raw_input"])
                     print(result)
                     speak(result)
+                    _record_tool_operation(short_term, pending["raw_input"], str(result))
                 continue
 
             # 否定关键词
@@ -1060,6 +1074,7 @@ def main():
                 result = call_tool("日程", params, _func="modify_last_reminder")
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, resp, result)
                 continue
 
             # 用户说了别的内容 → 取消暂存，当作新请求继续
@@ -1131,6 +1146,7 @@ def main():
                 reply = _generate_tool_reply(result)
                 print(reply)
                 speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
                 continue
 
             # ---- query: 查询 ----
@@ -1151,6 +1167,7 @@ def main():
                 reply = _generate_tool_reply(result)
                 print(reply)
                 speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
                 continue
 
             # ---- delete: 删除 ----
@@ -1172,6 +1189,7 @@ def main():
                         reply = _generate_tool_reply(result, prefix="明白了")
                         print(reply)
                         speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
                     elif time in DIRECT_SCOPES:
                         # time 字段可直接用作 scope（如 today / last_week）
                         print(f"🔧 正在按时间删除财务记录（time={time}，3b路由）...")
@@ -1179,6 +1197,7 @@ def main():
                         reply = _generate_tool_reply(result, prefix="明白了")
                         print(reply)
                         speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
                     else:
                         # 无明确时间/范围 → 进入澄清流程
                         message = "你想删除全部财务记录，还是最近一周的？还是最新一条？"
@@ -1207,6 +1226,7 @@ def main():
                     reply = _generate_tool_reply(result, prefix="明白了")
                     print(reply)
                     speak(reply)
+                    _record_tool_operation(short_term, user_input, reply)
                 else:
                     # target 不明确，先确认类型
                     message = "你想删除哪种数据？是财务记录、日程待办、还是记忆数据？"
@@ -1225,6 +1245,7 @@ def main():
                                   _func="add_reminder_from_params")
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, user_input, result)
                 continue
 
             # ---- correct: 修正提醒 ----
@@ -1234,6 +1255,7 @@ def main():
                                   _func="modify_last_reminder")
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, user_input, result)
                 continue
 
             # ---- recall: 回顾最近操作 ----
@@ -1241,7 +1263,7 @@ def main():
                 print("🔍 正在回顾最近操作（3b路由）...")
                 # 从短期记忆中提取最近几轮对话
                 recent_turns = []
-                for turn in short_term[-8:]:  # 最近 8 轮（最多 4 组对话）
+                for turn in short_term[-12:]:  # 最近 12 轮（含工具操作记录）
                     role = turn.get("role", "")
                     content = turn.get("content", "")
                     if role == "user":
@@ -1256,7 +1278,7 @@ def main():
                         "下面是用户和助手最近的对话记录。请用一句话（不超过40字）总结用户刚才做了什么，"
                         "语气温暖自然。如果涉及提醒/记账/删除等操作，重点说明操作类型和内容。"
                         "只输出总结句子，不要任何解释。\n\n"
-                        + "\n".join(recent_turns[-6:])
+                        + "\n".join(recent_turns[-10:])
                         + "\n\n总结："
                     )
                     try:
@@ -1488,6 +1510,7 @@ def main():
             reply = _generate_tool_reply(result)
             print(reply)
             speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
 
         elif tool == "日程":
             if action == "add_reminder" and intent.get("params"):
@@ -1496,24 +1519,28 @@ def main():
                                    _func="add_reminder_from_params")
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, user_input, result)
             elif action == "correct_reminder":
                 print("🔧 正在修正提醒...")
                 params = intent.get("params") or {"raw_text": user_input}
                 result = call_tool("日程", params, _func="modify_last_reminder")
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, user_input, result)
             elif action == "delete_reminder":
                 print("🔧 正在按描述删除提醒...")
                 query = intent.get("params", {}).get("query", user_input)
                 result = call_tool("日程", query, _func="delete_reminder_by_query")
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, user_input, result)
             else:
                 # 日程管理类指令，走自然语言解析
                 print("🔧 正在处理日程指令...")
                 result = call_tool("日程", user_input)
                 print(result)
                 speak(result)
+                _record_tool_operation(short_term, user_input, result)
 
         else:
             print("[路由] → LLM 对话")

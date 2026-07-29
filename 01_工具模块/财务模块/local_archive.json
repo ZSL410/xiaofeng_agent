@@ -25,5 +25,338 @@
     "category": "生活",
     "time_ref": "昨天",
     "original_text": "昨天花了五十"
+  },
+  {
+    "type": "expense",
+    "amount": 20,
+    "source": "饭",
+    "date": "2026-07-28",
+    "category": "餐饮",
+    "time_ref": "今天",
+    "original_text": "今天吃饭花了二十"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "日常消费",
+    "date": "2026-07-28",
+    "category": "生活",
+    "time_ref": "昨天",
+    "original_text": "昨天花了十块"
+  },
+  {
+    "type": "expense",
+    "amount": 20,
+    "source": "饭",
+    "date": "2026-07-28",
+    "category": "餐饮",
+    "time_ref": "今天",
+    "original_text": "今天吃饭花二十"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "日常消费",
+    "date": "2026-07-27",
+    "category": "生活",
+    "time_ref": "昨天",
+    "original_text": "昨天花了十块"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-27",
+    "category": "生活",
+    "time_ref": "昨天",
+    "original_text": "昨天上午花了六块"
+  },
+  {
+    "type": "expense",
+    "amount": 1,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上周一消费十元"
+  },
+  {
+    "type": "expense",
+    "amount": 2,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上周二消费五元"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上上周周二花了十元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上周三花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上周二花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "饭",
+    "date": "2026-07-20",
+    "category": "餐饮",
+    "time_ref": "上周",
+    "original_text": "上周吃饭花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "饭",
+    "date": "2026-07-18",
+    "category": "餐饮",
+    "time_ref": "LLM日期解析",
+    "original_text": "上周三吃饭花了十元"
+  },
+  {
+    "type": "expense",
+    "amount": 3,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上周三花在了元"
+  },
+  {
+    "type": "expense",
+    "amount": 3,
+    "source": "其他",
+    "date": "2026-07-20",
+    "category": "其他",
+    "time_ref": "上周",
+    "original_text": "上周吃饭的三元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-20",
+    "category": "生活",
+    "time_ref": "上周",
+    "original_text": "上周三花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 10,
+    "source": "日常消费",
+    "date": "2026-07-29",
+    "category": "生活",
+    "time_ref": "",
+    "original_text": "上上周二花了十元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-29",
+    "category": "生活",
+    "time_ref": "",
+    "original_text": "周二花五元"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-28",
+    "category": "生活",
+    "time_ref": "昨天",
+    "original_text": "昨天花了六元"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-01",
+    "category": "生活",
+    "time_ref": "本月",
+    "original_text": "这个月的二十三号花了六元"
+  },
+  {
+    "type": "expense",
+    "amount": 7,
+    "source": "日常消费",
+    "date": "2026-07-22",
+    "category": "生活",
+    "time_ref": "上周周三",
+    "original_text": "上周三消费七元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-01",
+    "category": "生活",
+    "time_ref": "本月",
+    "original_text": "本月的四九号消费五元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-01",
+    "category": "生活",
+    "time_ref": "本月",
+    "original_text": "本月的十九号消费五元"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-23",
+    "category": "生活",
+    "time_ref": "上周周四",
+    "original_text": "是啊上周四花了六元"
+  },
+  {
+    "type": "expense",
+    "amount": 7,
+    "source": "日常消费",
+    "date": "2026-07-23",
+    "category": "生活",
+    "time_ref": "上周周四",
+    "original_text": "上周周四花了七元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-23",
+    "category": "生活",
+    "time_ref": "上周周四",
+    "original_text": "这儿上周四花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-23",
+    "category": "生活",
+    "time_ref": "上周周四",
+    "original_text": "让上周四花了六元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-01",
+    "category": "生活",
+    "time_ref": "本月",
+    "original_text": "本月二十六号花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-29",
+    "category": "生活",
+    "time_ref": "本周周三",
+    "original_text": "本周周三花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-22",
+    "category": "生活",
+    "time_ref": "上周周三",
+    "original_text": "上周周三花了六元"
+  },
+  {
+    "type": "expense",
+    "amount": 7,
+    "source": "日常消费",
+    "date": "2026-07-15",
+    "category": "生活",
+    "time_ref": "上上周周三",
+    "original_text": "上上周周三花了七元"
+  },
+  {
+    "type": "expense",
+    "amount": 8,
+    "source": "日常消费",
+    "date": "2026-07-01",
+    "category": "生活",
+    "time_ref": "本月",
+    "original_text": "本月的十六号消费八元"
+  },
+  {
+    "type": "expense",
+    "amount": 5,
+    "source": "日常消费",
+    "date": "2026-07-23",
+    "category": "生活",
+    "time_ref": "本月23号",
+    "original_text": "这个月的二十三号花了五元"
+  },
+  {
+    "type": "expense",
+    "amount": 8,
+    "source": "日常消费",
+    "date": "2026-07-16",
+    "category": "生活",
+    "time_ref": "本月16号",
+    "original_text": "这个月的十六号消费八月"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-01",
+    "category": "生活",
+    "time_ref": "本月",
+    "original_text": "本月的十七号消费六元"
+  },
+  {
+    "type": "expense",
+    "amount": 9,
+    "source": "日常消费",
+    "date": "2026-07-27",
+    "category": "生活",
+    "time_ref": "前天",
+    "original_text": "前天花了九元"
+  },
+  {
+    "type": "income",
+    "amount": 6,
+    "source": "收入来源",
+    "date": "2026-07-02",
+    "category": "收入",
+    "time_ref": "本月2号",
+    "original_text": "本月的二号收费六元"
+  },
+  {
+    "type": "expense",
+    "amount": 6,
+    "source": "日常消费",
+    "date": "2026-07-09",
+    "category": "生活",
+    "time_ref": "本月9号",
+    "original_text": "本月九号花费六元"
   }
 ]
