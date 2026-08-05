@@ -7,19 +7,260 @@ from datetime import datetime, timedelta
 # ===================== 配置 =====================
 BASE_DIR = os.path.dirname(__file__)
 DATA_FILE = os.path.join(BASE_DIR, "local_archive.json")
+
+# v3.9.18: 查询上下文缓存 — 支持"把它们详细列举一下"继承上一轮筛选条件
+_last_query_context = None
+
+# v3.9.24: 存储格式版本号 — 用于自动迁移检测
+_STORAGE_VERSION = 2
 # ===============================================
 
 # ===================== 数据管理 =====================
 def load_data():
+    """加载财务数据，自动排序（date desc + time asc），触发迁移。"""
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
+            data = json.load(f)
+    except Exception:
         return []
 
+    if not data:
+        return []
+
+    # v3.9.24: 检测是否需要迁移（缺少标准字段）
+    needs_migration = any("id" not in r for r in data)
+    if needs_migration:
+        data = _migrate_to_standard_format(data)
+        save_data(data)
+
+    return _sort_records(data)
+
+
 def save_data(data):
+    """保存财务数据，自动排序后写入。"""
+    sorted_data = _sort_records(data)
     with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(sorted_data, f, ensure_ascii=False, indent=2)
+
+
+# ===================== v3.9.24: 标准化辅助函数 =====================
+
+def _generate_id(date_str="", time_str=""):
+    """生成唯一 ID: finance_{YYYYMMDD}_{HHMM}_{6chars}"""
+    import random
+    import string
+    now = datetime.now()
+    if date_str:
+        try:
+            d = datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            d = now
+    else:
+        d = now
+    if time_str:
+        t_part = time_str.replace(":", "")
+    else:
+        t_part = now.strftime("%H%M")
+    rand = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
+    return f"finance_{d.strftime('%Y%m%d')}_{t_part}_{rand}"
+
+
+_PERIOD_MAP = [
+    ("00:00", "05:59", "凌晨"),
+    ("06:00", "08:59", "早上"),
+    ("09:00", "11:59", "上午"),
+    ("12:00", "13:59", "中午"),
+    ("14:00", "17:59", "下午"),
+    ("18:00", "21:59", "晚上"),
+    ("22:00", "23:59", "深夜"),
+]
+
+
+def _get_period(time_str):
+    """将 HH:MM 时间映射到时段时间标签。"""
+    if not time_str:
+        return ""
+    try:
+        h, m = map(int, time_str.split(":")[:2])
+    except (ValueError, AttributeError):
+        return ""
+    minutes = h * 60 + m
+    for start, end, label in _PERIOD_MAP:
+        sh, sm = map(int, start.split(":"))
+        eh, em = map(int, end.split(":"))
+        if sh * 60 + sm <= minutes <= eh * 60 + em:
+            return label
+    return ""
+
+
+_CATEGORY_RULES = [
+    (["饭", "吃", "餐", "食堂", "外卖", "餐厅", "饭店", "午餐", "晚餐", "早餐", "晚饭", "午饭", "早饭"], "餐饮"),
+    (["交通", "车", "公交", "地铁", "打车", "停车", "高铁", "火车", "飞机"], "交通"),
+    (["水果", "零食", "小吃", "面包", "甜品"], "食品"),
+    (["奶茶", "咖啡", "饮料", "饮品", "喝"], "饮品"),
+    (["购物", "买", "超市", "商场", "网购", "淘宝", "京东", "拼多多"], "购物"),
+    (["娱乐", "电影", "游戏", "唱K", "旅游", "KTV", "门票", "景点"], "娱乐"),
+    (["房租", "物业", "水电", "燃气", "网费", "电费", "水费", "煤气"], "居住"),
+    (["工资", "奖金", "兼职", "收入", "报销", "退款", "红包"], "收入"),
+    (["医疗", "药", "医院", "诊所", "体检"], "医疗"),
+    (["教育", "书", "课程", "培训", "学费"], "教育"),
+    (["通讯", "话费", "流量", "宽带"], "通讯"),
+    (["水"], "饮品"),
+    (["日常消费", "生活", "日用", "杂货"], "生活"),
+]
+
+
+def _get_category(source):
+    """根据来源关键词自动推断分类。"""
+    if not source:
+        return "其他"
+    for keywords, category in _CATEGORY_RULES:
+        for kw in keywords:
+            if kw in source:
+                return category
+    return "其他"
+
+
+def _generate_content(period, source, amount):
+    """自动生成自然语言摘要内容。"""
+    amt_str = str(int(amount)) if amount == int(amount) else str(amount)
+    if source and period:
+        return f"{period}{source}花了{amt_str}元"
+    elif source:
+        return f"{source}花了{amt_str}元"
+    elif period:
+        return f"{period}日常消费{amt_str}元"
+    else:
+        return f"日常消费{amt_str}元"
+
+
+def _normalize_date(date_str):
+    """将各种日期格式统一为 YYYY-MM-DD。"""
+    if not date_str:
+        return datetime.now().strftime("%Y-%m-%d")
+    s = str(date_str).strip()
+    # 2026-07-25
+    if re.match(r'^\d{4}-\d{2}-\d{2}$', s):
+        return s
+    # 2026/07/25
+    m = re.match(r'^(\d{4})/(\d{1,2})/(\d{1,2})$', s)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
+    # 2026-07-25T12:30:00
+    m = re.match(r'^(\d{4}-\d{2}-\d{2})T', s)
+    if m:
+        return m.group(1)
+    # 07-25 or 7-25
+    m = re.match(r'^(\d{1,2})[-/](\d{1,2})$', s)
+    if m:
+        return f"{datetime.now().year}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"
+    return s
+
+
+def _normalize_time(time_str):
+    """确保时间格式为 HH:MM。"""
+    if not time_str:
+        return "12:00"
+    s = str(time_str).strip()
+    if re.match(r'^\d{2}:\d{2}$', s):
+        return s
+    if re.match(r'^\d{2}:\d{2}:\d{2}$', s):
+        return s[:5]
+    # "12:30:00" from datetime
+    if "T" in s:
+        s = s.split("T")[1]
+        if re.match(r'^\d{2}:\d{2}', s):
+            return s[:5]
+    return "12:00"
+
+
+def _sort_records(records):
+    """按 date 降序 + time 升序排序。"""
+    if not records:
+        return records
+    def _sort_key(r):
+        d = r.get("date", "0000-00-00") or "0000-00-00"
+        t = r.get("time", "00:00") or "00:00"
+        return (-_date_to_ordinal(d), t)
+    return sorted(records, key=_sort_key)
+
+
+def _date_to_ordinal(d):
+    """将 YYYY-MM-DD 转为整数序数，用于排序。"""
+    try:
+        parts = d.split("-")
+        if len(parts) == 3:
+            return int(parts[0]) * 10000 + int(parts[1]) * 100 + int(parts[2])
+    except (ValueError, TypeError):
+        pass
+    return 0
+
+
+# ===================== v3.9.24: 数据迁移 =====================
+
+def _migrate_to_standard_format(records):
+    """
+    将旧格式记录迁移到标准化格式（v3.9.24）。
+    补全缺失字段，不丢失任何现有数据。
+    """
+    if not records:
+        return records
+
+    migrated = []
+    for r in records:
+        if not isinstance(r, dict):
+            continue
+
+        # 已迁移过的记录跳过
+        if "id" in r and "datetime" in r and "content" in r:
+            migrated.append(r)
+            continue
+
+        # 日期规范化
+        date_str = _normalize_date(r.get("date", ""))
+        # 时间规范化
+        raw_time = r.get("time", "")
+        if not raw_time:
+            # 尝试从 datetime 或 date 中提取
+            raw_dt = r.get("datetime", r.get("date", ""))
+            if "T" in str(raw_dt):
+                raw_time = str(raw_dt).split("T")[1][:5]
+        time_str = _normalize_time(raw_time)
+        # datetime 组合
+        dt_str = f"{date_str}T{time_str}:00"
+
+        period = _get_period(time_str)
+        source = r.get("source", "日常消费")
+        amount = r.get("amount", 0)
+        category = r.get("category") or _get_category(source)
+        content = r.get("content") or _generate_content(period, source, amount)
+        record_id = r.get("id") or _generate_id(date_str, time_str)
+
+        new_record = {
+            "id": record_id,
+            "type": r.get("type", "expense"),
+            "date": date_str,
+            "time": time_str,
+            "datetime": dt_str,
+            "period": period,
+            "amount": amount if isinstance(amount, (int, float)) else 0,
+            "source": source,
+            "category": category,
+            "content": content,
+            "detail": r.get("detail"),
+            "created_at": r.get("created_at") or dt_str,
+            "updated_at": r.get("updated_at"),
+            # 保留旧字段用于兼容（不参与新逻辑，仅供调试）
+            "_original_text": r.get("original_text", ""),
+            "_time_ref": r.get("time_ref", ""),
+        }
+        migrated.append(new_record)
+
+    debug = os.environ.get("DEBUG", "") == "1"
+    if debug:
+        print(f"[迁移] 已迁移 {len(migrated)} 条记录到标准化格式 (v3.9.24)")
+
+    return migrated
 
 # ===================== 分类映射（v3.8.0） =====================
 CATEGORY_MAP = {
@@ -77,6 +318,10 @@ def _parse_relative_date(text, now=None):
 
     today = now.strftime("%Y-%m-%d")
     text_clean = text.strip()
+    debug = os.environ.get("DEBUG", "") == "1"
+
+    if debug:
+        print(f"[日期解析] 输入: {text_clean!r}, 当前日期: {today} (周{['一','二','三','四','五','六','日'][now.weekday()]})")
 
     # 先检查显式日期格式（优先级最高）
     # 2026-07-27 / 2026/07/27
@@ -151,6 +396,10 @@ def _parse_relative_date(text, now=None):
             target_wd, wd_name = wd
             target_date = _compute_weekday_date(now, -1, target_wd)
             d = target_date.strftime("%Y-%m-%d")
+            if debug:
+                print(f"[日期解析] 上周X: text={text_clean!r}, weekday={wd_name}({target_wd}), "
+                      f"this_monday={(now - timedelta(days=now.weekday())).strftime('%Y-%m-%d')}, "
+                      f"result={d}")
             return d, f"上周{wd_name}"
         else:
             # Fallback: 上周一
@@ -187,6 +436,9 @@ def _parse_relative_date(text, now=None):
     if "本月" in text_clean or "这个月" in text_clean:
         d = now.strftime("%Y-%m") + "-01"
         return d, "本月"
+
+    if debug:
+        print(f"[日期解析] 无匹配: {text_clean!r}")
 
     return None, ""
 
@@ -570,37 +822,66 @@ def process_command(text):
     """
     处理单条完整指令（有钱数的情况）。
 
-    v3.8.0: 返回结构化结果，由上层（脑.py）负责生成用户可见的回复。
+    v3.9.24: 记录标准化 — 所有新记录自动填充 11 个标准字段。
     """
-    new_record = parse_user_input(text)
-    if new_record['amount'] > 0:
-        data = load_data()
-        data.append(new_record)
-        save_data(data)
-
-        # 生成简短摘要，供上层拼装自然语言回复
-        time_ref = new_record.get("time_ref", "")
-        source = new_record["source"]
-        amount = new_record["amount"]
-        amt_str = str(int(amount)) if amount == int(amount) else str(amount)
-        summary = f"记录{time_ref}{source}{amt_str}元"
-
-        return {
-            "status": "success",
-            "type": new_record["type"],
-            "data": {
-                "amount": amount,
-                "source": source,
-                "date": new_record["date"],
-                "category": new_record["category"],
-            },
-            "summary": summary,
-        }
-    else:
+    parsed = parse_user_input(text)
+    if parsed['amount'] <= 0:
         return {
             "status": "error",
             "message": "没听懂金额，请说清楚一点，比如'今天早上吃饭花了6元'",
         }
+
+    now = datetime.now()
+    date_str = _normalize_date(parsed.get("date", ""))
+    time_str = parsed.get("time") or now.strftime("%H:%M")
+    time_str = _normalize_time(time_str)
+    dt_str = f"{date_str}T{time_str}:00"
+
+    source = parsed.get("source", "日常消费")
+    amount = parsed["amount"]
+    period = _get_period(time_str)
+    category = _get_category(source)
+    content = _generate_content(period, source, amount)
+    record_id = _generate_id(date_str, time_str)
+
+    new_record = {
+        "id": record_id,
+        "type": parsed.get("type", "expense"),
+        "date": date_str,
+        "time": time_str,
+        "datetime": dt_str,
+        "period": period,
+        "amount": amount,
+        "source": source,
+        "category": category,
+        "content": content,
+        "detail": None,
+        "created_at": dt_str,
+        "updated_at": None,
+        "_original_text": parsed.get("original_text", ""),
+        "_time_ref": parsed.get("time_ref", ""),
+    }
+
+    data = load_data()
+    data.append(new_record)
+    save_data(data)
+
+    # 生成简短摘要，供上层拼装自然语言回复
+    time_ref = parsed.get("time_ref", "")
+    amt_str = str(int(amount)) if amount == int(amount) else str(amount)
+    summary = f"记录{time_ref}{source}{amt_str}元"
+
+    return {
+        "status": "success",
+        "type": new_record["type"],
+        "data": {
+            "amount": amount,
+            "source": source,
+            "date": date_str,
+            "category": category,
+        },
+        "summary": summary,
+    }
 
 
 def delete_by_scope(scope, keyword=None):
@@ -698,21 +979,25 @@ _QUERY_PARSE_PROMPT = """你是财务查询解析器。将用户的自然语言�
 ## 输出格式 (只输出JSON, 无其他内容)
 {{
   "date_range": "today"|"yesterday"|"this_week"|"last_week"|"this_month"|"last_month"|null,
+  "date": "YYYY-MM-DD"|null,
   "source": "饭"|"奶茶"|...|null,
   "aggregate": "sum"|"count"|"avg"|"max"|"min"|null,
   "sort": "amount_desc"|"amount_asc"|"date_desc"|"date_asc"|null,
   "limit": <整数>|null,
   "amount_min": <数字>|null,
-  "amount_max": <数字>|null
+  "amount_max": <数字>|null,
+  "detail": true|false
 }}
 
 ## 规则
 - date_range: "今天"→today, "昨天"→yesterday, "这周/本周"→this_week, "上周"→last_week, "这个月/本月"→this_month, "上个月"→last_month
+- date: 🚨 始终填 null！日期由后端正则引擎精确计算，LLM 不准填写此字段（避免幻觉日期如 2023-04-18）
 - source: 从食物/饮品/交通等类别词提取，无则为null
 - aggregate: "花了多少/一共/总计"→sum, "几笔/几次/多少笔"→count, "平均"→avg, "最大/最多/最贵"→max, "最小/最少/最便宜"→min
 - sort: "最多/最大/最贵"→amount_desc, "最少/最便宜"→amount_asc
 - limit: 用户说"前3"/"top3"或有排序需求时设
 - amount_min/amount_max: "大于50"→amount_min:50, "小于20"→amount_max:20, "50到100"→amount_min:50,amount_max:100
+- detail: 用户要求"详细"/"列举"/"逐条"/"明细"/"每笔"列出时设为true，否则false
 
 用户输入: {user_input}
 JSON:"""
@@ -775,7 +1060,7 @@ def _execute_query(params):
     根据结构化参数查询财务数据，返回结构化结果。
 
     参数:
-        params: dict — 查询参数, 字段可含 date_range/source/aggregate/sort/limit/amount_min/amount_max
+        params: dict — 查询参数, 字段可含 date_range/date/source/aggregate/sort/limit/amount_min/amount_max/detail
 
     返回:
         dict — {"status": "success", "type": "query", "data": [...], "summary": "..."}
@@ -784,68 +1069,80 @@ def _execute_query(params):
     now = datetime.now()
     today = now.strftime("%Y-%m-%d")
 
-    # ---- 日期范围过滤 ----
-    date_range = params.get("date_range", "")
-
-    # 计算截止日期
-    if isinstance(date_range, str):
-        date_range = date_range.strip().lower()
+    # ---- v3.9.16: 精确日期过滤（优先级最高，覆盖 date_range）----
+    exact_date = params.get("date", "")
+    if isinstance(exact_date, str):
+        exact_date = exact_date.strip()
     else:
-        date_range = ""
+        exact_date = ""
 
-    # v3.9.3: 映射 3b router 的 "time" 字段到 date_range
-    # 当 date_range 未设置时，从 3b 路由的 time 字段推断
-    if not date_range:
-        time_field = params.get("time", "")
-        if time_field and isinstance(time_field, str):
-            TIME_TO_RANGE = {
-                "today": "today",
-                "yesterday": "yesterday",
-                "this_week": "this_week",
-                "this_month": "this_month",
-                "last_week": "last_week",
-            }
-            date_range = TIME_TO_RANGE.get(time_field.strip().lower(), "")
+    if exact_date:
+        records = [r for r in records if (r.get("date", "") or "") == exact_date]
+        label_date = exact_date
+        date_start = exact_date  # 标记已过滤，跳过后续范围过滤
+    else:
+        # ---- 日期范围过滤 ----
+        date_range = params.get("date_range", "")
 
-    date_start = None
-    label_date = ""
-
-    if date_range == "today":
-        date_start = today
-        label_date = "今天"
-    elif date_range == "yesterday":
-        date_start = (now - timedelta(days=1)).strftime("%Y-%m-%d")
-        label_date = "昨天"
-    elif date_range in ("this_week", "本周"):
-        days_since_monday = now.weekday()
-        date_start = (now - timedelta(days=days_since_monday)).strftime("%Y-%m-%d")
-        label_date = "本周"
-    elif date_range in ("last_week", "上周"):
-        days_since_monday = now.weekday()
-        last_monday = (now - timedelta(days=days_since_monday + 7))
-        last_sunday = last_monday + timedelta(days=6)
-        date_start = last_monday.strftime("%Y-%m-%d")
-        date_end = last_sunday.strftime("%Y-%m-%d")
-        label_date = "上周"
-    elif date_range in ("this_month", "本月"):
-        date_start = now.strftime("%Y-%m") + "-01"
-        label_date = "本月"
-    elif date_range in ("last_month", "上个月"):
-        first_this_month = datetime(now.year, now.month, 1)
-        last_month_end = first_this_month - timedelta(days=1)
-        date_start = last_month_end.strftime("%Y-%m") + "-01"
-        date_end = last_month_end.strftime("%Y-%m-%d")
-        label_date = "上个月"
-
-    if date_start:
-        if date_range == "today" or date_range == "yesterday":
-            records = [r for r in records if (r.get("date", "") or "") == date_start]
-        elif date_range in ("last_week", "上个月"):
-            records = [r for r in records
-                       if date_start <= (r.get("date", "") or "") <= date_end]
+        # 计算截止日期
+        if isinstance(date_range, str):
+            date_range = date_range.strip().lower()
         else:
-            records = [r for r in records
-                       if (r.get("date", "") or "") >= date_start]
+            date_range = ""
+
+        # v3.9.3: 映射 3b router 的 "time" 字段到 date_range
+        # 当 date_range 未设置时，从 3b 路由的 time 字段推断
+        if not date_range:
+            time_field = params.get("time", "")
+            if time_field and isinstance(time_field, str):
+                TIME_TO_RANGE = {
+                    "today": "today",
+                    "yesterday": "yesterday",
+                    "this_week": "this_week",
+                    "this_month": "this_month",
+                    "last_week": "last_week",
+                }
+                date_range = TIME_TO_RANGE.get(time_field.strip().lower(), "")
+
+        date_start = None
+        label_date = ""
+
+        if date_range == "today":
+            date_start = today
+            label_date = "今天"
+        elif date_range == "yesterday":
+            date_start = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+            label_date = "昨天"
+        elif date_range in ("this_week", "本周"):
+            days_since_monday = now.weekday()
+            date_start = (now - timedelta(days=days_since_monday)).strftime("%Y-%m-%d")
+            label_date = "本周"
+        elif date_range in ("last_week", "上周"):
+            days_since_monday = now.weekday()
+            last_monday = (now - timedelta(days=days_since_monday + 7))
+            last_sunday = last_monday + timedelta(days=6)
+            date_start = last_monday.strftime("%Y-%m-%d")
+            date_end = last_sunday.strftime("%Y-%m-%d")
+            label_date = "上周"
+        elif date_range in ("this_month", "本月"):
+            date_start = now.strftime("%Y-%m") + "-01"
+            label_date = "本月"
+        elif date_range in ("last_month", "上个月"):
+            first_this_month = datetime(now.year, now.month, 1)
+            last_month_end = first_this_month - timedelta(days=1)
+            date_start = last_month_end.strftime("%Y-%m") + "-01"
+            date_end = last_month_end.strftime("%Y-%m-%d")
+            label_date = "上个月"
+
+        if date_start:
+            if date_range == "today" or date_range == "yesterday":
+                records = [r for r in records if (r.get("date", "") or "") == date_start]
+            elif date_range in ("last_week", "上个月"):
+                records = [r for r in records
+                           if date_start <= (r.get("date", "") or "") <= date_end]
+            else:
+                records = [r for r in records
+                           if (r.get("date", "") or "") >= date_start]
 
     # ---- 来源过滤 ----
     source_filter = params.get("source", "")
@@ -905,6 +1202,17 @@ def _execute_query(params):
     if limit and isinstance(limit, (int, float)) and limit > 0:
         records = records[:int(limit)]
 
+    # ---- v3.9.16: 明细模式检测 ----
+    detail = params.get("detail", False)
+    if isinstance(detail, str):
+        detail = detail.strip().lower() in ("true", "1", "yes")
+    # 也检查 query_text 中的关键词（兜底）
+    query_text_for_detail = params.get("_query_text", "")
+    if not detail and query_text_for_detail:
+        DETAIL_KW = ["详细", "逐条", "列出", "明细", "每笔", "列举"]
+        if any(kw in query_text_for_detail for kw in DETAIL_KW):
+            detail = True
+
     # ---- 生成摘要 ----
     if count == 0:
         scope_desc = label_date or "全部"
@@ -919,6 +1227,37 @@ def _execute_query(params):
     # 构建自然语言摘要
     scope_desc = label_date or ""
     src_desc = source_filter or ""
+
+    # v3.9.24: 明细模式 — 逐条列出（含时间 + 时段）
+    if detail:
+        detail_lines = []
+        for i, r in enumerate(records, 1):
+            date_str = r.get("date", "?")
+            time_str = r.get("time", "")
+            source_str = r.get("source", "?")
+            amt = r.get("amount", 0)
+            amt_str_item = str(int(amt)) if amt == int(amt) else str(amt)
+            period_str = r.get("period", "")
+            type_str = "💸" if r.get("type") == "expense" else "💰"
+            # 格式: 1. 💸 07-29 12:00 中午 吃饭 10元
+            date_short = date_str[-5:] if len(date_str) >= 10 else date_str  # MM-DD
+            time_display = f" {time_str}" if time_str else ""
+            period_display = f" {period_str}" if period_str else ""
+            detail_lines.append(
+                f"{i}. {type_str} {date_short}{time_display}{period_display} "
+                f"{source_str} {amt_str_item}元"
+            )
+        detail_text = "\n".join(detail_lines)
+        total_amt = sum(r.get("amount", 0) for r in records)
+        total_str = str(int(total_amt)) if total_amt == int(total_amt) else str(total_amt)
+        scope_prefix = scope_desc + " " if scope_desc else ""
+        summary = f"{scope_prefix}共{count}笔财务记录：\n\n{detail_text}\n\n合计：{total_str}元"
+        return {
+            "status": "success",
+            "type": "query",
+            "data": records,
+            "summary": summary.strip(),
+        }
 
     if aggregate == "count":
         summary = f"{scope_desc}{src_desc}共{count}笔记录"
@@ -949,15 +1288,20 @@ def _execute_query(params):
 
 def query_finance(query_text, params=None):
     """
-    统一的财务查询入口（v3.8.1 新增）。
+    统一的财务查询入口（v3.8.1 新增，v3.9.18 增强：+上下文继承 +精确日期 +明细模式）。
 
     支持两种模式:
     - Mode B (structured): params 包含明确的查询参数, 直接执行
     - Mode C (natural language): 仅 query_text, 通过 LLM 解析后执行
 
+    v3.9.18: 当用户使用指代词（"它们"/"这些"）或纯格式请求（"详细点"）时，
+    自动继承上一轮查询的筛选条件（date/time/source/scope），避免上下文丢失。
+
     返回:
         dict — {"status": "success"/"error", "type": "query", "data": [...], "summary": "..."}
     """
+    global _last_query_context
+
     if not query_text:
         return {"status": "error", "message": "请提供查询条件"}
 
@@ -980,7 +1324,60 @@ def query_finance(query_text, params=None):
     if not query_params:
         query_params = {"date_range": "today"}
 
-    return _execute_query(query_params)
+    # ---- v3.9.17: 从原始文本提取精确日期（优先于 date_range）----
+    # _parse_relative_date 使用确定性的正则计算，LLM（_parse_query_nl）可能
+    # 产生幻觉日期（如把"上周周二"算成 2023-04-18）。因此始终运行正则解析，
+    # 并覆盖 LLM 可能返回的错误 date 字段。
+    parsed_date, date_label = _parse_relative_date(query_text)
+    if parsed_date:
+        query_params["date"] = parsed_date
+        if os.environ.get("DEBUG", "") == "1":
+            print(f"[查询日期] 正则解析: {query_text!r} → {parsed_date} ({date_label})")
+
+    # ---- v3.9.18: 上下文继承检测 ----
+    # 当用户使用指代词（"它们"/"这些"）或仅要求格式化（"详细点"），
+    # 且当前查询没有明确筛选条件时，继承上一轮查询的筛选条件。
+    REF_WORDS = ["它们", "这些", "那些", "刚才的", "之前的"]
+    DETAIL_WORDS = ["详细", "逐条", "列出", "明细", "每笔", "列举"]
+    has_ref = any(w in query_text for w in REF_WORDS)
+    is_detail_req = query_params.get("detail") or any(
+        w in query_text for w in DETAIL_WORDS
+    )
+    has_filters = bool(
+        query_params.get("date")
+        or query_params.get("time")
+        or query_params.get("date_range")
+        or (query_params.get("scope") and query_params.get("scope") != "all")
+        or query_params.get("source")
+    )
+
+    if _last_query_context and not has_filters and (has_ref or is_detail_req):
+        for k in ("date", "time", "date_range", "source", "scope"):
+            val = _last_query_context.get(k)
+            if val:
+                query_params[k] = val
+        if os.environ.get("DEBUG", "") == "1":
+            inherited = {k: query_params.get(k) for k in ("date", "time", "date_range", "source", "scope") if query_params.get(k)}
+            print(f"[上下文继承] 指代词={has_ref} 格式请求={is_detail_req} → 继承: {json.dumps(inherited, ensure_ascii=False)}")
+
+    # ---- v3.9.16: 传递原始查询文本供明细模式检测 ----
+    query_params["_query_text"] = query_text
+
+    # ---- v3.9.18: 执行查询并缓存上下文 ----
+    result = _execute_query(query_params)
+
+    # 保存当前查询的筛选条件，供下一轮上下文继承
+    ctx = {}
+    for k in ("date", "time", "date_range", "source", "scope"):
+        v = query_params.get(k)
+        if v:
+            ctx[k] = v
+    if ctx:
+        _last_query_context = ctx
+        if os.environ.get("DEBUG", "") == "1":
+            print(f"[上下文缓存] 保存: {json.dumps(ctx, ensure_ascii=False)}")
+
+    return result
 
 # ===================== 独立运行入口 =====================
 if __name__ == "__main__":

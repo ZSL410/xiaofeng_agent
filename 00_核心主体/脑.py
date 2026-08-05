@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.14"
+VERSION = "3.9.24"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -190,7 +190,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 当前时间:{current_time}
 {context_section}
 ## 输出格式
-{{"intent":"record|query|delete|remind|correct|recall|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null"}},"confidence":0.0~1.0}}
+{{"intent":"record|query|delete|remind|correct|recall|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false}},"confidence":0.0~1.0}}
 
 ## 意图判定规则
 
@@ -201,15 +201,20 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - 同时提取source（吃饭/购物/交通等）和time（默认today）
 - target固定为finance
 - ⚠️ 只有record意图才提取amount，其他意图amount一律为null
+- 🚨 record 排除规则（最高优先级）：如果用户输入包含 "多少钱"、"花了多少"、"用了多少"、"合计"、"总共"、"一共" 等查询/汇总词，则绝对不能判定为 record，必须判定为 query。即使同时出现"花了"/"用了"等词，查询语义优先。
 
 ### query（查询）
 - 查看数据，不修改
-- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共、看
-- 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week，"本月/这个月"→this_month）
+- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共、看、多少钱、花了多少、用了多少、合计、总共
+- 🚨 查询优先级：含 "多少钱"/"花了多少"/"用了多少"/"合计"/"总共"/"一共" 的输入 → 即使同时包含"花了"/"用了"等记账触发词，也必须判定为 query（不是 record）
+- 🚨 格式化查询规则（v3.9.19）：含 "详细"/"列举"/"列出"/"明细"/"逐条"/"每笔"/"具体" 但无其他工具意图（删除/记账/提醒）→ 必须判定为 query，绝不能判定为 chat。即使无明确 target，也应尝试从上下文继承或设为 finance
+- 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week，"本月/这个月"→this_month，"昨天"→yesterday，"上周"→last_week）
 - amount必须为null（查询场景不提取金额）
 - target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/叫我→schedule，记忆/记住→memory
 - ⚠️ 上下文延续规则：如果当前输入省略了主题词（如只说"看这个月的"、"那本周呢"），有上下文时沿用上一轮的target和意图
+- ⚠️ 格式化查询延续规则（v3.9.19）：如果当前输入只有格式化关键词（"详细"/"列举"/"明细"/"逐条"等）而无时间/类别/目标词，有上下文时必须沿用上一轮的 target（通常为 finance）
 - 当target=schedule时，根据输入填充scope或time（如"今天的待办"→scope:"today"，"本周任务"→time:"this_week"）
+- 🆕 detail: 用户要求"详细"/"列举"/"逐条"/"明细"/"每笔"/"列出"时设为true，否则false（v3.9.16）
 
 ### delete（删除）
 - 🚨最高优先级：含删除/删掉/清空/清除/去掉 → delete
@@ -250,8 +255,19 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - confidence一般为0.85-0.95（回顾意图明确）
 
 ### chat（聊天）
-- 无工具意图的日常对话
-- 问候、闲聊、确认词（是/对/好）、简单问答、否定删除的语句
+- ⚠️ chat 优先级规则（v3.9.21，最高优先级）：
+  当输入可能同时匹配"工具关键词"和"聊天关键词"时，优先判定为聊天。
+  理由：聊天误判为工具的代价（功能查询被当成clarify冷冰冰回复），
+  比工具误判为聊天的代价（闲聊进入7b对话，用户再发一次指令即可）更大。
+- 触发词（含以下任一即判定为chat）：
+  你好、哈喽、嗨、早上好、下午好、晚上好、你是谁、你叫什么名字、你几岁了、
+  你多大了、你是什么、你是AI吗、你会什么、你能干什么、你会干什么、你能做什么、
+  你会什么功能、你有什么功能、你能帮我什么、你能帮我做什么、你有什么用、你会干嘛、你懂什么、
+  你会帮人干什么、你有什么能力、你能处理什么、你能回答什么、
+  今天天气不错、今天天气怎么样、讲个笑话、说个笑话、你累吗、你开心吗、
+  你吃了吗、你在吗、在不在、忙吗、有空吗、跟我说说、聊聊、随便聊、聊聊天、
+  随便说说、你的功能是什么
+- 其他也视为聊天的场景：问候、闲聊、确认词（是/对/好）、简单问答、否定删除的语句
 - target为null，所有params字段为null
 
 ### clarify（澄清）
@@ -277,6 +293,18 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 输入：今天吃饭花了二十元
 输出：{{"intent":"record","target":"finance","params":{{"amount":20,"time":"today","source":"吃饭","scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：昨天花了多少钱
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"yesterday","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：这个月花了多少
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_month","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：上周花了多少
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"last_week","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：花了15元
+输出：{{"intent":"record","target":"finance","params":{{"amount":15,"time":"today","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
 
 输入：查看本月所有开销
 输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_month","source":null,"scope":"all","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
@@ -315,7 +343,25 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 输出：{{"intent":"query","target":"schedule","params":{{"amount":null,"time":"last_week","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
 
 输入（上一轮在查财务）：那本周呢
-输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_week","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_week","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":false}},"confidence":0.85}}
+
+输入：详细列举今天的记录
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"today","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.9}}
+
+输入：显示所有明细
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":null,"source":null,"scope":"all","keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.9}}
+
+输入（上一轮在查财务）：详细列举一下
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.85}}
+
+输入（上一轮在查财务）：详细点
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.85}}
+
+输入（上一轮在查财务）：列举一下
+输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.8}}
+
+输入：你会什么功能
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
 
 输入：你好
 输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
@@ -607,43 +653,213 @@ def _record_tool_operation(short_term, user_input, reply_text):
 
 def _generate_tool_reply(result, prefix="好的"):
     """
-    根据工具模块返回的结构化结果，生成面向用户的自然语言回复（v3.8.0 新增）。
+    根据工具模块返回的结构化结果，生成温暖、自然的用户回复（v3.9.23 重写）。
 
     架构定位：这是回复层的集中入口。各工具模块只返回结构化数据，
-    不负责拼装用户可见的字符串。所有模块共享同一套回复模板，
-    后续可升级为 LLM 驱动而无需修改各个工具模块。
+    不负责拼装用户可见的字符串。本函数负责将所有工具结果转换为
+    与聊天风格一致的温暖回复，消除"工具模式"与"聊天模式"的割裂感。
+
+    v3.9.23: 自动追加跟进问题，保持对话流畅（如"还有别的要记的吗？"）
 
     参数:
         result: dict — 工具模块返回的结构化结果
-            {"status": "success"/"error", "type": "...", "data": {...}, "summary": "..."}
-            或 {"status": "error", "message": "..."}
-        prefix: str — 成功回复的前缀词，按场景可传入"好的"/"明白了"等
+        prefix: str — 已废弃（v3.9.22），保留以兼容旧调用方
 
     返回:
-        str — 面向用户的自然语言回复
+        str — 温暖、自然的用户回复（含跟进问题）
     """
     if not isinstance(result, dict):
-        # 兼容旧版字符串返回值（其他模块尚未迁移到结构化返回）
         return str(result)
 
+    # ---- 错误回复：温暖化常见错误消息 ----
     if result.get("status") == "error":
-        return result.get("message", "处理失败，请重试")
-
-    # 成功：根据类型生成自然语言回复
-    rtype = result.get("type", "")
-    summary = result.get("summary", "")
-
-    if rtype == "delete":
-        return f"{prefix}，已{summary}"
-    elif rtype == "query":
-        # 查询结果摘要已包含完整描述，直接返回
-        return summary
-    elif rtype in ("expense", "income"):
-        # summary 格式如 "记录今天饭10元"，直接拼接前缀即可
-        return f"{prefix}，已{summary}"
+        msg = result.get("message", "处理失败，请重试")
+        if "没有找到" in msg or "没找到" in msg:
+            main = "没找到你说的那笔记录，能再说清楚一点吗？"
+        elif "没有财务记录" in msg:
+            if "今天" in msg:
+                main = "今天还没有记录哦，要不要记一笔？"
+            elif "最近一周" in msg:
+                main = "最近一周还没有记录呢～"
+            else:
+                main = "目前还没有记录呢～"
+        elif "请提供" in msg:
+            main = msg.replace("💰 ", "").replace("⚠️ ", "").replace("🔍 ", "")
+        else:
+            main = msg
     else:
-        # 兜底：直接用 summary
-        return f"{prefix}，已{summary}" if summary else f"{prefix}，操作完成"
+        # ---- 成功回复：按类型分发 ----
+        rtype = result.get("type", "")
+        summary = result.get("summary", "")
+        data = result.get("data", {})
+
+        if rtype == "delete":
+            main = _fmt_delete(summary)
+        elif rtype == "query":
+            main = _fmt_query(summary)
+        elif rtype in ("expense", "income"):
+            main = _fmt_record(summary, data)
+        else:
+            main = summary if summary else "操作完成啦～"
+
+    # ---- v3.9.23: 追加自然的跟进问题 ----
+    followup = _tool_followup(result)
+    if followup:
+        main += followup
+
+    return main
+
+
+def _tool_followup(result):
+    """
+    v3.9.23: 根据工具执行结果生成自然的跟进问题，保持对话流畅。
+
+    不同类型的操作使用不同的跟进措辞，让用户感觉是在对话而非
+    使用命令行工具。
+    """
+    if not isinstance(result, dict):
+        return ""
+
+    rtype = result.get("type", "")
+    status = result.get("status", "")
+
+    # 错误场景 → 引导用户修正
+    if status == "error":
+        msg = result.get("message", "")
+        if "没有找到" in msg or "没找到" in msg:
+            return " 能再说清楚一点是哪个吗？"
+        if "没有" in msg and ("记录" in msg or "财务" in msg):
+            return " 要换个日期查查看吗？"
+        return ""
+
+    # 记账成功 → 询问是否还有
+    if rtype in ("expense", "income"):
+        return " 还有别的要记的吗？"
+
+    # 查询成功 → 根据有无数据给出不同跟进
+    if rtype == "query":
+        data = result.get("data", [])
+        if isinstance(data, list) and len(data) > 0:
+            return " 需要帮你整理一下吗？还是想查别的日期？"
+        else:
+            return " 要换个日期查查看吗？"
+
+    # 删除成功 → 询问是否还有调整
+    if rtype == "delete":
+        return " 还有别的要调整的吗？"
+
+    return ""
+
+
+def _fmt_delete(summary):
+    """格式化删除回复为温暖风格。"""
+    # "删除今天3条财务记录" / "清空全部40条财务记录" / "删除最新财务记录: 饭 10元"
+    if "清空" in summary:
+        m = re.search(r'(\d+)条', summary)
+        count = m.group(1) if m else ""
+        return f"已全部清掉啦，{count}条记录都没了～" if count else "已全部清掉啦～"
+
+    m = re.search(r'删除(.+?)(\d+)条', summary)
+    if m:
+        scope = m.group(1).strip()
+        count = m.group(2)
+        return f"已删掉啦，{scope}那{count}条记录清掉咯～"
+
+    # "删除最新财务记录: 饭 10元"
+    m = re.search(r'删除最新财务记录:\s*(.+)', summary)
+    if m:
+        detail = m.group(1).strip()
+        return f"已删掉最近那笔啦（{detail}），没问题～"
+
+    return "已删掉啦，没问题～"
+
+
+def _fmt_query(summary):
+    """格式化查询回复为温暖风格。"""
+    # 明细列表（含换行）→ 保持格式，加温暖前缀
+    if "\n" in summary:
+        return f"来，给你列出来啦：\n\n{summary}"
+
+    # 无数据："{time}没有{source}财务记录"
+    if "没有" in summary and "财务记录" in summary:
+        m = re.match(r'^(.+?)没有', summary)
+        time_part = m.group(1).strip() if m else ""
+        if time_part:
+            return f"{time_part}没有查到记录哦，是不是记错日期啦？"
+        return "没有查到相关记录哦，要不要换个别的时间看看？"
+
+    # 汇总："{time}{source}共{count}笔，合计{total}元"
+    m = re.match(r'^(.+?)共(\d+)笔，合计([\d.]+)元$', summary)
+    if m:
+        time_part = m.group(1).strip()
+        count = m.group(2)
+        total = m.group(3)
+        total_str = str(int(float(total))) if float(total) == int(float(total)) else total
+        if time_part:
+            return f"找到了！{time_part}有{count}笔记录，一共{total_str}块"
+        else:
+            return f"找到了！一共{count}笔记录，合计{total_str}块"
+
+    # 单条："2026-07-22 饭 10元（今天仅此一笔）"
+    if "仅此一笔" in summary:
+        return f"就这一笔记录：{summary}"
+
+    # 聚合查询："{scope}最大开支: 饭 50元"
+    for agg_word in ["最大开支", "最小开支"]:
+        if agg_word in summary:
+            return summary  # 聚合查询保持原样即可
+
+    # 兜底
+    return summary
+
+
+def _fmt_record(summary, data):
+    """格式化记账回复为温暖风格。"""
+    # data 中有结构化字段：amount, source, date, category
+    amount = data.get("amount", 0) if isinstance(data, dict) else 0
+    source = data.get("source", "") if isinstance(data, dict) else ""
+    date_str = data.get("date", "") if isinstance(data, dict) else ""
+
+    amt_str = str(int(amount)) if amount == int(amount) else str(amount)
+
+    # 来源友好化
+    source_friendly = source
+    if source == "日常消费":
+        source_friendly = "日常"
+    elif source == "收入来源":
+        source_friendly = "收入"
+    elif source == "其他":
+        source_friendly = ""
+
+    # 时间友好化：从 summary 中提取 human-readable 时间词
+    # summary 格式: "记录{time_ref}{source}{amount}元"
+    time_word = ""
+    time_tokens = ["大前天", "前天", "昨天", "今天"]
+    for t in time_tokens:
+        if t in summary:
+            time_word = t
+            break
+    if not time_word:
+        # 检查上周X/本周X/上上周X
+        m = re.search(r'((?:上周|本周|上上周)[一二三四五六日天])', summary)
+        if m:
+            time_word = m.group(1)
+    if not time_word:
+        # 日期非今天/昨天/前天 → 用 ISO 日期；今天则省略时间词
+        from datetime import date
+        today_str = date.today().isoformat()
+        if date_str and date_str != today_str:
+            time_word = date_str
+
+    # 构建温暖回复
+    if source_friendly and time_word:
+        return f"好嘞，已记下你{time_word}{source_friendly}花的{amt_str}块钱～"
+    elif source_friendly:
+        return f"好嘞，已记下你这笔{source_friendly}{amt_str}块钱～"
+    elif time_word:
+        return f"好嘞，已记下你{time_word}这笔{amt_str}块钱～"
+    else:
+        return f"好嘞，已记下你这笔{amt_str}块钱～"
 
 
 def chat_with_xiaofeng(user_input, history):
@@ -1153,16 +1369,43 @@ def main():
             elif intent_3b == "query":
                 if target_3b == "finance":
                     print("🔧 正在查询财务记录（3b路由）...")
-                    # v3.9.3: 同时传入原始输入和结构化参数，让 query_finance 走 Mode B
                     result = call_tool("财务", user_input, params_3b, _func="query_finance")
                 elif target_3b == "schedule":
                     print("🔧 正在查询日程（3b路由）...")
-                    # v3.9.4: 使用 query_schedule 支持结构化时间/范围参数
                     result = call_tool("日程", user_input, params_3b, _func="query_schedule")
                 else:
-                    # target 不明确时默认查财务
-                    print("🔧 正在查询财务记录（3b路由，默认finance）...")
-                    result = call_tool("财务", user_input, params_3b, _func="query_finance")
+                    # v3.9.19: target 不明确时的降级策略
+                    # 尝试从 finance_module 的 _last_query_context 推断 target
+                    has_detail_kw = any(
+                        kw in user_input for kw in
+                        ["详细", "列举", "列出", "明细", "逐条", "每笔", "具体"]
+                    )
+                    has_filters = bool(
+                        params_3b.get("date") or params_3b.get("time")
+                        or params_3b.get("scope") or params_3b.get("source")
+                    ) if isinstance(params_3b, dict) else False
+                    # 格式化查询（无筛选条件 + 有detail关键词）→ 尝试继承上下文
+                    if has_detail_kw and not has_filters:
+                        try:
+                            import importlib
+                            fm = importlib.import_module("财务模块.finance_module")
+                            ctx = getattr(fm, "_last_query_context", None)
+                        except Exception:
+                            ctx = None
+                        if ctx:
+                            print("🔧 正在查询财务记录（3b路由，从上下文继承target）...")
+                            result = call_tool("财务", user_input, params_3b, _func="query_finance")
+                        else:
+                            # 无上下文可继承 → 询问用户
+                            print("🤔 格式化查询但无上下文，需要澄清")
+                            reply = "你想详细列举什么数据？是财务记录还是日程待办？"
+                            print(f"晓风: {reply}")
+                            speak(reply)
+                            _record_tool_operation(short_term, user_input, reply)
+                            continue
+                    else:
+                        print("🔧 正在查询财务记录（3b路由，默认finance）...")
+                        result = call_tool("财务", user_input, params_3b, _func="query_finance")
 
                 reply = _generate_tool_reply(result)
                 print(reply)
@@ -1327,6 +1570,47 @@ def main():
                 short_term.append({"role": "assistant", "content": reply})
                 save_short_term(short_term)
                 continue
+
+            # ---- v3.9.20: 格式化查询兜底 —— 在 chat 分支之前拦截 ----
+            # 当 3b 将"详细列举一下"/"详细点"/"列举一下"等格式化查询误判为 chat 时，
+            # 在此处强制转向 query，避免进入 7b 对话导致无数据排序的 LLM 自由回复。
+            if intent_3b == "chat":
+                FORMAT_KW = [
+                    "详细", "列举", "列出", "明细", "逐条",
+                    "每笔", "具体", "列表", "全部列出",
+                ]
+                CHAT_KW = [
+                    "介绍", "说明", "解释", "你是谁",
+                    "你能干什么", "你的功能", "介绍一下你自己",
+                ]
+                is_format = any(kw in user_input for kw in FORMAT_KW)
+                is_genuine_chat = any(kw in user_input for kw in CHAT_KW)
+
+                if is_format and not is_genuine_chat:
+                    print("[路由兜底] 检测到格式化查询被误判为chat，强制转向query")
+                    # 尝试从财务模块继承上一轮查询上下文
+                    try:
+                        import importlib
+                        fm = importlib.import_module("财务模块.finance_module")
+                        ctx = getattr(fm, "_last_query_context", None)
+                    except Exception:
+                        ctx = None
+
+                    if ctx:
+                        print("🔧 正在查询财务记录（兜底路由，从上下文继承）...")
+                        params_fallback = {"detail": True}
+                        result = call_tool("财务", user_input, params_fallback,
+                                          _func="query_finance")
+                        reply = _generate_tool_reply(result)
+                        print(reply)
+                        speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
+                    else:
+                        reply = "你想详细列举什么数据？是财务记录、日程待办、还是记忆数据？"
+                        print(f"晓风: {reply}")
+                        speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
+                    continue
 
             # ---- chat: 交给 7b 对话 ----
             elif intent_3b == "chat":
