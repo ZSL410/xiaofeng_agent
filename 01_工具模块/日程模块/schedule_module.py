@@ -38,33 +38,43 @@ _lock = threading.Lock()
 def _load_events():
     try:
         with open(EVENTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception:
         return []
+    # v3.9.25: 自动迁移 + 自动排序（同财务模块）
+    migrated, count = _migrate_schedule_to_standard_format(data, "event")
+    if count > 0:
+        _save_events(migrated)
+    return _sort_records(migrated)
 
 
 def _save_events(events):
     _debug_log(f"[文件] 写入 events.json: 路径={EVENTS_FILE!r}, 条数={len(events)}")
     with open(EVENTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(events, f, ensure_ascii=False, indent=2)
+        json.dump(_sort_records(events), f, ensure_ascii=False, indent=2)
 
 
 def _load_todos():
     try:
         with open(TODOS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception:
         return []
+    # v3.9.25: 自动迁移 + 自动排序（同财务模块）
+    migrated, count = _migrate_schedule_to_standard_format(data, "todo")
+    if count > 0:
+        _save_todos(migrated)
+    return _sort_records(migrated)
 
 
 def _save_todos(todos):
     _debug_log(f"[文件] 写入 todos.json: 路径={TODOS_FILE!r}, 条数={len(todos)}")
     with open(TODOS_FILE, "w", encoding="utf-8") as f:
-        json.dump(todos, f, ensure_ascii=False, indent=2)
+        json.dump(_sort_records(todos), f, ensure_ascii=False, indent=2)
 
 
 def _get_next_id():
-    """扫描现有 events 和 todos，返回下一个可用 ID"""
+    """扫描现有 events 和 todos，返回下一个可用 ID（旧整数 ID，兼容保留）"""
     events = _load_events()
     todos = _load_todos()
     max_id = 0
@@ -75,6 +85,246 @@ def _get_next_id():
         if t.get("id", 0) > max_id:
             max_id = t["id"]
     return max_id + 1
+
+
+# ===================== v3.9.25: 存储标准化 =====================
+
+_STORAGE_VERSION = 2
+
+_PERIOD_MAP = [
+    ("00:00", "05:59", "凌晨"),
+    ("06:00", "08:59", "早上"),
+    ("09:00", "11:59", "上午"),
+    ("12:00", "13:59", "中午"),
+    ("14:00", "17:59", "下午"),
+    ("18:00", "21:59", "晚上"),
+    ("22:00", "23:59", "深夜"),
+]
+
+
+def _get_period(time_str):
+    """将 HH:MM 时间映射到时段时间标签（与财务模块一致）。"""
+    if not time_str:
+        return ""
+    try:
+        h, m = map(int, str(time_str).split(":")[:2])
+    except (ValueError, AttributeError):
+        return ""
+    minutes = h * 60 + m
+    for start, end, label in _PERIOD_MAP:
+        sh, sm = map(int, start.split(":"))
+        eh, em = map(int, end.split(":"))
+        if sh * 60 + sm <= minutes <= eh * 60 + em:
+            return label
+    return ""
+
+
+def _normalize_date(date_str):
+    """将各种日期格式统一为 YYYY-MM-DD。"""
+    if not date_str:
+        return datetime.now().strftime("%Y-%m-%d")
+    s = str(date_str).strip()
+    # 2026-07-25
+    if re.match(r'^\d{4}-\d{2}-\d{2}$', s):
+        return s
+    # 2026/07/25
+    m = re.match(r'^(\d{4})/(\d{1,2})/(\d{1,2})$', s)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
+    # 2026-07-25T12:30:00
+    m = re.match(r'^(\d{4}-\d{2}-\d{2})T', s)
+    if m:
+        return m.group(1)
+    # 07-25 / 7-25
+    m = re.match(r'^(\d{1,2})[-/](\d{1,2})$', s)
+    if m:
+        return f"{datetime.now().year}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"
+    return s
+
+
+def _normalize_time(time_str):
+    """确保时间格式为 HH:MM（空时间保持为空，用于全天事件/无到期待办）。"""
+    if not time_str:
+        return ""
+    s = str(time_str).strip()
+    # HH:MM
+    if re.match(r'^\d{1,2}:\d{2}$', s):
+        hh, mm = s.split(":")
+        return f"{int(hh):02d}:{mm}"
+    # HH:MM:SS
+    if re.match(r'^\d{2}:\d{2}:\d{2}$', s):
+        return s[:5]
+    # "12:30:00" from datetime
+    if "T" in s:
+        s = s.split("T")[1]
+        if re.match(r'^\d{1,2}:\d{2}', s):
+            return s[:5]
+    return ""
+
+
+def _date_to_ordinal(d):
+    """将 YYYY-MM-DD 转为整数序数，用于排序。"""
+    try:
+        parts = d.split("-")
+        if len(parts) == 3:
+            return int(parts[0]) * 10000 + int(parts[1]) * 100 + int(parts[2])
+    except (ValueError, TypeError):
+        pass
+    return 0
+
+
+def _sort_records(records):
+    """按 date 降序（最新在前）+ time 升序（同日最早在前）排序。"""
+    if not records:
+        return records
+
+    def _sort_key(r):
+        d = r.get("date", "") or "0000-00-00"
+        t = r.get("time", "") or "00:00"
+        return (-_date_to_ordinal(d), t)
+
+    return sorted(records, key=_sort_key)
+
+
+def _generate_id(prefix, date_str="", time_str=""):
+    """生成唯一 ID: schedule_{prefix}_{YYYYMMDD}_{HHMM}_{6chars}"""
+    import random
+    import string
+    now = datetime.now()
+    if date_str:
+        try:
+            d = datetime.strptime(_normalize_date(date_str), "%Y-%m-%d")
+        except ValueError:
+            d = now
+    else:
+        d = now
+    if time_str:
+        t_part = _normalize_time(time_str).replace(":", "") or now.strftime("%H%M")
+    else:
+        t_part = now.strftime("%H%M")
+    rand = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6))
+    return f"schedule_{prefix}_{d.strftime('%Y%m%d')}_{t_part}_{rand}"
+
+
+def _generate_event_content(period, title):
+    """生成事件摘要: {period}{title} → 下午开会（无时段则仅标题）"""
+    if period:
+        return f"{period}{title}"
+    return title or "日程事件"
+
+
+def _generate_todo_content(period, title):
+    """生成待办摘要: {period}需要{title} → 晚上需要买牛奶（无时段则 需要{title}）"""
+    if period:
+        return f"{period}需要{title}"
+    return f"需要{title}" if title else "待办事项"
+
+
+def _is_standard_record(record, record_type):
+    """判断记录是否已采用标准格式（新字符串 ID + datetime + content）。"""
+    if not isinstance(record, dict):
+        return False
+    rid = str(record.get("id", ""))
+    # v3.9.26: 以 schedule_ 前缀 ID 为迁移标记（不要求 datetime 非空，
+    # 否则无日期待办会被误判为旧格式反复迁移）
+    return (rid.startswith(f"schedule_{record_type}_")
+            and record.get("content") is not None)
+
+
+def _migrate_schedule_to_standard_format(records, record_type):
+    """
+    将旧格式记录迁移到标准化格式（v3.9.25）。
+    补全缺失字段，不丢失任何现有数据。
+    返回 (records, migrated_count)。
+    """
+    if not records:
+        return records, 0
+    migrated = []
+    count = 0
+    for r in records:
+        if not isinstance(r, dict):
+            migrated.append(r)
+            continue
+        if _is_standard_record(r, record_type):
+            migrated.append(r)
+            continue
+
+        # ---- 兼容字段读取：事件用 date/time，待办用 due_date/due_time ----
+        # v3.9.26: 无日期记录保留空 date（不默认今天），避免"无日期待办"被迁移成今天
+        raw_date = (r.get("date") or r.get("due_date") or "").strip()
+        date_str = _normalize_date(raw_date) if raw_date else ""
+        time_str = _normalize_time(r.get("time") or r.get("due_time") or "")
+        title = (r.get("title") or "").strip() or (
+            "日程事件" if record_type == "event" else "待办事项")
+        period = r.get("period") or _get_period(time_str)
+        if record_type == "event":
+            content = r.get("content") or _generate_event_content(period, title)
+        else:
+            content = r.get("content") or _generate_todo_content(period, title)
+        dt_str = f"{date_str}T{time_str}:00" if (date_str and time_str) else ""
+
+        old_id = r.get("id")
+        if str(old_id).startswith("schedule_"):
+            new_id = old_id
+        else:
+            new_id = _generate_id(record_type, date_str, time_str)
+
+        new_record = {
+            "id": new_id,
+            "type": record_type,
+            "date": date_str,
+            "time": time_str,
+            "datetime": r.get("datetime") or dt_str,
+            "period": period,
+            "title": title,
+            "content": content,
+            "detail": r.get("detail"),
+            "status": "done" if r.get("completed") else (r.get("status") or "pending"),
+            "created_at": r.get("created_at") or dt_str,
+            "updated_at": r.get("updated_at"),
+            "notified": r.get("notified", False),
+        }
+        if record_type == "event":
+            new_record["repeat"] = r.get("repeat", "none")
+            new_record["location"] = r.get("location")
+        else:
+            # 待办兼容字段：保留 due_date / due_time / completed
+            new_record["due_date"] = r.get("due_date", date_str)
+            new_record["due_time"] = r.get("due_time", time_str)
+            new_record["completed"] = r.get("completed", False)
+
+        # 保留旧记录中的任何未知扩展字段（不丢失数据）
+        for k, v in r.items():
+            if k not in new_record:
+                new_record[k] = v
+
+        migrated.append(new_record)
+        count += 1
+
+    return migrated, count
+
+
+def _resolve_item_ref(items, ref):
+    """
+    将用户引用（字符串 ID 或 数字序号）解析为具体记录。
+
+    - ref 为字符串且是纯数字 → 视为列表中的序号（1-based）
+    - ref 为字符串 → 精确匹配新格式 ID，或兼容旧整数 ID
+    返回记录 dict，未命中返回 None
+    """
+    if ref is None:
+        return None
+    if isinstance(ref, str) and ref.strip().isdigit():
+        ref = int(ref.strip())
+    if isinstance(ref, int):
+        if 1 <= ref <= len(items):
+            return items[ref - 1]
+        return None
+    ref_str = str(ref)
+    for it in items:
+        if str(it.get("id", "")) == ref_str:
+            return it
+    return None
 
 
 # ===================== 时间解析 =====================
@@ -200,6 +450,13 @@ def _parse_time(text):
     text = _normalize_chinese_numbers(text)
     time_str = ""
     remaining = text
+
+    # 0. "一会儿"/"待会儿"/"过会儿" — 模糊时间，默认 5 分钟后（v3.9.26）
+    if re.search(r"(一会儿|待会儿|过会儿|等会儿|稍后)", text):
+        future = datetime.now() + timedelta(minutes=5)
+        time_str = future.strftime("%H:%M")
+        remaining = re.sub(r"(一会儿|待会儿|过会儿|等会儿|稍后)", "", text)
+        return time_str, remaining
 
     # 1. "X分钟后" / "X分钟之后" / "X分钟以后" — 相对时间
     m = re.search(r"(\d+)\s*分[钟]?\s*(后|之后|以后)", text)
@@ -362,16 +619,29 @@ def _parse_time_with_llm(user_text, current_time=None):
 
 
 def _add_event(title, date_str, time_str, repeat="none"):
-    events = _load_events()
+    """创建日程事件（v3.9.25 存储标准化，11 字段标准格式）。"""
+    date_str = _normalize_date(date_str)
+    time_str = _normalize_time(time_str)
+    period = _get_period(time_str)
+    dt_str = f"{date_str}T{time_str}:00" if (date_str and time_str) else ""
     event = {
-        "id": _get_next_id(),
-        "title": title,
+        "id": _generate_id("event", date_str, time_str),
+        "type": "event",
         "date": date_str,
         "time": time_str,
+        "datetime": dt_str,
+        "period": period,
+        "title": title,
+        "content": _generate_event_content(period, title),
+        "detail": None,
+        "location": None,
+        "status": "pending",
         "repeat": repeat,
         "notified": False,
         "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "updated_at": None,
     }
+    events = _load_events()
     events.append(event)
     _save_events(events)
     repeat_msg = {"none": "", "daily": "(每天重复)", "weekly": "(每周重复)",
@@ -381,13 +651,13 @@ def _add_event(title, date_str, time_str, repeat="none"):
 
 def _delete_event(event_id):
     events = _load_events()
-    for e in events:
-        if e.get("id") == event_id:
-            title = e["title"]
-            events.remove(e)
-            _save_events(events)
-            return f"✅ 已删除日程:{title}"
-    return f"❌ 未找到 ID 为 {event_id} 的日程"
+    target = _resolve_item_ref(events, event_id)
+    if target is None:
+        return f"❌ 未找到 ID 为 {event_id} 的日程"
+    title = target.get("title", "日程")
+    events.remove(target)
+    _save_events(events)
+    return f"✅ 已删除日程:{title}"
 
 
 def _list_events(date_str=None):
@@ -397,13 +667,15 @@ def _list_events(date_str=None):
     today_events = [e for e in events if e.get("date") == date_str]
     if not today_events:
         return f"📅 {date_str} 没有日程安排"
+    # 序号使用在完整排序列表中的全局位置，与 _delete_event(数字) 一致
+    position = {id(e): i for i, e in enumerate(events, 1)}
     today_events.sort(key=lambda e: e.get("time", "00:00"))
     lines = [f"📅 {date_str} 的日程:"]
     for e in today_events:
         repeat_tag = {"none": "", "daily": " 🔄每天",
                       "weekly": " 🔄每周", "monthly": " 🔄每月"}.get(
             e.get("repeat", "none"), "")
-        lines.append(f"  [{e['id']}] {e['time']} {e['title']}{repeat_tag}")
+        lines.append(f"  [{position[id(e)]}] {e['time']} {e['title']}{repeat_tag}")
     return "\n".join(lines)
 
 
@@ -411,17 +683,31 @@ def _list_events(date_str=None):
 
 
 def _add_todo(title, due_date="", due_time=""):
-    todos = _load_todos()
+    """创建待办（v3.9.25 存储标准化，11 字段标准格式）。"""
+    due_date = _normalize_date(due_date) if due_date else ""
+    due_time = _normalize_time(due_time)
+    period = _get_period(due_time)
+    dt_str = f"{due_date}T{due_time}:00" if (due_date and due_time) else ""
     todo = {
-        "id": _get_next_id(),
+        "id": _generate_id("todo", due_date, due_time),
+        "type": "todo",
+        "date": due_date,
+        "time": due_time,
+        "datetime": dt_str,
+        "period": period,
         "title": title,
+        "content": _generate_todo_content(period, title),
+        "detail": None,
+        "status": "pending",
         "due_date": due_date,
         "due_time": due_time,
         "completed": False,
         "notified": False,
         "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "updated_at": None,
     }
     _debug_log(f"[写入] _add_todo: title={title!r}, due_date={due_date!r}, due_time={due_time!r}")
+    todos = _load_todos()
     todos.append(todo)
     _save_todos(todos)
     parts = [f"✅ 已添加待办:{title}"]
@@ -436,45 +722,70 @@ def _add_todo(title, due_date="", due_time=""):
 
 def _delete_todo(todo_id):
     todos = _load_todos()
-    for t in todos:
-        if t.get("id") == todo_id:
-            title = t["title"]
-            todos.remove(t)
-            _save_todos(todos)
-            return f"✅ 已删除待办:{title}"
-    return f"❌ 未找到 ID 为 {todo_id} 的待办"
+    # v3.9.28: 数字序号按完整展示顺序（date 降序 + time 升序，未完成优先）解析，
+    # 与"显示所有待办"/delete_by_index 一致；字符串 ID 精确匹配
+    if isinstance(todo_id, int) or (isinstance(todo_id, str) and todo_id.strip().isdigit()):
+        display = _todos_display_order(list(todos), show_all=True)
+        target = _resolve_item_ref(display, todo_id)
+    else:
+        target = _resolve_item_ref(todos, todo_id)
+    if target is None:
+        return f"❌ 未找到 ID 为 {todo_id} 的待办"
+    title = target.get("title", "待办")
+    todos.remove(target)
+    _save_todos(todos)
+    return f"✅ 已删除待办:{title}"
 
 
 def _complete_todo(todo_id):
     todos = _load_todos()
-    for t in todos:
-        if t.get("id") == todo_id:
-            if t.get("completed"):
-                return f"ℹ️ 待办「{t['title']}」已经完成了"
-            t["completed"] = True
-            _save_todos(todos)
-            return f"✅ 已完成待办:{t['title']}"
-    return f"❌ 未找到 ID 为 {todo_id} 的待办"
+    if isinstance(todo_id, int) or (isinstance(todo_id, str) and todo_id.strip().isdigit()):
+        display = _todos_display_order(list(todos), show_all=True)
+        target = _resolve_item_ref(display, todo_id)
+    else:
+        target = _resolve_item_ref(todos, todo_id)
+    if target is None:
+        return f"❌ 未找到 ID 为 {todo_id} 的待办"
+    if target.get("completed"):
+        return f"ℹ️ 待办「{target['title']}」已经完成了"
+    target["completed"] = True
+    target["status"] = "done"
+    target["updated_at"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    _save_todos(todos)
+    return f"✅ 已完成待办:{target['title']}"
 
 
-def _list_todos(show_all=False):
-    todos = _load_todos()
+def _todos_display_order(todos, show_all=False):
+    """返回待办展示/序号删除共用的排序列表：未完成优先 → date 降序 → time 升序。
+
+    v3.9.28: 与 query_schedule / _sort_records 保持一致（date 降序 + time 升序），
+    保证"删除待办N"的序号与用户看到的列表一致。
+    """
     if not show_all:
         todos = [t for t in todos if not t.get("completed", False)]
 
-    if not todos:
+    def _key(t):
+        d = (t.get("date") or t.get("due_date") or "").strip()
+        tm = (t.get("time") or t.get("due_time") or "").strip() or "99:99"
+        return (t.get("completed", False), -_date_to_ordinal(d), tm)
+
+    return sorted(todos, key=_key)
+
+
+def _list_todos(show_all=False, date_str=None):
+    """列出待办。date_str 非空时仅显示该日期的待办（如"显示今天的待办"）。"""
+    todos_sorted = _todos_display_order(_load_todos(), show_all=show_all)
+    if date_str:
+        todos_sorted = [t for t in todos_sorted
+                        if (t.get("due_date") or t.get("date")) == date_str]
+
+    if not todos_sorted:
+        if date_str:
+            return f"📋 {date_str} 没有待办事项 🎉"
         return "📋 没有待办事项 🎉"
 
-    # 排序：未完成优先 → 按到期时间排序
-    def sort_key(t):
-        dt = t.get("due_date", "") or "9999-99-99"
-        tm = t.get("due_time", "") or "99:99"
-        return (t.get("completed", False), dt, tm)
-
-    todos_sorted = sorted(todos, key=sort_key)
-
-    lines = ["📋 待办事项:"]
-    for t in todos_sorted:
+    lines = [f"📋 {date_str} 的待办事项:" if date_str else "📋 待办事项:"]
+    for i, t in enumerate(todos_sorted, 1):
         status = "✅" if t.get("completed") else "⬜"
         due = ""
         if t.get("due_date") and t.get("due_time"):
@@ -483,7 +794,7 @@ def _list_todos(show_all=False):
             due = f" ⏰{t['due_date']}"
         elif t.get("due_time"):
             due = f" ⏰{t['due_time']}"
-        lines.append(f"  {status} [{t['id']}] {t['title']}{due}")
+        lines.append(f"  {status} [{i}] {t['title']}{due}")
     return "\n".join(lines)
 
 
@@ -720,6 +1031,11 @@ def start_reminder_thread():
 start_reminder_thread()
 
 
+# v3.9.25: 模块加载时执行一次存储标准化迁移（_load_* 内部自动迁移+排序+回写，幂等）
+_load_events()
+_load_todos()
+
+
 # ===================== 自然语言解析与入口 =====================
 
 _HELP_TEXT = """
@@ -783,8 +1099,27 @@ def _has_time_pattern(text):
         r"\d+\s*个?\s*小?时\s*(后|之后|以后)",                        # "一小时后" / "2个小时后"
         r"(明天|后天|今天|明日)\s*\d*\s*点",                          # "明天8点" 无前缀
         r"(叫我|喊我|叫我一下|叫醒我)\s*$",                           # 纯提醒关键词结尾
+        r"(一会儿|待会儿|过会儿|等会儿|稍后)",                        # 模糊时间（v3.9.26）
     ]
     return any(re.search(p, text, re.IGNORECASE) for p in patterns)
+
+
+def _has_date_word(text):
+    """检测文本中是否包含日期表达（今天/明天/后天/周X/月X日等）。
+
+    v3.9.28: 用于识别"添加后天出门"这类只有日期没有时间的日程添加请求。
+    """
+    if re.search(r"(今天|今日|明天|明日|后天|大后天|昨天|昨日|前天)", text):
+        return True
+    if re.search(r"[周星期][一二三四五六日天]", text):          # 周一/星期二/周五
+        return True
+    if re.search(r"\d{1,2}\s*月\s*\d{1,2}\s*[日号]", text):    # 6月15日/6月15号
+        return True
+    if re.search(r"\d{4}[-/]\d{1,2}[-/]\d{1,2}", text):        # 2026-08-09
+        return True
+    if re.search(r"(本月|下月|上月|这个月|下个月|下礼拜|下周|这个礼拜)", text):
+        return True
+    return False
 
 
 def process_command(text):
@@ -806,11 +1141,36 @@ def process_command(text):
 
     # ==================== 日程事件 ====================
 
+    # v3.9.28: 自然日程记录表达 —— "后天有日程安排给我记一下" / "有个日程" / "帮我记一下后天开会"
+    # 这类句子没有"添加/创建"等显式动作词，但明显是记录日程的请求
+    NATURAL_ADD_RE = re.compile(
+        r"(有日程安排|有个日程|有日程|日程安排给我记|"
+        r"帮我记(?:一下)?|帮我记一下|"
+        r"记(?:一下|上|着)?.*日程|安排一下.*日程)"
+    )
+    # v3.9.28: 排除财务记账类表达（"帮我记一下花了30元"应走财务，不是日程）
+    _FINANCE_NOISE_RE = re.compile(r"(花了|买了|消费|花了钱|记账|支出|元|块|多少钱)")
+    if NATURAL_ADD_RE.search(text) and not _FINANCE_NOISE_RE.search(text):
+        _debug_log(f"[解析] 检测到自然日程记录表达: {text!r}")
+        date_str, after_date = _parse_date(text)
+        time_str, after_time = _parse_time(after_date)
+        # 提取标题：去掉日期、时间以及"有日程/记一下/帮我"等噪声
+        title = re.sub(
+            r"(有日程安排|有个日程|有日程|日程安排|给我|帮我|记一下|记上|记着|记|"
+            r"安排一下|安排|日程|事件|后天|明天|今天|大后天|昨日|今日|明日)",
+            "", after_time).strip()
+        title = _clean_title(title)
+        if not title:
+            title = "日程安排"
+        if not time_str and not _has_date_word(text):
+            time_str = ""
+        return _add_event(title, date_str, time_str)
+
     # 添加事件：添加/新增/安排 + 标题 + 时间
     m = re.match(r"(添加|新增|创建|加一个|增加|安排)\s*(.*)", text)
     if m:
         raw = m.group(2).strip()
-        # 检测是否为事件：有关键词或包含时间
+        # 检测是否为事件：有关键词、包含时间、或包含日期表达（v3.9.28 支持"添加后天出门"）
         EVENT_KEYWORDS = ["会议", "事件", "日程", "安排", "约会", "聚会",
                           "开会", "会", "上课", "课", "面试", "活动",
                           "每天", "每周", "每月"]
@@ -822,7 +1182,7 @@ def process_command(text):
         if is_todo:
             # 在下文 todo 分支处理，这里跳过
             pass
-        elif is_event or _has_time_pattern(raw):
+        elif is_event or _has_time_pattern(raw) or _has_date_word(raw):
             repeat = "none"
             if "每天" in text:
                 repeat = "daily"
@@ -846,7 +1206,8 @@ def process_command(text):
             if not title:
                 title = "日程事件"
 
-            if not time_str:
+            # v3.9.28: 只有日期（如"添加后天出门"）时允许无时间，作为全天事件
+            if not time_str and not _has_date_word(raw):
                 return "⚠️ 请提供时间,例如「添加会议明天下午3点」"
 
             return _add_event(title, date_str, time_str, repeat)
@@ -961,7 +1322,11 @@ def process_command(text):
                                    "有什么任务", "待办事项", "待办", "todo",
                                    "tasks"]):
         show_all = "全部" in text or "所有" in text
-        return _list_todos(show_all=show_all)
+        # 日期限定：今天/明天/后天 → 仅显示该日期的待办（v3.9.25）
+        date_filter = None
+        if re.search(r"(今天|今日|明天|明日|后天)", text):
+            date_filter, _ = _parse_date(text)
+        return _list_todos(show_all=show_all, date_str=date_filter)
 
     # ==================== 帮助 ====================
     if any(kw in text for kw in ["帮助", "help", "说明", "功能"]):
@@ -991,6 +1356,20 @@ def query_schedule(user_input, params=None):
     if params and isinstance(params, dict):
         time_filter = params.get("time")
         scope = params.get("scope")
+
+    # v3.9.27: 兜底——若路由层未传 time，从用户输入中推断时间范围，
+    # 避免"查看本周的日程"等因 LLM 未提取 time 而退化成显示全部（含历史旧数据）
+    if not time_filter and user_input:
+        if re.search(r"(本周|这周|这个礼拜)", user_input):
+            time_filter = "this_week"
+        elif re.search(r"(今天|今日)", user_input):
+            time_filter = "today"
+        elif re.search(r"(昨天|昨日)", user_input):
+            time_filter = "yesterday"
+        elif re.search(r"(上周|上礼拜)", user_input):
+            time_filter = "last_week"
+        elif re.search(r"(本月|这个月|这个月里)", user_input):
+            time_filter = "this_month"
 
     # ---- 推断日期过滤 ----
     now = datetime.now()
@@ -1039,13 +1418,14 @@ def query_schedule(user_input, params=None):
     active_todos = [t for t in todos if not t.get("completed", False)]
 
     if date_start:
+        # v3.9.26: 指定了时间筛选（today/this_week/this_month 等）时，只显示该时间范围内的待办，
+        # 无到期日的待办（date 为空）不纳入——否则筛选会退化成"显示全部"。
         filtered_todos = []
         for t in active_todos:
-            due = t.get("due_date", "") or ""
+            due = (t.get("date") or t.get("due_date") or "").strip()
             if not due:
-                # 无到期日的待办视为通用，始终包含
-                filtered_todos.append(t)
-            elif date_end and due >= date_start and due <= date_end:
+                continue  # 有时间筛选时，无日期待办不属于任何时间范围
+            if date_end and date_start <= due <= date_end:
                 filtered_todos.append(t)
             elif not date_end and due >= date_start:
                 filtered_todos.append(t)
@@ -1069,21 +1449,22 @@ def query_schedule(user_input, params=None):
     lines = []
     time_prefix = f"{label}" if label else ""
 
+    # v3.9.25: 统一排序规则 date 降序 + time 升序
     if events:
-        events.sort(key=lambda e: (e.get("date", ""), e.get("time", "00:00")))
+        events = _sort_records(events)
         header = f"📅 {time_prefix}的日程:" if time_prefix else "📅 日程安排:"
         lines.append(header)
-        for e in events:
+        for i, e in enumerate(events, 1):
             repeat_tag = {"none": "", "daily": " 🔄每天",
                           "weekly": " 🔄每周", "monthly": " 🔄每月"}.get(
                 e.get("repeat", "none"), "")
-            lines.append(f"  [{e['id']}] {e.get('date','?')} {e.get('time','')} {e['title']}{repeat_tag}")
+            lines.append(f"  [{i}] {e.get('date','?')} {e.get('time','')} {e['title']}{repeat_tag}")
 
     if active_todos:
-        active_todos.sort(key=lambda t: (t.get("due_date", "") or "9999", t.get("due_time", "") or "99:99"))
+        active_todos = _sort_records(active_todos)
         header = f"📋 {time_prefix}的待办:" if time_prefix else "📋 待办事项:"
         lines.append(header)
-        for t in active_todos:
+        for i, t in enumerate(active_todos, 1):
             due = ""
             if t.get("due_date") and t.get("due_time"):
                 due = f" ⏰{t['due_date']} {t['due_time']}"
@@ -1092,7 +1473,7 @@ def query_schedule(user_input, params=None):
             elif t.get("due_time"):
                 due = f" ⏰{t['due_time']}"
             status = "✅" if t.get("completed") else "⬜"
-            lines.append(f"  {status} [{t['id']}] {t['title']}{due}")
+            lines.append(f"  {status} [{i}] {t['title']}{due}")
 
     if not lines:
         if time_prefix:
@@ -1219,7 +1600,6 @@ def delete_reminder_by_query(query):
         return _delete_todo(t["id"])
     else:
         # 多个候选，列出让用户选择
-        todos_list = _load_todos()
         lines = [f"🔍 找到 {len(scored)} 个匹配的提醒，请告诉我序号:"]
         for i, (t, _) in enumerate(scored[:5], 1):
             due = ""
@@ -1227,7 +1607,7 @@ def delete_reminder_by_query(query):
                 due = f" ⏰{t['due_date']} {t['due_time']}"
             elif t.get("due_time"):
                 due = f" ⏰{t['due_time']}"
-            lines.append(f"  {i}. [{t['id']}] {t['title']}{due}")
+            lines.append(f"  {i}. {t['title']}{due}")
         return "\n".join(lines)
 
 
@@ -1339,6 +1719,48 @@ def delete_by_scope(scope, keyword=None):
 
     else:
         return f"⚠️ 未知的删除范围: {scope}"
+
+
+def delete_by_index(index, record_type="todo"):
+    """
+    按序号删除待办/日程（v3.9.26 新增）。
+
+    供路由层在"删除待办1"/"删除任务2"等场景使用：
+    只删除指定序号的那一条，绝不批量删除。
+
+    参数:
+        index: int | str — 序号（1 起）或字符串 ID
+        record_type: str — "todo" | "event"
+
+    返回:
+        str — 操作结果消息
+    """
+    try:
+        index_int = int(index) if not isinstance(index, int) else index
+    except (ValueError, TypeError):
+        return f"⚠️ 无效的序号: {index}"
+
+    if record_type == "event":
+        events = _load_events()
+        target = _resolve_item_ref(events, index_int)
+        if target is None:
+            return f"❌ 未找到序号为 {index} 的日程"
+        title = target.get("title", "日程")
+        events.remove(target)
+        _save_events(events)
+        return f"✅ 已删除日程: {title}"
+    else:
+        todos = _load_todos()
+        # v3.9.28: 序号按完整展示顺序（date 降序 + time 升序，未完成优先）解析，
+        # 与"显示所有待办"/query_schedule 完全一致，确保"删除待办N"删的是用户看到的那条
+        display = _todos_display_order(list(todos), show_all=True)
+        target = _resolve_item_ref(display, index_int)
+        if target is None:
+            return f"❌ 未找到序号为 {index} 的待办"
+        title = target.get("title", "待办")
+        todos.remove(target)
+        _save_todos(todos)
+        return f"✅ 已删除待办: {title}"
 
 
 def modify_last_reminder(new_params):
@@ -1505,6 +1927,13 @@ def add_reminder_from_params(params):
     now = datetime.now()
     _debug_log(f"[结构化提醒] 收到 params: time_offset={time_offset!r}, "
                f"absolute_time={absolute_time!r}, content={content!r}, raw_text={raw_text!r}")
+
+    # v3.9.27: 模糊时间词防御——若原文含"一会儿/待会儿/过会儿/等会儿/稍后"，
+    # 即使 LLM 猜了 time_offset（常见误判为 1），也统一修正为 5 分钟
+    if raw_text and re.search(r"(一会儿|待会儿|过会儿|等会儿|稍后)", raw_text):
+        _debug_log(f"[结构化提醒] ⚠️ 检测到模糊时间词，time_offset 强制为 5 分钟")
+        time_offset = 5
+        absolute_time = None
 
     # ---- 第 1 步：根据参数计算目标时间 ----
     if time_offset is not None:

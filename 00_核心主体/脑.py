@@ -190,27 +190,29 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 当前时间:{current_time}
 {context_section}
 ## 输出格式
-{{"intent":"record|query|delete|remind|correct|recall|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false}},"confidence":0.0~1.0}}
+{{"intent":"record|query|delete|remind|correct|recall|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false,"raw_text":"用户原始输入"}},"confidence":0.0~1.0}}
 
 ## 意图判定规则
 
-### record（记账）
-- 必须包含金额（数字或中文数字） + 花费关键词
-- 触发词：花了、付了、买了、消费、支出、花费、用了、记账
+### record（记账/添加）
+- 记录一笔支出/收入，或添加一个日程/待办项
+- 财务触发词：花了、付了、买了、消费、支出、花费、用了、记账
 - amount提取为数字，"十元"→10，"三块五"→3.5
 - 同时提取source（吃饭/购物/交通等）和time（默认today）
-- target固定为finance
-- ⚠️ 只有record意图才提取amount，其他意图amount一律为null
+- 🚨 target推断优先级（v3.9.27）：如果输入包含 任务/待办/提醒/日程/事件/会议/约会/聚会/面试/上课/活动/叫我 等日程词，target **必须为 schedule**（即便同时出现"买了"等财务词："添加任务买牛奶"是加待办而非记账，"添加会议明天下午3点"是日程事件而非记账）。否则（含财务词）target=finance
+- ⚠️ "添加/新增/安排/创建" + 时间表达（如"明天下午3点"）且无金额 → 通常是日程事件，target=schedule
+- 当 target=schedule 时，amount 一律为 null（无金额字段），content 填任务/事件内容（如"买牛奶"、"会议"）
+- ⚠️ 只有record意图才提取amount（且仅当 target=finance），其他意图amount一律为null
 - 🚨 record 排除规则（最高优先级）：如果用户输入包含 "多少钱"、"花了多少"、"用了多少"、"合计"、"总共"、"一共" 等查询/汇总词，则绝对不能判定为 record，必须判定为 query。即使同时出现"花了"/"用了"等词，查询语义优先。
 
 ### query（查询）
 - 查看数据，不修改
-- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共、看、多少钱、花了多少、用了多少、合计、总共
+- 触发词：查看、查询、显示、列出、统计、看看、多少、列表、有没有、一共、看、多少钱、花了多少、用了多少、合计、总共、事件、日程（v3.9.26 补充"事件"）
 - 🚨 查询优先级：含 "多少钱"/"花了多少"/"用了多少"/"合计"/"总共"/"一共" 的输入 → 即使同时包含"花了"/"用了"等记账触发词，也必须判定为 query（不是 record）
 - 🚨 格式化查询规则（v3.9.19）：含 "详细"/"列举"/"列出"/"明细"/"逐条"/"每笔"/"具体" 但无其他工具意图（删除/记账/提醒）→ 必须判定为 query，绝不能判定为 chat。即使无明确 target，也应尝试从上下文继承或设为 finance
 - 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week，"本月/这个月"→this_month，"昨天"→yesterday，"上周"→last_week）
 - amount必须为null（查询场景不提取金额）
-- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/叫我→schedule，记忆/记住→memory
+- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/事件/叫我→schedule，记忆/记住→memory
 - ⚠️ 上下文延续规则：如果当前输入省略了主题词（如只说"看这个月的"、"那本周呢"），有上下文时沿用上一轮的target和意图
 - ⚠️ 格式化查询延续规则（v3.9.19）：如果当前输入只有格式化关键词（"详细"/"列举"/"明细"/"逐条"等）而无时间/类别/目标词，有上下文时必须沿用上一轮的 target（通常为 finance）
 - 当target=schedule时，根据输入填充scope或time（如"今天的待办"→scope:"today"，"本周任务"→time:"this_week"）
@@ -219,20 +221,23 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 ### delete（删除）
 - 🚨最高优先级：含删除/删掉/清空/清除/去掉 → delete
 - ⚠️否定规则：当用户说"不要删除"、"不是删除"、"别删"时，意图必须标记为chat或clarify，不触发删除。否定词与"删除"之间可以隔着少量内容（如"不要删除财务数据"仍是否定删除，"不想删"也判定为否定）
-- 提取scope：含"全部/所有/清空"→all，含"今天"→today，含"最近一周"→last_week
+- 🚨 序号删除规则（v3.9.26）："删除待办1"/"删除任务2"/"删除第3个待办" → 只删一条。scope 填 "keyword"，keyword 填序号数字（如"1"），不要填 today/all/latest。**绝不**因为含数字就把 scope 判为 today/all
+- 提取scope：仅当明确含范围词："全部/所有/清空"→all，含"今天"→today（且无数字序号），含"最近一周"→last_week
 - amount必须为null（删除场景不提取金额）
 - target按被删除对象推断："财务数据/记账/账单"→finance，"日程/提醒/待办"→schedule，"记忆"→memory
 
 ### remind（提醒）
 - 用户想在某个时间被提醒做某事
-- 触发词：提醒、叫我、喊我、通知、闹钟、叫醒、X分钟后、X小时后
+- 触发词：提醒、叫我、喊我、通知、闹钟、叫醒、X分钟后、X小时后、一会儿、待会儿、等一会儿、过会儿
 - ⚠️ time_offset严格规则（相对分钟数，最重要！）：
   "一分钟后"→1（绝对不是60！），"两分钟后"→2，"五分钟后"→5，"十分钟后"→10
   "半小时后"→30，"一个小时/一小时"才是60（只有明确说"小时"才乘60）
   "一个半小时后"→90，"两小时后"→120
-  规则总结：中文"X分钟"=X分钟，中文"X小时"=X×60分钟，中文"半小时"=30分钟
+  "一会儿"/"等一会儿"/"待会儿"/"过会儿"→5（v3.9.27）
+  规则总结：中文"X分钟"=X分钟，中文"X小时"=X×60分钟，中文"半小时"=30分钟，模糊时间词"一会儿"=5分钟
 - absolute_time：具体时刻（"8点"→"08:00"，"明天8点"→"08:00"），结合当前时间推断
 - content：去掉时间词和触发词后的核心内容（≤15字），如无明确内容则填"提醒"
+- raw_text：原样保留用户完整输入（供降级解析，必填）
 - target固定为schedule
 - amount必须为null
 
@@ -277,8 +282,8 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - target为null，所有params字段为null
 
 ## target推断优先级
-1. 含 财务/记账/花了/消费/收入/支出/账单 → finance
-2. 含 日程/提醒/待办/任务/事件/叫我/闹钟 → schedule
+1. 🚨 含 任务/待办/提醒/日程/事件/会议/约会/聚会/面试/上课/活动/叫我/闹钟 → **schedule（最高优先级，v3.9.27）**：即使同时含财务词（"添加任务买牛奶"含"买"、"添加会议明天下午3点"含"明天下午"），也必须是 schedule
+2. 含 财务/记账/花了/消费/收入/支出/账单 → finance
 3. 含 记忆/记住 → memory
 4. chat、clarify、correct、recall和remind → 按规则自动确定（remind→schedule, correct→schedule, recall→null）
 5. 仅含"数据"/"记录"无模块词 → null
@@ -305,6 +310,12 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 输入：花了15元
 输出：{{"intent":"record","target":"finance","params":{{"amount":15,"time":"today","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：添加任务买牛奶
+输出：{{"intent":"record","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":"买牛奶"}},"confidence":0.9}}
+
+输入：添加会议明天下午3点
+输出：{{"intent":"record","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":"会议"}},"confidence":0.9}}
 
 输入：查看本月所有开销
 输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":"this_month","source":null,"scope":"all","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
@@ -1333,6 +1344,20 @@ def main():
             speak(reply)
             continue
 
+        # v3.9.27: 确定性预路由——"添加/新增/安排/创建 + 日程词" 直接走日程模块，
+        # 不依赖 LLM 路由（"添加会议明天下午3点"曾被误判为财务记账）
+        _ADD_PREFIX_RE = r"(?:添加|新增|安排|创建|预约|订)\s*(?:一个)?\s*"
+        _SCHEDULE_ITEM_RE = r"(会议|事件|日程|约会|聚会|面试|上课|活动|任务|待办|todo)"
+        if re.search(_ADD_PREFIX_RE + _SCHEDULE_ITEM_RE, user_input) or re.search(
+                r"(添加|新增|创建)\s*(任务|待办|todo)", user_input):
+            print(f"[预路由] 检测到日程添加意图 → 日程模块: {user_input!r}")
+            result = call_tool("日程", user_input)
+            reply = _generate_tool_reply(result, prefix="明白了")
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
         # v3.9.6: 提取上一轮用户输入 + 上一轮路由结果作为结构化上下文
         last_user_context = None
         for turn in reversed(short_term):
@@ -1355,14 +1380,23 @@ def main():
             # v3.9.6: 存储路由结果供下一轮上下文延续
             _last_router_result = {"intent": intent_3b, "target": target_3b}
 
-            # ---- record: 记账 ----
+            # ---- record: 记账 / 添加待办 ----
             if intent_3b == "record":
-                print("🔧 正在处理财务指令（3b路由）...")
-                result = call_tool("财务", user_input)
-                reply = _generate_tool_reply(result)
-                print(reply)
-                speak(reply)
-                _record_tool_operation(short_term, user_input, reply)
+                if target_3b == "schedule":
+                    # v3.9.26: "添加任务买牛奶" → 添加待办（走日程模块）
+                    print("🔧 正在添加日程/待办（3b路由）...")
+                    result = call_tool("日程", user_input)
+                    reply = _generate_tool_reply(result, prefix="明白了")
+                    print(reply)
+                    speak(reply)
+                    _record_tool_operation(short_term, user_input, reply)
+                else:
+                    print("🔧 正在处理财务指令（3b路由）...")
+                    result = call_tool("财务", user_input)
+                    reply = _generate_tool_reply(result)
+                    print(reply)
+                    speak(reply)
+                    _record_tool_operation(short_term, user_input, reply)
                 continue
 
             # ---- query: 查询 ----
@@ -1418,6 +1452,19 @@ def main():
                 scope = params_3b.get("scope", "keyword") if isinstance(params_3b, dict) else "keyword"
                 keyword = params_3b.get("keyword") if isinstance(params_3b, dict) else None
 
+                # v3.9.27: 序号删除必须在 target 分发之前拦截——
+                # 无论 LLM 把 target 判成 schedule/finance/null，"删除待办N"/"删除任务N" 都应只删第 N 条待办
+                m_idx = re.search(r"(?:删除|删掉|移除|取消|清掉)\s*(?:待办|任务|todo)\s*(\d+)", user_input)
+                if m_idx:
+                    idx = int(m_idx.group(1))
+                    print(f"🔧 正在按序号删除待办（第{idx}项，3b路由）...")
+                    result = call_tool("日程", idx, _func="delete_by_index")
+                    reply = _generate_tool_reply(result, prefix="明白了")
+                    print(reply)
+                    speak(reply)
+                    _record_tool_operation(short_term, user_input, reply)
+                    continue
+
                 if target_3b == "finance":
                     # v3.9.2: 如果已有时限或范围，直接执行，不反问
                     time = params_3b.get("time") if isinstance(params_3b, dict) else None
@@ -1459,17 +1506,39 @@ def main():
                         "message": message,
                     }
                 elif target_3b == "schedule":
-                    print("🔧 正在按范围删除日程（3b路由）...")
-                    if scope == "keyword" and keyword:
-                        result = call_tool("日程", scope, keyword,
-                                          _func="delete_by_scope")
+                    # v3.9.26: "删除待办1"/"删除任务2" → 按序号删除单条，绝不批量删除
+                    m_idx = re.search(r"(?:删除|删掉|移除|取消)\s*(?:待办|任务|todo)\s*(\d+)", user_input)
+                    if m_idx:
+                        idx = int(m_idx.group(1))
+                        print(f"🔧 正在按序号删除待办（第{idx}项，3b路由）...")
+                        result = call_tool("日程", idx, _func="delete_by_index")
+                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(reply)
+                        speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
+                        continue
+                    # 只有用户说"今天/所有/全部/最近"等范围词时才批量删除
+                    if scope in ("all", "today", "last_week", "latest"):
+                        print("🔧 正在按范围删除日程（3b路由）...")
+                        if scope == "keyword" and keyword:
+                            result = call_tool("日程", scope, keyword,
+                                              _func="delete_by_scope")
+                        else:
+                            result = call_tool("日程", scope,
+                                              _func="delete_by_scope")
+                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(reply)
+                        speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
                     else:
-                        result = call_tool("日程", scope,
-                                          _func="delete_by_scope")
-                    reply = _generate_tool_reply(result, prefix="明白了")
-                    print(reply)
-                    speak(reply)
-                    _record_tool_operation(short_term, user_input, reply)
+                        # 无明确范围 → 走模糊删除（按关键词单条删）
+                        print("🔧 正在按描述删除日程（3b路由）...")
+                        result = call_tool("日程", user_input,
+                                          _func="delete_reminder_by_query")
+                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(reply)
+                        speak(reply)
+                        _record_tool_operation(short_term, user_input, reply)
                 else:
                     # target 不明确，先确认类型
                     message = "你想删除哪种数据？是财务记录、日程待办、还是记忆数据？"
@@ -1484,6 +1553,11 @@ def main():
             # ---- remind: 设置提醒 ----
             elif intent_3b == "remind":
                 print("🔧 正在处理日程提醒（3b路由）...")
+                # v3.9.27: 3b 路由输出不含 raw_text，注入原始输入供时间解析降级回退
+                if isinstance(params_3b, dict):
+                    params_3b.setdefault("raw_text", user_input)
+                else:
+                    params_3b = {"raw_text": user_input}
                 result = call_tool("日程", params_3b,
                                   _func="add_reminder_from_params")
                 print(result)
@@ -1645,7 +1719,7 @@ def main():
         # LLM 路由失败时降级为关键词匹配
         if intent is None:
             FINANCE_KW = ["记账", "查账", "花了", "报销", "帮我记"]
-            SCHEDULE_KW = ["日程", "提醒", "待办", "todo", "任务",
+            SCHEDULE_KW = ["日程", "提醒", "待办", "todo", "任务", "事件",
                            "叫我", "教", "叫醒", "喊我", "通知", "闹钟", "分钟后"]
             CORRECTION_KW = ["不是", "说错了", "改成", "应该是", "不对", "换个"]
             DELETE_KW = ["删掉", "删", "删除", "取消", "去掉", "移除"]
@@ -1812,9 +1886,10 @@ def main():
                 speak(result)
                 _record_tool_operation(short_term, user_input, result)
             elif action == "delete_reminder":
-                print("🔧 正在按描述删除提醒...")
+                # v3.9.27: 走 process_command 以支持序号删除（"删除待办1"）和模糊删除
+                print("🔧 正在删除日程/待办...")
                 query = intent.get("params", {}).get("query", user_input)
-                result = call_tool("日程", query, _func="delete_reminder_by_query")
+                result = call_tool("日程", query)
                 print(result)
                 speak(result)
                 _record_tool_operation(short_term, user_input, result)
