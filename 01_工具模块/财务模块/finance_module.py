@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import sys
 import urllib.request
 from datetime import datetime, timedelta
 
@@ -14,6 +15,25 @@ _last_query_context = None
 # v3.9.24: 存储格式版本号 — 用于自动迁移检测
 _STORAGE_VERSION = 2
 # ===============================================
+
+# v3.9.29: 记忆系统集成 —— 记录成功记账后写入统一记忆库（失败不影响记账）
+def _record_memory_event(title, detail, tags=None):
+    """将一笔记账写入统一记忆库 memory.json（add_memory_event）。"""
+    try:
+        _core_dir = os.path.normpath(os.path.join(BASE_DIR, "..", "..", "00_核心主体"))
+        if _core_dir not in sys.path:
+            sys.path.insert(0, _core_dir)
+        from 记忆.记忆引擎 import add_memory_event
+        add_memory_event(
+            title=title,
+            detail=detail,
+            tags=tags or ["财务"],
+            importance=5,
+            subtype="event",
+        )
+    except Exception as e:
+        # 记忆记录失败不阻塞记账主流程
+        print(f"⚠️ 记忆记录失败(忽略):{e}")
 
 # ===================== 数据管理 =====================
 def load_data():
@@ -870,6 +890,13 @@ def process_command(text):
     time_ref = parsed.get("time_ref", "")
     amt_str = str(int(amount)) if amount == int(amount) else str(amount)
     summary = f"记录{time_ref}{source}{amt_str}元"
+
+    # v3.9.29: 记录到统一记忆库
+    _record_memory_event(
+        title="记账",
+        detail=f"记录{time_ref}{source}花费{amt_str}元（分类:{category}，日期:{date_str}）",
+        tags=["财务", category],
+    )
 
     return {
         "status": "success",

@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.9.24"
+VERSION = "3.10.1"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,7 +16,8 @@ from 器官.耳朵 import listen_once
 from 器官.手 import call_tool
 from 记忆.记忆引擎 import (load_short_term, save_short_term, load_long_term,
                               decay_patterns, reject_pattern,
-                              build_injection_context, get_memory_stats)
+                              build_injection_context, get_memory_stats,
+                              add_dialogue_record)
 from 记忆.数据提炼 import refine
 from 记忆.衰减调度 import scheduler_check, manual_cleanup, get_decay_status
 
@@ -27,6 +28,15 @@ with open(os.path.join(BASE_DIR, "模型.json"), "r", encoding="utf-8") as f:
 MODEL_NAME = CONFIG.get("model_name", "qwen2.5:7b")
 OLLAMA_HOST = CONFIG.get("ollama_host", None)
 OLLAMA_BIN = CONFIG.get("ollama_bin", None) or "ollama"
+
+# DEBUG 环境变量控制详细日志（默认关闭，与日程模块约定一致）
+_DEBUG = os.environ.get("DEBUG", "").lower() in ("1", "true", "yes")
+
+
+def _debug_log(msg):
+    """仅在 DEBUG=1 模式下输出日志"""
+    if _DEBUG:
+        print(msg)
 
 
 def _ollama_chat(messages, model=None):
@@ -190,7 +200,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 当前时间:{current_time}
 {context_section}
 ## 输出格式
-{{"intent":"record|query|delete|remind|correct|recall|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false,"raw_text":"用户原始输入"}},"confidence":0.0~1.0}}
+{{"intent":"record|query|delete|remind|correct|recall|search|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false,"raw_text":"用户原始输入"}},"confidence":0.0~1.0}}
 
 ## 意图判定规则
 
@@ -204,6 +214,8 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - 当 target=schedule 时，amount 一律为 null（无金额字段），content 填任务/事件内容（如"买牛奶"、"会议"）
 - ⚠️ 只有record意图才提取amount（且仅当 target=finance），其他意图amount一律为null
 - 🚨 record 排除规则（最高优先级）：如果用户输入包含 "多少钱"、"花了多少"、"用了多少"、"合计"、"总共"、"一共" 等查询/汇总词，则绝对不能判定为 record，必须判定为 query。即使同时出现"花了"/"用了"等词，查询语义优先。
+- 🆕 记忆记录规则（v3.9.30，最高优先级）：如果输入以"记住/记下/请记住"开头或包含"记住"，target **必须为 memory**（绝不是 finance！）。content 填"记住"之后的内容（如"记住我叫霖"→content="我叫霖"，"记住我喜欢喝冰美式咖啡"→content="我喜欢喝冰美式咖啡"）。amount 一律为 null。即便含"喝/咖啡"等疑似财务词，只要以"记住"引导就是记记忆，不是记账。
+- 🆕 财务记账必须有金额（v3.10.1）：仅当输入含**明确金额**（数字 + 元/块/块钱/角/毛，或中文数字金额如"十元"/"三块五"）才判定为 record+finance。仅含"买了/消费/花了"等词但**无金额** → 不是记账："今天买了咖啡豆"是购物陈述、"买了本书"是陈述，都应判定为 chat（无金额就不是可记账的交易）。
 
 ### query（查询）
 - 查看数据，不修改
@@ -212,11 +224,21 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - 🚨 格式化查询规则（v3.9.19）：含 "详细"/"列举"/"列出"/"明细"/"逐条"/"每笔"/"具体" 但无其他工具意图（删除/记账/提醒）→ 必须判定为 query，绝不能判定为 chat。即使无明确 target，也应尝试从上下文继承或设为 finance
 - 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week，"本月/这个月"→this_month，"昨天"→yesterday，"上周"→last_week）
 - amount必须为null（查询场景不提取金额）
-- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/事件/叫我→schedule，记忆/记住→memory
+- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/事件/叫我→schedule，记忆/记住/回忆/回顾→memory
+- 🆕 记忆查询规则（v3.9.30，v3.9.31 强化）：含"记忆/回忆/回顾/记住的"且是查看类意图 → target **必须为 memory**（绝不是 finance，也绝不是 schedule！）。即使输入含"日程/待办"等词，只要以"查看/显示+记忆"为主体就是记忆查询。"查看今天的记忆"→query+memory+time:today，"查看最近的记忆"→query+memory+scope:latest，"回忆一下昨天的事"→query+memory+time:yesterday
 - ⚠️ 上下文延续规则：如果当前输入省略了主题词（如只说"看这个月的"、"那本周呢"），有上下文时沿用上一轮的target和意图
 - ⚠️ 格式化查询延续规则（v3.9.19）：如果当前输入只有格式化关键词（"详细"/"列举"/"明细"/"逐条"等）而无时间/类别/目标词，有上下文时必须沿用上一轮的 target（通常为 finance）
 - 当target=schedule时，根据输入填充scope或time（如"今天的待办"→scope:"today"，"本周任务"→time:"this_week"）
 - 🆕 detail: 用户要求"详细"/"列举"/"逐条"/"明细"/"每笔"/"列出"时设为true，否则false（v3.9.16）
+
+### search（搜索记忆，v3.9.30）
+- 在记忆库中按关键词搜索相关记忆
+- 触发词：搜索、查找、找一下、搜一下、有没有关于、相关记忆、记得吗、提一下
+- keyword 填搜索关键词（如"咖啡"→keyword:"咖啡"）
+- target **必须为 memory**
+- 🚨 排除规则（v3.9.31）：含"日程/会议/待办/提醒/记账/花了" → 不是 search（可能搜索日程或财务），按 schedule/finance 处理
+- amount必须为null，time/scope 为 null（搜索全库，除非用户指定时间）
+- "搜索咖啡"→search+memory+keyword:咖啡，"找一下关于咖啡的记忆"→search+memory+keyword:咖啡
 
 ### delete（删除）
 - 🚨最高优先级：含删除/删掉/清空/清除/去掉 → delete
@@ -253,8 +275,9 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - confidence一般为0.85-0.95（修正模式语义明确）
 
 ### recall（回顾）
-- 用户询问刚才做了什么、说过什么、最近的操作记录
-- 触发词："刚才干了什么"、"刚才我说了什么"、"我刚才做了什么"、"之前我说了什么"、"我刚才的操作"、"回顾一下"、"刚才发生了什么"、"最近干了什么"
+- 用户询问刚才做了什么、说过什么、最近的操作记录（⚠️ 仅限"刚才/最近的操作"，不是长期记忆）
+- 触发词："刚才干了什么"、"刚才我说了什么"、"我刚才做了什么"、"之前我说了什么"、"我刚才的操作"、"刚才发生了什么"、"最近干了什么"
+- 🚨 排除规则（v3.9.31）：含"记忆/回忆/记住/搜索/查看记忆/名字/我是谁" → 不是 recall，按记忆类意图处理（query+memory / record+memory / search+memory / chat）
 - 没有参数需要提取，所有params字段为null
 - target为null
 - confidence一般为0.85-0.95（回顾意图明确）
@@ -272,7 +295,12 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
   今天天气不错、今天天气怎么样、讲个笑话、说个笑话、你累吗、你开心吗、
   你吃了吗、你在吗、在不在、忙吗、有空吗、跟我说说、聊聊、随便聊、聊聊天、
   随便说说、你的功能是什么
-- 其他也视为聊天的场景：问候、闲聊、确认词（是/对/好）、简单问答、否定删除的语句
+- 🆕 观点/评价类触发词（v3.10.1）：好喝、好吃、好看、好听、好玩、怎么样、觉得、认为、你怎么看、你感觉
+- 🆕 身份类问题（v3.9.30）：我是谁、我叫什么、我的名字、你知道我是谁吗、
+  你知道我叫什么吗、记得我吗、你认识我吗 → chat（7b 对话层可查询记忆）
+- 当身份问题出现时，即使含"记忆/记住"词也优先 chat（"我是谁"不是记忆操作）
+- 🆕 观点/评价类问题（v3.10.1，最高优先级）：含 "你觉得"/"你认为"/"你感觉"/"你怎么看"/"好不好喝"/"好吃吗"/"怎么样" 等观点询问 → **必须判定为 chat**（绝不是 finance/schedule！）。即使含"咖啡/买了"等财务词（"你觉得咖啡好喝吗"是征求看法，不是记账）。例外：同时含"多少钱/花了多少/一共/合计/总共"等财务查询词（如"你觉得上个月花了多少钱"）→ 判定为 query
+- 其他也视为聊天的场景：问候、闲聊、确认词（是/对/好）、简单问答、否定删除的语句、无金额的购物/消费陈述（v3.10.1）
 - target为null，所有params字段为null
 
 ### clarify（澄清）
@@ -282,10 +310,10 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - target为null，所有params字段为null
 
 ## target推断优先级
-1. 🚨 含 任务/待办/提醒/日程/事件/会议/约会/聚会/面试/上课/活动/叫我/闹钟 → **schedule（最高优先级，v3.9.27）**：即使同时含财务词（"添加任务买牛奶"含"买"、"添加会议明天下午3点"含"明天下午"），也必须是 schedule
-2. 含 财务/记账/花了/消费/收入/支出/账单 → finance
-3. 含 记忆/记住 → memory
-4. chat、clarify、correct、recall和remind → 按规则自动确定（remind→schedule, correct→schedule, recall→null）
+1. 🚨 含 记住/记忆/回忆/回顾/搜索/查找/找一下 → **memory（最高优先级，v3.9.30）**：即使同时含财务词（"记住我喜欢喝咖啡"含"喝"），也必须是 memory。例外：身份问题（我是谁/我叫什么）→ chat
+2. 🚨 含 任务/待办/提醒/日程/事件/会议/约会/聚会/面试/上课/活动/叫我/闹钟 → **schedule（v3.9.27）**：即使同时含财务词（"添加任务买牛奶"含"买"），也必须是 schedule
+3. 含 财务/记账/花了/消费/收入/支出/账单 → finance
+4. chat、clarify、correct、recall、search和remind → 按规则自动确定（remind→schedule, correct→schedule, recall→null, search→memory）
 5. 仅含"数据"/"记录"无模块词 → null
 
 ## 置信度指南
@@ -325,6 +353,27 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 输入：不要删除数据
 输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.85}}
+
+输入：我是谁
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：记住我叫霖
+输出：{{"intent":"record","target":"memory","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":"我叫霖"}},"confidence":0.95}}
+
+输入：记住我喜欢喝冰美式咖啡
+输出：{{"intent":"record","target":"memory","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":"我喜欢喝冰美式咖啡"}},"confidence":0.95}}
+
+输入：查看今天的记忆
+输出：{{"intent":"query","target":"memory","params":{{"amount":null,"time":"today","source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：查看最近的记忆
+输出：{{"intent":"query","target":"memory","params":{{"amount":null,"time":null,"source":null,"scope":"latest","keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：搜索咖啡
+输出：{{"intent":"search","target":"memory","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":"咖啡","time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：找一下关于咖啡的记忆
+输出：{{"intent":"search","target":"memory","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":"咖啡","time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
 
 输入：一分钟后提醒我喝水
 输出：{{"intent":"remind","target":"schedule","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":1,"absolute_time":null,"content":"喝水"}},"confidence":0.95}}
@@ -367,6 +416,24 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 输入（上一轮在查财务）：详细点
 输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.85}}
+
+输入：你觉得咖啡好喝吗
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：你觉得这个怎么样
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：你怎么看
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
+
+输入：今天买了咖啡豆
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：买了本书
+输出：{{"intent":"chat","target":null,"params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.9}}
+
+输入：买了一本书花了30元
+输出：{{"intent":"record","target":"finance","params":{{"amount":30,"time":"today","source":"书","scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null}},"confidence":0.95}}
 
 输入（上一轮在查财务）：列举一下
 输出：{{"intent":"query","target":"finance","params":{{"amount":null,"time":null,"source":null,"scope":null,"keyword":null,"time_offset":null,"absolute_time":null,"content":null,"detail":true}},"confidence":0.8}}
@@ -614,7 +681,7 @@ def _route_with_3b(user_input, context=None, last_result=None):
             return None
 
         intent = parsed.get("intent")
-        if intent not in ("record", "query", "delete", "remind", "correct", "recall", "chat", "clarify"):
+        if intent not in ("record", "query", "delete", "remind", "correct", "recall", "search", "chat", "clarify"):
             return None
 
         params = parsed.get("params", {})
@@ -656,10 +723,141 @@ def _record_tool_operation(short_term, user_input, reply_text):
     """
     v3.9.9: 将工具操作记录到短期记忆，使 recall 能回顾非聊天操作。
     存储格式与 chat 一致：user → assistant 交替，便于 recall 函数统一读取。
+    v3.10.0: 同步写入对话归档（工具轮 → 规则摘要，零 LLM）。
     """
     short_term.append({"role": "user", "content": user_input})
     short_term.append({"role": "assistant", "content": reply_text})
     save_short_term(short_term)
+    _record_dialogue_archive(user_input, reply_text, is_tool_round=True)
+
+
+# ===================== 对话归档与摘要（v3.10.0）=====================
+
+# 工具轮关键词（用于规则摘要判定）
+_DIALOGUE_FINANCE_KW = ["花了", "消费", "记账", "付款", "支出", "买", "用"]
+_DIALOGUE_SCHEDULE_KW = ["添加", "新增", "安排", "创建", "预约", "提醒",
+                         "会议", "日程", "待办", "任务", "事件", "todo"]
+_DIALOGUE_MEMORY_KW = ["记住", "记下", "请记住", "帮我记住"]
+# 消费来源物品表（与财务模块 parse_user_input 一致，保证规则摘要口径统一）
+_DIALOGUE_SOURCE_ITEMS = ["水", "饭", "奶茶", "咖啡", "水果", "外卖", "零食"]
+
+# 基础关键词标签（Phase 3 完整标签生成前的最小实现）
+_DIALOGUE_TAG_RULES = [
+    (["咖啡"], "咖啡"),
+    (["吃饭", "吃", "餐"], "餐饮"),
+    (["买", "购物", "网购", "购买"], "购物"),
+    (["日程", "会议", "提醒", "待办", "任务"], "日程"),
+    (["记账", "花了", "消费", "财务"], "财务"),
+    (["心情", "开心", "难过", "高兴", "郁闷", "烦躁"], "情绪"),
+]
+
+
+def _extract_finance_source(text):
+    """提取消费来源（与财务模块 parse_user_input 物品表一致）"""
+    for item in _DIALOGUE_SOURCE_ITEMS:
+        if item in text:
+            return item
+    return "日常消费"
+
+
+def _extract_amount(text):
+    """提取金额数字（优先匹配 元/块/钱 等货币单位后的数字）"""
+    m = re.search(r'(\d+\.?\d*)\s*[元块钱角毛]', text)
+    return m.group(1) if m else None
+
+
+def _rule_summary(text):
+    """
+    工具轮规则摘要（零 LLM 调用，v3.10.0）。
+    财务优先且需有金额（避免"添加任务买牛奶"被误判为记账），
+    其次记忆 / 日程，兜底工具操作。
+    """
+    text = text.strip()
+    amount = _extract_amount(text)
+    if amount and any(kw in text for kw in ["花了", "消费", "付", "支出", "买了", "用了", "买"]):
+        return f"记账：{_extract_finance_source(text)}{amount}元"
+    if any(kw in text for kw in _DIALOGUE_MEMORY_KW):
+        content = re.sub(r"^(记住|记下|请记住|帮我记住|记住一下)\s*", "", text).strip()
+        return f"记忆：{content[:20]}"
+    if any(kw in text for kw in _DIALOGUE_SCHEDULE_KW):
+        title = re.sub(r"^(添加|新增|安排|创建|预约)\s*", "", text).strip()
+        # 删除/修改/查询类 → 中性"日程"前缀，避免误标为"添加"
+        if any(kw in text for kw in ["删", "取消", "移除", "改", "修正", "查", "显示", "看", "找"]):
+            return f"日程：{title[:20]}"
+        return f"添加日程：{title[:20]}"
+    if amount:
+        # 无消费动词但带金额（如"中午吃饭25元"）也视为记账
+        return f"记账：{_extract_finance_source(text)}{amount}元"
+    return f"工具操作：{text[:20]}"
+
+
+def _generate_dialogue_tags(text):
+    """基础关键词标签提取（Phase 3 前的简单实现）"""
+    tags = []
+    for kws, tag in _DIALOGUE_TAG_RULES:
+        if any(kw in text for kw in kws) and tag not in tags:
+            tags.append(tag)
+    return tags[:5]
+
+
+def _summarize_text(text, is_tool_round, role):
+    """
+    生成单条文本摘要：
+      工具轮 → 规则摘要（零 LLM）
+      纯对话 → 3b 轻量摘要（2s 超时），失败降级为截断
+    """
+    text = (text or "").strip()
+    if not text:
+        return ""
+    if is_tool_round:
+        if role == "user":
+            return _rule_summary(text)
+        return f"确认：{text[:20]}"
+    prompt = ("用一句话总结用户说的内容，不超过15字：" if role == "user"
+              else "用一句话总结助手回复的内容，不超过15字：")
+    summary = _call_ollama_3b(prompt + text, timeout=2)
+    if summary:
+        return summary.replace("\n", " ").strip()[:30]
+    return text[:20]
+
+
+def _record_dialogue_archive(user_input, reply_text, is_tool_round):
+    """
+    将一轮完整交互（user + assistant）写入对话归档。
+    失败不阻塞主流程（try/except 静默降级）。
+    """
+    try:
+        u_summary = _summarize_text(user_input, is_tool_round, "user")
+        add_dialogue_record("user", user_input, u_summary,
+                            tags=_generate_dialogue_tags(user_input))
+        a_summary = _summarize_text(reply_text, is_tool_round, "assistant")
+        add_dialogue_record("assistant", reply_text, a_summary, tags=[])
+    except Exception as e:
+        print(f"⚠️ 对话归档失败: {e}")
+
+
+def _contains_amount(text):
+    """检测文本是否含明确金额（数字+货币词 或 中文数字金额，v3.10.1）。"""
+    if re.search(r'\d+(?:\.\d+)?\s*[元块钱角毛]', text):
+        return True
+    if re.search(r'[一二三四五六七八九十两零百千万]+\s*[元块角毛]', text):
+        return True
+    return False
+
+
+def _handle_chat(user_input, short_term):
+    """
+    纯对话轮统一入口（v3.10.1 预路由复用）：
+    7b 对话 + 短期记忆记录 + 对话归档（纯对话 3b 摘要）。
+    """
+    short_term.append({"role": "user", "content": user_input})
+    response = chat_with_xiaofeng(user_input, short_term)
+    print(f"晓风: {response}")
+    speak(response)
+    short_term.append({"role": "assistant", "content": response})
+    save_short_term(short_term)
+    _record_dialogue_archive(user_input, response, is_tool_round=False)
+    return response
 
 
 def _generate_tool_reply(result, prefix="好的"):
@@ -1358,6 +1556,190 @@ def main():
             _record_tool_operation(short_term, user_input, reply)
             continue
 
+        # v3.9.31: 确定性预路由——记忆类意图直接处理，不依赖 LLM 路由。
+        # LLM(3b) 对记忆意图极不稳定（"记住我叫霖"→schedule、"查看记忆"→schedule、"搜索咖啡"→chat）。
+        # 记忆意图关键词明确，用确定性匹配兜底。
+
+        # (A) 记住 X → 写入记忆（record+memory）
+        m_mem_rec = re.search(r"^\s*(记住|记下|请记住|帮我记住|记住一下)\s*(.+)", user_input)
+        if m_mem_rec:
+            mem_content = m_mem_rec.group(2).strip()
+            print(f"[预路由] 检测到记忆记录意图: {user_input!r}")
+            try:
+                from 记忆.记忆引擎 import add_fact
+                res = add_fact(mem_content, source="对话")
+                if res.get("status") == "merged":
+                    reply = f"这个我早就记住了：{mem_content}"
+                else:
+                    reply = f"好的，我记住了：{mem_content}"
+            except Exception as e:
+                print(f"⚠️ 记忆写入失败:{e}")
+                reply = f"好的，我记住了：{mem_content}"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # (B) 身份问题 → 从记忆/事实中查找名字回答（7b 不可靠）
+        if re.search(r"(我是谁|我叫什么|我的名字|你知道我是谁|你知道我叫什么|我叫什么名字|我叫谁)", user_input):
+            print(f"[预路由] 检测到身份查询: {user_input!r}")
+            name = None
+            try:
+                from 记忆.记忆引擎 import get_memories  # load_long_term 已在模块顶层导入，勿在函数内重复 import
+                mems = get_memories(limit=50)
+                for m in mems:
+                    c = (m.get("content") or "") + (m.get("title") or "")
+                    for pat in (r"我叫([一-鿿]+)", r"我的名字(?:是|叫)?([一-鿿]+)",
+                                r"(?:我是|我是叫)([一-鿿]{1,4})"):
+                        mm = re.search(pat, c)
+                        if mm:
+                            name = mm.group(1).strip()
+                            break
+                    if name:
+                        break
+                if not name:
+                    for f in load_long_term().get("patterns", []):
+                        c = f.get("content", "")
+                        mm = re.search(r"我叫([一-鿿]+)", c)
+                        if mm:
+                            name = mm.group(1).strip()
+                            break
+            except Exception as e:
+                print(f"⚠️ 身份查询记忆失败:{e}")
+            if name:
+                reply = f"你叫{name}呀，我记得你。"
+            else:
+                reply = "我还不太确定你的名字，你可以告诉我，比如'记住我叫XX'。"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # (C) 搜索/找 → search+memory（关键词搜索）
+        if re.search(r"(搜索|搜一下|搜|查找|找一下|帮我找|找找)", user_input) and not re.search(
+                r"(日程|会议|待办|提醒|记账|花了)", user_input):
+            print(f"[预路由] 检测到记忆搜索意图: {user_input!r}")
+            kw = re.sub(r"^(搜索|搜一下|搜|查找|找一下|帮我找|找找)\s*(关于)?\s*", "", user_input)
+            kw = re.sub(r"(的记忆|的记忆有|相关记忆|里.*|中的.*)$", "", kw).strip()
+            if not kw:
+                kw = user_input.strip()
+            try:
+                from 记忆.记忆引擎 import get_memories
+                mems = get_memories(limit=50)
+                hits = [m for m in mems if kw in (m.get("content") or "")
+                        or kw in (m.get("title") or "")
+                        or any(kw in (t or "") for t in (m.get("tags") or []))]
+                if not hits:
+                    reply = f"没有找到关于「{kw}」的记忆～"
+                else:
+                    lines = [f"🔍 找到 {len(hits)} 条相关记忆:"]
+                    for m in hits[:8]:
+                        title = m.get("title") or m.get("content", "")
+                        date = m.get("date", "")
+                        sub = m.get("subtype", "")
+                        lines.append(f"  [{date}] ({sub}) {title}")
+                    reply = "\n".join(lines)
+            except Exception as e:
+                print(f"⚠️ 记忆搜索失败:{e}")
+                reply = "记忆搜索暂时不可用"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # (D) 查看/回忆记忆 → query+memory（时间筛选）
+        if re.search(r"(查看|看看|显示|查一下|查询|翻看).*(记忆|回忆)|(记忆|回忆).*(查看|看看|查询|查一下)|"
+                     r"今天的记忆|最近的记忆|昨天的事|上次.*记忆|"
+                     r"回忆(一下|一下昨天|昨天|今天|最近|上周|本月|起来)|"
+                     r"看看.*(我记得|记了|记忆)|查一下.*(记了|记忆)", user_input):
+            print(f"[预路由] 检测到记忆查询意图: {user_input!r}")
+            time_f = None
+            if re.search(r"(今天|今日)", user_input):
+                time_f = "today"
+            elif re.search(r"(昨天|昨日)", user_input):
+                time_f = "yesterday"
+            elif re.search(r"(本周|这周)", user_input):
+                time_f = "this_week"
+            elif re.search(r"(上周)", user_input):
+                time_f = "last_week"
+            elif re.search(r"(本月|这个月)", user_input):
+                time_f = "this_month"
+            try:
+                from 记忆.记忆引擎 import get_memories
+                mems = get_memories(time_filter=time_f, limit=10)
+                if not mems:
+                    reply = "目前还没有相关的记忆记录～"
+                else:
+                    lines = ["🧠 记忆记录:"]
+                    for m in mems:
+                        title = m.get("title") or m.get("content", "")
+                        date = m.get("date", "")
+                        sub = m.get("subtype", "")
+                        lines.append(f"  [{date}] ({sub}) {title}")
+                    reply = "\n".join(lines[:12])
+            except Exception as e:
+                print(f"⚠️ 记忆查询失败:{e}")
+                reply = "记忆查询暂时不可用"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # ============================================================
+        # v3.10.1: 确定性预路由 —— 观点问题 / 无金额消费 / 自然日程表达
+        # ============================================================
+
+        # (E) 观点/评价类问题 → chat（"你觉得咖啡好喝吗"绝不进财务）
+        _E_OPINION_RE = re.compile(r"(你觉得|你认为|你感觉|你怎么看|好不好喝|好不好吃|好不好看|好喝吗|好吃吗|好看吗|好听吗|好玩吗)")
+        _E_FIN_EXCL_RE = re.compile(r"(多少钱|花了多少|用了多少|一共|合计|总共|开销|支出|花费|账单)")
+        e_opinion = _E_OPINION_RE.search(user_input)
+        e_fin_excl = _E_FIN_EXCL_RE.search(user_input)
+        if e_opinion and not e_fin_excl:
+            print(f"[预路由] 检测到观点询问 → chat: {user_input!r}")
+            _handle_chat(user_input, short_term)
+            continue
+        elif e_opinion and e_fin_excl:
+            _debug_log(f"[DEBUG-预路由] (E)观点 命中模式但被排除词拦截: {user_input!r} 含财务查询词 {e_fin_excl.group(0)!r} → 不劫持，交给正常路由（应为 query）")
+        elif _DEBUG:
+            _debug_log(f"[DEBUG-预路由] (E)观点 未命中: {user_input!r}（无'你觉得/好喝吗/怎么样'等观点词）→ 继续后续路由")
+
+        # (F) 财务记账必须有金额 —— "买了/消费/花了" 无金额 → 闲聊（购物陈述），不是记账
+        _F_VERB_RE = re.compile(r"(买了|消费|花了|支付|用了)")
+        _F_EXCL_RE = re.compile(r"(日程|会议|待办|任务|提醒|记住|记得|记忆|查看|查询|显示|搜索|多少|一共|合计|删|取消|叫我|帮我买|买一下|有没有|账单|报表)")
+        f_verb = _F_VERB_RE.search(user_input)
+        f_has_amount = _contains_amount(user_input)
+        f_excl = _F_EXCL_RE.search(user_input)
+        if f_verb and not f_has_amount and not f_excl:
+            print(f"[预路由] 无金额消费陈述 → chat: {user_input!r}")
+            _handle_chat(user_input, short_term)
+            continue
+        elif _DEBUG:
+            if not f_verb:
+                _debug_log(f"[DEBUG-预路由] (F)无金额消费 未命中: {user_input!r}（无'买了/消费/花了'等消费动词）→ 继续")
+            elif f_has_amount:
+                _debug_log(f"[DEBUG-预路由] (F)无金额消费 触发但检测到金额: {user_input!r} → 不劫持，交给记账路由（record+finance）")
+            else:
+                _debug_log(f"[DEBUG-预路由] (F)无金额消费 触发但被排除词拦截: {user_input!r} 含 {f_excl.group(0)!r} → 不劫持，交给正常路由（日程/记忆/查询/提醒）")
+
+        # (G) "有+日程词" 自然表达 → 日程模块（"明天有个重要的会议"/"后天有个任务"/"下周一有个面试"）
+        _G_ITEM_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(会议|事件|日程|安排|约会|聚会|面试|上课|活动|任务|待办|事项|todo)", re.IGNORECASE)
+        _G_EXCL_RE = re.compile(r"(什么|哪些|有没有|几个|吗|呢|多少钱|删|提醒|记得|叫我|叫醒|喊我|通知|闹钟)")
+        g_item = _G_ITEM_RE.search(user_input)
+        g_excl = _G_EXCL_RE.search(user_input)
+        if g_item and not g_excl:
+            print(f"[预路由] 检测到'有+日程词'自然表达 → 日程模块: {user_input!r}")
+            result = call_tool("日程", user_input)
+            reply = _generate_tool_reply(result, prefix="明白了")
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+        elif _DEBUG:
+            if not g_item:
+                _debug_log(f"[DEBUG-预路由] (G)有+日程词 未命中: {user_input!r}（无'有+会议/任务'等日程词模式）→ 继续")
+            else:
+                _debug_log(f"[DEBUG-预路由] (G)有+日程词 触发但被排除词拦截: {user_input!r} 含 {g_excl.group(0)!r} → 不劫持（查询/提醒/财务）")
+
         # v3.9.6: 提取上一轮用户输入 + 上一轮路由结果作为结构化上下文
         last_user_context = None
         for turn in reversed(short_term):
@@ -1390,6 +1772,25 @@ def main():
                     print(reply)
                     speak(reply)
                     _record_tool_operation(short_term, user_input, reply)
+                elif target_3b == "memory":
+                    # v3.9.30: "记住我叫霖" → 写入记忆（fact）
+                    print("🧠 正在记录记忆（3b路由）...")
+                    content = (params_3b.get("content") or "").strip() if isinstance(params_3b, dict) else ""
+                    if not content:
+                        # 兜底：去掉"记住"前缀
+                        content = re.sub(r"^(记住|记下|请记住|记得)\s*", "", user_input).strip()
+                    try:
+                        from 记忆.记忆引擎 import add_fact
+                        result = add_fact(content, source="对话")
+                        reply = f"好的，我记住了：{content}"
+                        if result.get("status") == "merged":
+                            reply = f"这个我早就记住了：{content}"
+                    except Exception as e:
+                        print(f"⚠️ 记忆写入失败:{e}")
+                        reply = f"好的，我记住了：{content}"
+                    print(reply)
+                    speak(reply)
+                    _record_tool_operation(short_term, user_input, reply)
                 else:
                     print("🔧 正在处理财务指令（3b路由）...")
                     result = call_tool("财务", user_input)
@@ -1407,6 +1808,33 @@ def main():
                 elif target_3b == "schedule":
                     print("🔧 正在查询日程（3b路由）...")
                     result = call_tool("日程", user_input, params_3b, _func="query_schedule")
+                elif target_3b == "memory":
+                    # v3.9.30: "查看今天的记忆" → 查询记忆库
+                    print("🧠 正在查询记忆（3b路由）...")
+                    try:
+                        from 记忆.记忆引擎 import get_memories
+                        time_f = params_3b.get("time") if isinstance(params_3b, dict) else None
+                        scope = params_3b.get("scope") if isinstance(params_3b, dict) else None
+                        if scope == "latest":
+                            time_f = "last_week"
+                        mems = get_memories(time_filter=time_f, limit=10)
+                        if not mems:
+                            reply = "目前还没有相关的记忆记录～"
+                        else:
+                            lines = ["🧠 记忆记录:"]
+                            for m in mems:
+                                title = m.get("title") or m.get("content", "")
+                                date = m.get("date", "")
+                                sub = m.get("subtype", "")
+                                lines.append(f"  [{date}] ({sub}) {title}")
+                            reply = "\n".join(lines[:12])
+                    except Exception as e:
+                        print(f"⚠️ 记忆查询失败:{e}")
+                        reply = "记忆查询暂时不可用"
+                    print(reply)
+                    speak(reply)
+                    _record_tool_operation(short_term, user_input, reply)
+                    continue
                 else:
                     # v3.9.19: target 不明确时的降级策略
                     # 尝试从 finance_module 的 _last_query_context 推断 target
@@ -1550,6 +1978,43 @@ def main():
                     }
                 continue
 
+            # ---- search: 搜索记忆 ----
+            elif intent_3b == "search":
+                print("🔍 正在搜索记忆（3b路由）...")
+                keyword = params_3b.get("keyword") if isinstance(params_3b, dict) else None
+                if not keyword and isinstance(params_3b, dict):
+                    keyword = params_3b.get("content")
+                if not keyword:
+                    # 兜底：去掉搜索触发词
+                    keyword = re.sub(r"^(搜索|查找|找一下|搜一下|有没有关于)\s*", "", user_input)
+                    keyword = re.sub(r"(关于.*的记忆|的记忆|相关记忆)$", "", keyword).strip()
+                try:
+                    from 记忆.记忆引擎 import get_memories
+                    mems = get_memories(limit=10)
+                    if keyword:
+                        hits = [m for m in mems if keyword in (m.get("content") or "")
+                                or keyword in (m.get("title") or "")
+                                or keyword in (m.get("tags") or [])]
+                    else:
+                        hits = mems
+                    if not hits:
+                        reply = f"没有找到关于「{keyword}」的记忆～"
+                    else:
+                        lines = [f"🔍 找到 {len(hits)} 条相关记忆:"]
+                        for m in hits[:10]:
+                            title = m.get("title") or m.get("content", "")
+                            date = m.get("date", "")
+                            sub = m.get("subtype", "")
+                            lines.append(f"  [{date}] ({sub}) {title}")
+                        reply = "\n".join(lines)
+                except Exception as e:
+                    print(f"⚠️ 记忆搜索失败:{e}")
+                    reply = "记忆搜索暂时不可用"
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+
             # ---- remind: 设置提醒 ----
             elif intent_3b == "remind":
                 print("🔧 正在处理日程提醒（3b路由）...")
@@ -1643,6 +2108,8 @@ def main():
                 short_term.append({"role": "user", "content": user_input})
                 short_term.append({"role": "assistant", "content": reply})
                 save_short_term(short_term)
+                # v3.10.0: 回顾轮也写入对话归档（规则摘要）
+                _record_dialogue_archive(user_input, reply, is_tool_round=True)
                 continue
 
             # ---- v3.9.20: 格式化查询兜底 —— 在 chat 分支之前拦截 ----
@@ -1702,6 +2169,8 @@ def main():
                 speak(response)
                 short_term.append({"role": "assistant", "content": response})
                 save_short_term(short_term)
+                # v3.10.0: 纯对话轮 → 3b 轻量摘要写入对话归档
+                _record_dialogue_archive(user_input, response, is_tool_round=False)
                 continue
 
             # ---- clarify: 请求澄清 ----
@@ -1909,6 +2378,8 @@ def main():
             speak(response)
             short_term.append({"role": "assistant", "content": response})
             save_short_term(short_term)
+            # v3.10.0: 纯对话轮 → 3b 轻量摘要写入对话归档
+            _record_dialogue_archive(user_input, response, is_tool_round=False)
 
 if __name__ == "__main__":
     main()

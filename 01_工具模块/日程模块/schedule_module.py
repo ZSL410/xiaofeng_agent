@@ -29,6 +29,22 @@ except ImportError:
     def speak(text):
         print(f"🔊 [语音播报] {text}")
 
+
+# v3.9.29: 记忆系统集成 —— 记录日程/待办操作到统一记忆库（失败不影响主流程）
+def _record_memory_event(title, detail, tags=None):
+    """将一次日程/待办操作写入统一记忆库 memory.json（add_memory_event）。"""
+    try:
+        from 记忆.记忆引擎 import add_memory_event
+        add_memory_event(
+            title=title,
+            detail=detail,
+            tags=tags or ["日程"],
+            importance=5,
+            subtype="event",
+        )
+    except Exception as e:
+        print(f"⚠️ 记忆记录失败(忽略):{e}")
+
 # ===================== 线程安全 =====================
 _lock = threading.Lock()
 
@@ -644,8 +660,17 @@ def _add_event(title, date_str, time_str, repeat="none"):
     events = _load_events()
     events.append(event)
     _save_events(events)
+
     repeat_msg = {"none": "", "daily": "(每天重复)", "weekly": "(每周重复)",
                   "monthly": "(每月重复)"}.get(repeat, "")
+
+    # v3.9.29: 记录到统一记忆库
+    _record_memory_event(
+        title="添加日程",
+        detail=f"添加日程「{title}」({date_str} {time_str}){repeat_msg}".strip(),
+        tags=["日程", "事件"],
+    )
+
     return f"✅ 已添加日程:{title}({date_str} {time_str}){repeat_msg}"
 
 
@@ -710,6 +735,21 @@ def _add_todo(title, due_date="", due_time=""):
     todos = _load_todos()
     todos.append(todo)
     _save_todos(todos)
+
+    # v3.9.29: 记录到统一记忆库
+    due_desc = ""
+    if due_date and due_time:
+        due_desc = f"(到期:{due_date} {due_time})"
+    elif due_date:
+        due_desc = f"(到期:{due_date})"
+    elif due_time:
+        due_desc = f"(到期时间:{due_time})"
+    _record_memory_event(
+        title="添加待办",
+        detail=f"添加待办「{title}」{due_desc}".strip(),
+        tags=["日程", "待办"],
+    )
+
     parts = [f"✅ 已添加待办:{title}"]
     if due_date and due_time:
         parts.append(f"(到期:{due_date} {due_time})")
@@ -1164,6 +1204,36 @@ def process_command(text):
             title = "日程安排"
         if not time_str and not _has_date_word(text):
             time_str = ""
+        return _add_event(title, date_str, time_str)
+
+    # v3.10.1: "有+日程词"自然表达 —— "明天有个重要的会议" / "后天有个任务" / "下周一有个面试"
+    # 没有"添加/创建"等显式动作词，但"有+日程/会议/任务"明显是记录日程/待办的请求
+    # 中间允许形容词等修饰（"有个重要的会议"），最多 10 字
+    HAS_EVENT_WORD_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(会议|事件|日程|安排|约会|聚会|面试|上课|活动|开会)")
+    HAS_TODO_WORD_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(任务|待办|事项|todo)", re.IGNORECASE)
+    # 排除：查询/疑问（"有什么会议"）、财务（"会议支出花了X元"）、提醒（"记得有个会议"）
+    _HAS_QUERY_NOISE_RE = re.compile(r"(什么|哪些|有没有|几个|吗|呢|多少钱)")
+    _HAS_REMIND_NOISE_RE = re.compile(r"(提醒|记得|叫我|叫醒|喊我|通知|闹钟|到时|到点)")
+    if (HAS_EVENT_WORD_RE.search(text) or HAS_TODO_WORD_RE.search(text)) \
+            and not _HAS_QUERY_NOISE_RE.search(text) \
+            and not _FINANCE_NOISE_RE.search(text) \
+            and not _HAS_REMIND_NOISE_RE.search(text):
+        _debug_log(f"[解析] 检测到'有+日程词'自然表达: {text!r}")
+        # 无日期也无时间 → 无法确定时间，澄清
+        if not _has_date_word(text) and not _has_time_pattern(text):
+            return "请问是什么类型的日程？"
+        date_str, after_date = _parse_date(text)
+        time_str, after_time = _parse_time(after_date)
+        # 提取标题：去掉日期/时间后的剩余文本，再清理"有/个/下/上/我"等噪声
+        title = re.sub(
+            r"(有|有一个|有个|一个|个|下|上|我|我们|需要)",
+            "", after_time).strip()
+        title = _clean_title(title)
+        if not title:
+            m_word = HAS_TODO_WORD_RE.search(text) or HAS_EVENT_WORD_RE.search(text)
+            title = m_word.group(1) if m_word else "日程安排"
+        if HAS_TODO_WORD_RE.search(text):
+            return _add_todo(title, date_str, time_str)
         return _add_event(title, date_str, time_str)
 
     # 添加事件：添加/新增/安排 + 标题 + 时间

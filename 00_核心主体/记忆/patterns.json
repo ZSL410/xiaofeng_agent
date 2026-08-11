@@ -6,7 +6,7 @@
       "content": "喝水",
       "time_range": "23:24-23:51",
       "frequency": 3,
-      "confidence": 0.47,
+      "confidence": 0.41,
       "rejected": false,
       "id": "pattern_001",
       "created_at": "2026-06-22",
@@ -22,7 +22,7 @@
       "content": "喝水",
       "time_range": "19:27-19:28",
       "frequency": 2,
-      "confidence": 0.42,
+      "confidence": 0.36,
       "rejected": false,
       "id": "pattern_002",
       "created_at": "2026-06-22",
@@ -37,7 +37,7 @@
       "content": "泡了杯咖啡",
       "time_range": "23:28-23:55",
       "frequency": 2,
-      "confidence": 0.42,
+      "confidence": 0.36,
       "rejected": false,
       "id": "pattern_003",
       "created_at": "2026-06-22",
@@ -52,7 +52,7 @@
       "content": "每天上午泡咖啡",
       "type": "time_based",
       "frequency": 1,
-      "confidence": 0.38,
+      "confidence": 0.32,
       "last_trigger": "2026-06-24T23:42:35.936873",
       "created_at": "2026-06-24T23:42:35.936873",
       "embedding": null,
@@ -63,6 +63,6 @@
     }
   ],
   "_migrated_from": "长期记忆.json",
-  "updated_at": "2026-08-07T20:50:14.329877",
-  "last_decay": "2026-08-07"
+  "updated_at": "2026-08-12T06:33:26.389926",
+  "last_decay": "2026-08-12"
 }
