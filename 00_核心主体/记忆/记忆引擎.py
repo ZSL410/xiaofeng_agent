@@ -1,5 +1,5 @@
 """
-记忆引擎 — 晓风Agent v3.7.0（v3.11.0 新增 Phase 5 对比分析；v3.12.0 新增 Phase 6 情绪检测与记忆关联）
+记忆引擎 — 晓风Agent v3.7.0（v3.11.0 新增 Phase 5 对比分析；v3.12.0 新增 Phase 6 情绪检测与记忆关联；v3.13.0 新增 Phase 7 增强对比分析）
 ======================================================================================================
 从"被动存储"升级为"主动学习"的核心记忆模块。
 
@@ -48,7 +48,7 @@ import string
 from datetime import timedelta
 
 MEMORY_FILE = os.path.join(BASE_DIR, "memory.json")
-VALID_MEMORY_SUBTYPES = {"event", "fact", "habit", "reflection"}
+VALID_MEMORY_SUBTYPES = {"event", "fact", "habit", "reflection", "emotion"}  # v3.12.1: emotion 情绪记忆
 
 _PERIOD_MAP = [
     ("00:00", "05:59", "凌晨"),
@@ -770,7 +770,7 @@ def _save_dialogue_raw(data: dict):
 
 
 def add_dialogue_record(role, original_text, summary, tags=None, mood=None,
-                        related_memory_ids=None) -> dict:
+                        related_memory_ids=None, is_tool_round=False) -> dict:
     """
     新增一条对话归档记录（v3.10.0，原始对话 + 摘要）。
 
@@ -781,6 +781,8 @@ def add_dialogue_record(role, original_text, summary, tags=None, mood=None,
         tags: 关键词标签列表（可选）
         mood: 情绪标签（可选，Phase 6 自动检测）
         related_memory_ids: 关联记忆 ID 列表（可选，指向 memory.json 条目）
+        is_tool_round: 是否为工具轮（v3.12.1）——工具轮不创建情绪记忆，
+                      避免"搜索开心"等工具指令被误记为情绪表达
 
     返回:
         {"status": "added"|"skipped", "id": str, "message": str}
@@ -792,6 +794,9 @@ def add_dialogue_record(role, original_text, summary, tags=None, mood=None,
     # v3.12.0: Phase 6 用户轮自动情绪检测（assistant 轮不检测，避免噪音）
     if role == "user" and mood is None:
         mood = detect_mood(text)
+    # v3.12.1: 纯对话轮 + 强情绪 → 自动创建情绪记忆（memory.json 可检索）
+    if (role == "user" and not is_tool_round and mood in _STRONG_MOODS):
+        _create_emotion_memory(text, mood)
     # v3.10.7: 自动标签生成——传入标签与 原文+摘要 关键词合并（去重、上限 5）
     merged_tags = _merge_tags(tags, _extract_tags(text, summary))
     record = {
@@ -2353,6 +2358,53 @@ def detect_mood(text, llm_fn=None):
     return None
 
 
+# 强情绪集合（v3.12.1）：仅这些情绪自动创建情绪记忆；平静/疲惫/专注/困惑 等弱情绪不建记忆
+_STRONG_MOODS = {"开心", "难过", "焦虑", "生气", "兴奋"}
+
+# 情绪描述提取：去掉常见时间/主语前缀，取首个分句，作为情绪记忆的 content
+_EMO_TIME_PREFIXES = ("这几天", "这两天", "这阵子", "最近", "今天", "昨天", "前天",
+                      "现在", "刚刚", "刚才", "我", "我们")
+_EMO_SEPARATORS = ("。", "，", ",", "！", "！", "？", "?", "；", ";")
+
+
+def _extract_emotion_content(text):
+    """从用户输入提取情绪描述短句（去时间/主语前缀 + 取首个分句），作情绪记忆 content。"""
+    t = str(text or "").strip()
+    # 1) 循环去除开头的 时间/主语 前缀（最长优先）
+    while t:
+        hit = False
+        for p in sorted(_EMO_TIME_PREFIXES, key=len, reverse=True):
+            if t.startswith(p):
+                t = t[len(p):].strip()
+                hit = True
+                break
+        if not hit:
+            break
+    # 2) 取首个分句
+    for sep in _EMO_SEPARATORS:
+        if sep in t:
+            t = t.split(sep)[0]
+            break
+    return (t or str(text or "").strip())[:24].strip()
+
+
+def _create_emotion_memory(text, mood):
+    """为强情绪创建情绪记忆（v3.12.1）。失败不阻塞对话归档流程。"""
+    try:
+        content = _extract_emotion_content(text)
+        add_memory_event(
+            title="情绪",
+            content=content,
+            detail=str(text).strip(),
+            mood=mood,
+            tags=["情绪", mood],
+            subtype="emotion",
+        )
+        logger.info(f"情绪记忆已创建: mood={mood} content={content[:20]}...")
+    except Exception as e:
+        logger.warning(f"情绪记忆创建失败: {e}")
+
+
 # ---- 记忆关联（知识图谱）----
 
 _ASSOC_TIME_WINDOW = 3600          # 时间临近窗口：1 小时（秒）
@@ -2520,29 +2572,62 @@ def build_association_network(limit_per=5):
     return {"checked": len(memories), "linked": linked}
 
 
-def get_related_memories(memory_id, limit=None):
+def _strength_label(strength):
+    """关联强度数值 → 中文标签（强/中/弱）。"""
+    try:
+        s = float(strength)
+    except (TypeError, ValueError):
+        s = 0
+    if s >= 0.9:
+        return "强"
+    if s >= 0.6:
+        return "中"
+    return "弱"
+
+
+def get_related_memories(memory_id, limit=None, live=True):
     """
-    查询某记忆的关联记忆（v3.12.0, Phase 6）。
+    查询某记忆的关联记忆（v3.12.0, Phase 6；v3.12.1 增强结构化返回；v3.12.2 实时兜底）。
+
+    返回的每条关联记忆为原记录副本，并附加关联元数据:
+      - strength: 关联强度数值（1.0/0.7/0.4）
+      - strength_label: 强/中/弱
+      - reasons: 关联原因列表（如 ["同实体:咖啡", "同标签"]）
 
     参数:
         memory_id: 记忆 ID
         limit: 最大返回条数
+        live: v3.12.2 实时兜底——该记忆尚无已存储关联（related_ids 为空）时，
+              调用 find_related_memories 实时计算，保证"XX和什么相关"总有结果
+              （即使关联网络尚未批量构建）
 
     返回:
-        关联记忆记录列表（按关联强度降序）；无关联或未找到返回 []。
+        按关联强度降序的关联记忆列表（含 content/detail/title + 关联元数据）；
+        无关联或未找到返回 []。
     """
     data = _load_memory_raw()
     by_id = {m.get("id"): m for m in data.get("memories", [])}
     rec = by_id.get(memory_id)
     if not rec:
         return []
-    links = sorted(rec.get("related_ids") or [], key=lambda x: x.get("strength", 0),
-                   reverse=True)
+    links = rec.get("related_ids") or []
+    if not links and live:
+        # v3.12.2: 无已存储关联 → 实时计算兜底（不落库，仅本次查询生效）
+        try:
+            links = find_related_memories(rec, limit=limit or 5)
+        except Exception:
+            links = []
+    links = sorted(links, key=lambda x: x.get("strength", 0), reverse=True)
     out = []
     for l in links:
         target = by_id.get(l.get("id"))
-        if target:
-            out.append(target)
+        if not target:
+            continue
+        enriched = dict(target)
+        enriched["strength"] = l.get("strength", _WEAK_STRENGTH)
+        enriched["strength_label"] = _strength_label(enriched["strength"])
+        enriched["reasons"] = list(l.get("reasons", []) or [])
+        out.append(enriched)
         if limit and len(out) >= limit:
             break
     return out
@@ -2890,6 +2975,262 @@ def generate_weekly_summary():
     }
 
 
+# ===================== Phase 7 增强对比分析（v3.13.0）=====================
+
+# 习惯总结排除的非行为类标签（情绪是情绪记忆的标签，聊天是兜底标签）
+_HABIT_EXCLUDE = {"情绪", "聊天"}
+
+
+def _week_start_date(date_str):
+    """将 YYYY-MM-DD 日期映射到所在周的周一（date 对象）；解析失败返回 None。"""
+    try:
+        d = datetime.strptime(str(date_str)[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+    return d - timedelta(days=d.weekday())
+
+
+def _habit_duration_text(created_at, now=None):
+    """习惯持续时长文本：已持续N天 / N周（≥2 周显示周）。"""
+    if not created_at:
+        return ""
+    if now is None:
+        now = datetime.now()
+    try:
+        start = datetime.strptime(str(created_at)[:10], "%Y-%m-%d")
+        days = max(0, (now - start).days)
+    except (ValueError, TypeError):
+        return ""
+    if days == 0:
+        return "今天开始"
+    if days < 14:
+        return f"已持续{days}天"
+    return f"已持续{days // 7}周"
+
+
+def get_habit_summary(limit=5):
+    """提取并总结用户习惯（Phase 7 功能 1）。
+
+    数据源:
+      1. patterns.json 行为模式（content + frequency + 持续时长）
+      2. get_frequent_activities() 高频活动（记忆实体标签 + 财务来源 + 对话归档）
+
+    同内容习惯合并频次；按频次降序返回 limit 个。
+
+    返回:
+        {"habits": [{"habit", "frequency", "duration_text", "source"}], "summary": str}
+    """
+    habits = {}
+    # 1) patterns.json 习惯（含持续时长）
+    for p in _load_patterns_raw().get("patterns", []):
+        if p.get("archived") or p.get("rejected"):
+            continue
+        content = (p.get("content") or "").strip()
+        if not content:
+            continue
+        freq = int(p.get("frequency") or 1)
+        created = p.get("created_at") or p.get("last_trigger") or ""
+        if content in habits:
+            habits[content]["frequency"] += freq
+        else:
+            habits[content] = {"habit": content, "frequency": freq,
+                               "created_at": created, "source": "pattern"}
+    # 2) 高频活动（记忆/财务/对话）——显示名与 patterns 同键合并
+    #    排除非行为类标签（情绪是情绪记忆的标签，不是行为习惯）
+    for a in get_frequent_activities(limit=10):
+        act = a["activity"]
+        if act in _HABIT_EXCLUDE:
+            continue
+        label = _ACTIVITY_LABEL.get(act, act)
+        if label in habits:
+            habits[label]["frequency"] += a["count"]
+        else:
+            habits[label] = {"habit": label, "frequency": a["count"],
+                             "created_at": "", "source": "activity"}
+
+    ranked = sorted(habits.values(), key=lambda x: x["frequency"], reverse=True)[:limit]
+    now = datetime.now()
+    for h in ranked:
+        h["duration_text"] = _habit_duration_text(h.get("created_at"), now)
+
+    if not ranked:
+        summary = "暂时还没发现你的习惯，多记录一些生活轨迹吧"
+    else:
+        names = "、".join(h["habit"] for h in ranked[:3])
+        top = ranked[0]
+        summary = (f"你最近的习惯有：{names}。其中「{top['habit']}」最频繁"
+                   f"（{top['frequency']}次），{top['duration_text'] or '刚形成'}。")
+    return {"habits": ranked, "summary": summary}
+
+
+def analyze_spending_trend(periods=3):
+    """分析最近 N 周（数据不足按 N 月）消费趋势（Phase 7 功能 2）。
+
+    按周聚合支出，取最近 periods 个时段对比:
+      - direction: rising/falling/stable（首尾变化 ±10% 判定）
+      - percent: 首尾百分比变化（前段为 0 时返回 None）
+      - insight: 识别最近时段相对前段涨幅最大的支出分类
+
+    返回:
+        {"has_data": bool, "periods", "unit": "周"|"月",
+         "series": [{"label", "total"}], "direction", "direction_cn", "percent", "insight"}
+    """
+    records = [r for r in _load_finance_records()
+               if (r.get("type") or "expense") == "expense"]
+    if not records:
+        return {"has_data": False}
+
+    # 按周聚合
+    week_totals = {}
+    for r in records:
+        d = (r.get("date") or "")[:10]
+        ws = _week_start_date(d)
+        if ws:
+            key = ws.isoformat()
+            week_totals[key] = week_totals.get(key, 0.0) + (r.get("amount", 0) or 0)
+
+    if len(week_totals) >= 2:
+        unit = "周"
+        buckets = week_totals
+    else:
+        # 数据不足两周 → 按月聚合
+        unit = "月"
+        buckets = {}
+        for r in records:
+            d = (r.get("date") or "")[:10]
+            key = d[:7]
+            if key:
+                buckets[key] = buckets.get(key, 0.0) + (r.get("amount", 0) or 0)
+    if len(buckets) < 2:
+        return {"has_data": False}
+
+    order = sorted(buckets.keys())[-periods:]
+    now_week = _week_start_date(datetime.now().strftime("%Y-%m-%d"))
+    series = []
+    for key in order:
+        if unit == "周":
+            label = "本周" if key == now_week.isoformat() else f"{int(key[5:7])}-{int(key[8:10])}周"
+        else:
+            label = f"{int(key[5:7])}月"
+        series.append({"label": label, "total": round(buckets[key], 2)})
+
+    earliest = series[0]["total"]
+    latest = series[-1]["total"]
+    percent = _percent_change(latest, earliest)
+
+    if percent is None:
+        direction = "rising" if latest > 0 else "stable"
+    elif percent >= 10:
+        direction = "rising"
+    elif percent <= -10:
+        direction = "falling"
+    else:
+        direction = "stable"
+    direction_cn = {"rising": "上升", "falling": "下降", "stable": "平稳"}[direction]
+
+    # 洞察：各分类在各时段合计，识别最近时段涨幅最大的分类
+    cat_series = {}
+    for r in records:
+        d = (r.get("date") or "")[:10]
+        if unit == "月":
+            key = d[:7]
+        else:
+            ws = _week_start_date(d)
+            key = ws.isoformat() if ws else None
+        if key not in order:
+            continue
+        cat = r.get("category") or "其他"
+        lst = cat_series.setdefault(cat, [0.0] * len(order))
+        lst[order.index(key)] += r.get("amount", 0) or 0
+    candidates = []
+    for cat, amounts in cat_series.items():
+        if len(amounts) < 2 or cat == "其他":
+            continue
+        earlier = sum(amounts[:-1]) / (len(amounts) - 1)
+        candidates.append((amounts[-1] - earlier, cat, amounts[-1]))
+    insight = ""
+    if candidates:
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        delta, cat, latest_amt = candidates[0]
+        if direction == "rising" and delta > 0:
+            insight = f"主要增长来自{cat}支出（最近时段{_fmt_amount(latest_amt)}元），建议关注"
+        elif delta > 0:
+            insight = f"主要支出集中在{cat}（{_fmt_amount(latest_amt)}元）"
+        else:
+            insight = "最近时段各分类支出均有回落，控制得不错"
+
+    return {
+        "has_data": True, "periods": len(series), "unit": unit,
+        "series": series, "direction": direction, "direction_cn": direction_cn,
+        "percent": percent, "insight": insight,
+    }
+
+
+def get_personalized_recommendations():
+    """基于消费与习惯生成个性化建议（Phase 7 功能 3）。
+
+    数据源: 近 30 天财务支出（分类 + 来源）+ patterns.json 习惯 + 高频活动。
+    规则: 咖啡 / 外卖 / 交通 等高频分类 → 对应省钱建议，估算每月可节省金额。
+
+    返回:
+        {"has_data": bool, "recommendations": [{"suggestion", "reason", "benefit"}]}
+    """
+    records = [r for r in _load_finance_records()
+               if (r.get("type") or "expense") == "expense"]
+    if not records:
+        return {"has_data": False, "recommendations": []}
+    now = datetime.now()
+    cutoff = (now - timedelta(days=30)).strftime("%Y-%m-%d")
+    recent = [r for r in records if (r.get("date") or "")[:10] >= cutoff]
+    if not recent:
+        recent = records
+    weeks = max(1.0, round((now - datetime.strptime(cutoff, "%Y-%m-%d")).days / 7.0))
+
+    recs = []
+    # 1) 咖啡 → 自制咖啡（高频触发，估算 60% 节省）
+    coffee = [r for r in recent
+              if _has_any((r.get("source") or "") + (r.get("category") or ""), ["咖啡"])]
+    if len(coffee) >= 3:
+        avg = sum(r.get("amount", 0) or 0 for r in coffee) / len(coffee)
+        per_week = len(coffee) / weeks
+        if per_week >= 1.0:
+            recs.append({
+                "suggestion": "可以考虑自制咖啡",
+                "reason": f"最近咖啡支出较多（约{per_week:.0f}次/周，平均{_fmt_amount(avg)}元/次）",
+                "benefit": f"每月可节省约{_fmt_amount(round(avg * per_week * 4 * 0.6))}元",
+            })
+    # 2) 外卖/外出就餐 → 自己做饭（估算 30% 节省）
+    meal = [r for r in recent
+            if _has_any((r.get("source") or "") + (r.get("category") or ""), ["外卖", "饭"])]
+    if len(meal) >= 5:
+        avg = sum(r.get("amount", 0) or 0 for r in meal) / len(meal)
+        per_week = len(meal) / weeks
+        recs.append({
+            "suggestion": "可以考虑自己做饭",
+            "reason": f"最近外出/外卖就餐较多（约{per_week:.0f}次/周）",
+            "benefit": f"每月可节省约{_fmt_amount(round(avg * per_week * 4 * 0.3))}元",
+        })
+    # 3) 交通 → 公共交通（估算 50% 节省）
+    trans = [r for r in recent if (r.get("category") or "") == "交通"]
+    if len(trans) >= 3:
+        avg = sum(r.get("amount", 0) or 0 for r in trans) / len(trans)
+        per_week = len(trans) / weeks
+        recs.append({
+            "suggestion": "可以优先选择地铁/公交出行",
+            "reason": f"最近交通支出较多（约{per_week:.0f}次/周）",
+            "benefit": f"每月可节省约{_fmt_amount(round(avg * per_week * 4 * 0.5))}元",
+        })
+    # 4) 兜底：预算管理建议（无具体分类命中时）
+    if not recs:
+        total = sum(r.get("amount", 0) or 0 for r in recent)
+        recs.append({
+            "suggestion": "可以尝试每周设定消费预算",
+            "reason": f"最近30天总支出{_fmt_amount(total)}元",
+            "benefit": "帮助控制冲动消费",
+        })
+    return {"has_data": True, "recommendations": recs}
+
+
 def run_analysis(user_input):
     """
     对比分析统一入口（v3.11.0，Phase 5 路由集成）。
@@ -2909,6 +3250,56 @@ def run_analysis(user_input):
         return None
 
     NO_DATA_MSG = "这段时间还没有数据记录哦"
+
+    # ---- 8) 习惯总结（Phase 7）："我最近有什么习惯" ----
+    if _has_any(text, ["习惯"]):
+        data = get_habit_summary(limit=5)
+        if not data["habits"]:
+            return "暂时还没发现你的习惯，多记录一些生活轨迹吧"
+        lines = [f"{i}. {h['habit']}（{h['frequency']}次，{h['duration_text'] or '刚形成'}）"
+                 for i, h in enumerate(data["habits"], 1)]
+        return " ".join(lines) + " " + data["summary"]
+
+    # ---- 9) 消费趋势（Phase 7）："最近消费趋势怎么样" ----
+    if _has_any(text, ["趋势", "走势", "走向", "变化趋势"]):
+        data = analyze_spending_trend(periods=3)
+        if not data["has_data"]:
+            return "数据太少，暂时分析不出消费趋势"
+        series_txt = "、".join(f"{s['label']}{_fmt_amount(s['total'])}元" for s in data["series"])
+        earliest = data["series"][0]["total"]
+        latest = data["series"][-1]["total"]
+        pct = data["percent"]
+        if pct is None:
+            trend_txt = (f"最近{data['periods']}{data['unit']}支出{data['direction_cn']}"
+                         f"（最新{_fmt_amount(latest)}元）")
+        elif data["direction"] == "rising":
+            trend_txt = (f"最近{data['periods']}{data['unit']}支出持续上升，"
+                         f"从{_fmt_amount(earliest)}元增至{_fmt_amount(latest)}元，增幅{abs(pct)}%")
+        elif data["direction"] == "falling":
+            trend_txt = (f"最近{data['periods']}{data['unit']}支出有所下降，"
+                         f"从{_fmt_amount(earliest)}元降至{_fmt_amount(latest)}元，降幅{abs(pct)}%")
+        else:
+            trend_txt = (f"最近{data['periods']}{data['unit']}支出保持平稳"
+                         f"（{_fmt_amount(earliest)}元→{_fmt_amount(latest)}元）")
+        parts = [f"最近{data['periods']}{data['unit']}消费趋势：{series_txt}", trend_txt]
+        if data["insight"]:
+            parts.append(data["insight"])
+        return "；".join(parts)
+
+    # ---- 10) 个性化建议（Phase 7）："有什么建议给我" ----
+    if _has_any(text, ["建议", "怎么省钱", "如何省钱", "省钱"]):
+        data = get_personalized_recommendations()
+        if not data["has_data"]:
+            return "暂时还没有足够数据给你建议，先记几笔账吧"
+        if not data["recommendations"]:
+            return "根据目前的数据，暂时没有特别的省钱建议，继续保持就好"
+        lines = []
+        for i, rec in enumerate(data["recommendations"], 1):
+            line = f"{i}. {rec['suggestion']}：{rec['reason']}"
+            if rec.get("benefit"):
+                line += f"，{rec['benefit']}"
+            lines.append(line)
+        return "；".join(lines)
 
     # 消费语境检测：类别分析必须伴随消费语义（"我喜欢喝拿铁"不是支出分析）
     _SPENDING_CTX = ["花了", "花销", "消费", "开销", "支出", "花费", "账单", "记账",

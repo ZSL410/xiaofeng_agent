@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.12.0"
+VERSION = "3.13.0"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -143,7 +143,7 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 ### 对比分析(analyze)
 用户想了解数据间的比较/统计洞察（跨期对比、最高开支、高频活动、消费时段、周期总结）。
-**优先级最高**：含"比上周/比上个月/对比/总结/经常做什么/最大的开支/什么时候花钱最多/这周我做了什么"等分析词时，判定为分析，**不要**判为财务查询或聊天。
+**优先级最高**：含"比上周/比上个月/对比/总结/经常做什么/最大的开支/什么时候花钱最多/这周我做了什么/习惯/趋势/建议"等分析词时，判定为分析，**不要**判为财务查询或聊天。
 - action: "analyze"
 - params: 无需结构化参数，原样传入 raw_text
 例: "本周花了多少比上周多吗" → analyze
@@ -300,7 +300,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 
 ### analyze（对比分析，v3.11.0）
 - 用户想了解跨期对比/统计洞察（比上周多吗、最大的开支、经常做什么、什么时候花钱最多、周期总结）
-- 触发词（含任一即判定为analyze）：比上周、和上周、比上个月、和上个月、对比、比较、总结、周报、小结、经常做什么、经常干什么、最大开支、开销最大、花钱最多、支出最多、什么时候花钱、几点花钱、消费时段、占比、这周我做了什么
+- 触发词（含任一即判定为analyze）：比上周、和上周、比上个月、和上个月、对比、比较、总结、周报、小结、经常做什么、经常干什么、最大开支、开销最大、花钱最多、支出最多、什么时候花钱、几点花钱、消费时段、占比、这周我做了什么、习惯、趋势、走势、建议、怎么省钱、如何省钱、省钱
 - 🚨 分析优先级：含上述分析词时，**必须**判定为 analyze（即使同时含"花了/花了多少"等财务词——"本周花了多少比上周多吗"是分析，不是财务查询）
 - params 无需结构化参数，raw_text 原样保留即可
 - target 为 null
@@ -321,6 +321,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
   你吃了吗、你在吗、在不在、忙吗、有空吗、跟我说说、聊聊、随便聊、聊聊天、
   随便说说、你的功能是什么
 - 🆕 观点/评价类触发词（v3.10.1）：好喝、好吃、好看、好听、好玩、怎么样、觉得、认为、你怎么看、你感觉
+- 🆕 情绪表达类触发词（v3.12.2）：心情很好、心情不错、心情不好、心情糟糕、心情一般、今天很开心、今天很累、今天很焦虑、最近压力很大、有点难过、有点伤心、今天真棒、有点开心、有点焦虑、有点累 → **必须判定为 chat**（绝不是 finance/schedule！"心情很好"不是金额表达）
 - 🆕 身份类问题（v3.9.30）：我是谁、我叫什么、我的名字、你知道我是谁吗、
   你知道我叫什么吗、记得我吗、你认识我吗 → chat（7b 对话层可查询记忆）
 - 当身份问题出现时，即使含"记忆/记住"词也优先 chat（"我是谁"不是记忆操作）
@@ -879,9 +880,11 @@ def _record_dialogue_archive(user_input, reply_text, is_tool_round):
     try:
         u_summary = _summarize_text(user_input, is_tool_round, "user")
         add_dialogue_record("user", user_input, u_summary,
-                            tags=_generate_dialogue_tags(user_input))
+                            tags=_generate_dialogue_tags(user_input),
+                            is_tool_round=is_tool_round)
         a_summary = _summarize_text(reply_text, is_tool_round, "assistant")
-        add_dialogue_record("assistant", reply_text, a_summary, tags=[])
+        add_dialogue_record("assistant", reply_text, a_summary, tags=[],
+                            is_tool_round=is_tool_round)
     except Exception as e:
         print(f"⚠️ 对话归档失败: {e}")
 
@@ -1697,7 +1700,10 @@ def main():
             r"最大(?:的)?开支|开支最大|开销最大|花(?:得|的)最多|花钱最多|支出最多|消费最多|最贵(?:的)?一笔|"
             r"什么时候(?:花|消费|开销|买)|几点(?:花|消费|开销)|(?:花|消费|开销).{0,4}时段|"
             r"(?:这周|本周)[^，。？!?\n]{0,10}?(?:做了|干了|做了什么|发生了什么|有什么|都做了|都干了)|"
-            r"分类花|类别花|哪类|占比)"
+            r"分类花|类别花|哪类|占比|"
+            r"习惯|"
+            r"趋势|走势|走向|"
+            r"建议|怎么省钱|如何省钱|省钱)"
         )
         _ANALYSIS_EXCL_RE = re.compile(
             r"(记住|记下|请记住|帮我记住|添加|新增|安排|创建|预约|删除|删掉|取消|"
@@ -1839,10 +1845,16 @@ def main():
                         label = (src.get("title") or src.get("content", ""))[:16] if src else mid[-6:]
                         rparts = []
                         for r in rels:
-                            rtitle = (r.get("title") or r.get("content", ""))[:20]
-                            rparts.append(rtitle)
-                        lines.append(f"「{label}」关联: " + " | ".join(rparts))
-                    reply = "\n".join(lines) if lines else "这些记忆暂时还没有建立关联～"
+                            # v3.12.1: 用 content/detail 而非 title（"记账"等泛化标题无信息量）
+                            st = r.get("strength_label", "弱")
+                            text = (r.get("content") or r.get("detail") or r.get("title") or "")
+                            reasons = "、".join(r.get("reasons", []) or [])
+                            seg = f"[{st}] {text[:24]}"
+                            if reasons:
+                                seg += f" - 原因：{reasons}"
+                            rparts.append(seg)
+                        lines.append(f"「{label}」关联记忆（按强度排序）:\n" + "\n".join(rparts))
+                    reply = "\n\n".join(lines) if lines else "这些记忆暂时还没有建立关联～"
             except Exception as e:
                 print(f"⚠️ 关联记忆查询失败:{e}")
                 reply = "关联记忆查询暂时不可用"
@@ -2087,6 +2099,25 @@ def main():
                 _debug_log(f"[DEBUG-预路由] (H)展开 未命中: {user_input!r}（无展开请求词）→ 继续")
             else:
                 _debug_log(f"[DEBUG-预路由] (H)展开 触发但被排除词拦截: {user_input!r} 含 {expand_excl.group(0)!r} → 不劫持（财务/日程/查询）")
+
+        # (K) 情绪表达 → chat（v3.12.2）：心情/情绪类表达确定性走聊天，绕过 3b
+        # "我今天心情很好"曾被 3b 误判为 record+target=mod → 财务"没听懂金额"。
+        # 置于所有工具预路由之后、3b 路由之前：工具意图（搜索/记账/日程/删除等）优先，
+        # 纯情绪表达才落这里。排除词拦截"查看压力记录/花了钱很累"等混合意图。
+        _EMOTION_RE = re.compile(r"(心情|情绪|开心|难过|高兴|生气|焦虑|压力|伤心|兴奋|激动|"
+                                 r"紧张|累|困|疲惫|烦|沮丧|失落|惊喜|感动|真棒|好开心|好难过|好累)")
+        _EMOTION_EXCL_RE = re.compile(
+            r"(搜索|查找|查一下|查看|查询|看看|找一下|回忆|回顾|"
+            r"记住|记下|请记住|帮我记住|删除|删掉|取消|"
+            r"添加|新增|安排|创建|预约|提醒|叫我|会议|待办|任务|日程|"
+            r"花了|消费|买了|付了|支出|多少钱|账单|记账|收入|"
+            r"天气|气温|下雨|温度|"
+            r"比上周|比上个月|对比|总结|周报|最大开支|占比|经常|"
+            r"和什么|跟什么|什么相关)")
+        if _EMOTION_RE.search(user_input) and not _EMOTION_EXCL_RE.search(user_input):
+            print(f"[预路由] 检测到情绪表达 → chat: {user_input!r}")
+            _handle_chat(user_input, short_term)
+            continue
 
         # v3.9.6: 提取上一轮用户输入 + 上一轮路由结果作为结构化上下文
         last_user_context = None
@@ -2602,7 +2633,8 @@ def main():
             elif any(kw in user_input for kw in
                      ["比上周", "和上周", "比上个月", "和上个月", "对比", "总结",
                       "经常做", "最大开支", "开销最大", "花钱最多", "什么时候花",
-                      "这周我做了", "本周总结", "周报", "占比", "分类花", "类别花"]):
+                      "这周我做了", "本周总结", "周报", "占比", "分类花", "类别花",
+                      "习惯", "趋势", "走势", "建议", "省钱"]):
                 intent = {"tool": "分析", "action": "analyze",
                           "confidence": 0.5, "explanation": "降级分析关键词匹配"}
             elif any(kw in user_input for kw in FINANCE_KW):

@@ -2,6 +2,594 @@
   "version": "1.0",
   "records": [
     {
+      "id": "dialogue_20260816_1328_q0mbo6",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "assistant",
+      "original_text": "考虑到你近期频繁在外就餐，我有一个小小的建议：\n\n1. **尝试自己烹饪**：自己动手做顿饭不仅经济实惠，还能保证饮食健康。你可以从简单的家常菜开始做起，慢慢培养做饭的乐趣。\n\n有什么其他的需要帮助的吗？比如学习新技能、规划周末活动或者是其他生活小贴士呢？",
+      "summary": "建议自己烹饪节省开支并健康饮食。",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T13:28:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:28:45.450759"
+    },
+    {
+      "id": "dialogue_20260816_1328_b5osvl",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "assistant",
+      "original_text": "1. 可以考虑自己做饭：最近外出/外卖就餐较多（约4次/周），每月可节省约74元",
+      "summary": "确认：1. 可以考虑自己做饭：最近外出/外卖就",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T13:28:19",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:28:19.193181"
+    },
+    {
+      "id": "dialogue_20260816_1328_ubng5u",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "user",
+      "original_text": "有什么生活建议给我",
+      "summary": "工具操作：有什么生活建议给我",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:28:19",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:28:19.187973"
+    },
+    {
+      "id": "dialogue_20260816_1325_muc3d9",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "assistant",
+      "original_text": "1. 可以考虑自己做饭：最近外出/外卖就餐较多（约4次/周），每月可节省约74元",
+      "summary": "确认：1. 可以考虑自己做饭：最近外出/外卖就",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T13:25:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:25:17.308765"
+    },
+    {
+      "id": "dialogue_20260816_1325_dn86g4",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "user",
+      "original_text": "有什么建议给我",
+      "summary": "工具操作：有什么建议给我",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:25:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:25:17.301800"
+    },
+    {
+      "id": "dialogue_20260816_1324_19iw4i",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "assistant",
+      "original_text": "最近3周消费趋势：7-27周257元、8-3周95元、本周233元；最近3周支出保持平稳（257元→233元）；主要支出集中在生活（143元）",
+      "summary": "确认：最近3周消费趋势：7-27周257元、8",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T13:24:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:24:47.295750"
+    },
+    {
+      "id": "dialogue_20260816_1324_we758b",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "user",
+      "original_text": "最近消费趋势怎么样",
+      "summary": "工具操作：最近消费趋势怎么样",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T13:24:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:24:47.289337"
+    },
+    {
+      "id": "dialogue_20260816_1324_a1rj6c",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "assistant",
+      "original_text": "1. 喝咖啡（31次，刚形成） 2. 吃饭（18次，刚形成） 3. 购物（13次，刚形成） 4. 喝水（5次，已持续7周） 5. 喝东西（3次，刚形成） 你最近的习惯有：喝咖啡、吃饭、购物。其中「喝咖啡」最频繁（31次），刚形成。",
+      "summary": "确认：1. 喝咖啡（31次，刚形成） 2. 吃",
+      "tags": [
+        "咖啡",
+        "吃饭",
+        "购物",
+        "喝水",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:24:20",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:24:20.562783"
+    },
+    {
+      "id": "dialogue_20260816_1324_m1b2le",
+      "dialogue_id": "session_20260816_1324_95hs2g",
+      "role": "user",
+      "original_text": "我最近有什么习惯",
+      "summary": "工具操作：我最近有什么习惯",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:24:20",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:24:20.556698"
+    },
+    {
+      "id": "dialogue_20260816_1251_fxjkra",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "assistant",
+      "original_text": "「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 深夜记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近",
+      "summary": "确认：「记账」关联记忆（按强度排序）:\n[强]",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T12:51:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:51:45.703886"
+    },
+    {
+      "id": "dialogue_20260816_1251_7fgvyy",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "user",
+      "original_text": "咖啡和什么相关",
+      "summary": "工具操作：咖啡和什么相关",
+      "tags": [
+        "咖啡",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T12:51:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:51:45.696555"
+    },
+    {
+      "id": "dialogue_20260816_1251_vtedyj",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "assistant",
+      "original_text": "🔍 找到 6 条相关内容:\n  [2026-08-16] (记忆) 情绪\n  [2026-08-16] (记忆) 情绪\n  [2026-08-16] (对话) 有啥打算？如看电影、聚会或新计划。\n  [2026-08-16] (对话) 你想聊天气/分享开心事/安排活动吧？\n  [2026-08-13] (对话) 很高兴听到你的好消息！\n  [2026-08-12] (对话) 分享小建议：尝试放松或倾诉心事。",
+      "summary": "确认：🔍 找到 6 条相关内容:\n  [202",
+      "tags": [
+        "娱乐",
+        "情绪",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T12:51:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:51:24.354992"
+    },
+    {
+      "id": "dialogue_20260816_1251_5wvr2n",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "user",
+      "original_text": "搜索开心",
+      "summary": "工具操作：搜索开心",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T12:51:24",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:51:24.348540"
+    },
+    {
+      "id": "dialogue_20260816_1250_7gu5ku",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "assistant",
+      "original_text": "听起来今天的你有些焦虑，这很正常。有时候和朋友聊聊天、做一些深呼吸练习或者是暂时转移注意力到一些轻松的事情上都能帮助缓解一下情绪。要不要试试设定一个提醒，让自己在一天中的某个时刻停下来放松一会儿呢？或者有其他什么需要我帮忙记录或安排的吗？",
+      "summary": "如何缓解焦虑心情建议",
+      "tags": [
+        "情绪",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T12:50:20",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:50:20.379788"
+    },
+    {
+      "id": "dialogue_20260816_1250_mhwene",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "user",
+      "original_text": "今天很焦虑",
+      "summary": "今日情绪较为焦虑。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T12:50:17",
+      "mood": "焦虑",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:50:17.958399"
+    },
+    {
+      "id": "dialogue_20260816_1249_4x5lg0",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "assistant",
+      "original_text": "听起来你最近的压力不小，希望你能找到合适的方式来缓解一下。有时候和朋友聊聊天、做一些自己喜欢的事情或者是简单地放松一下都很有帮助哦。如果你愿意的话，可以记录一下具体是什么让你感到压力大，我也可以帮你设定一个提醒，每天给自己一点小奖励或者放松的时间。有什么需要我帮忙的吗？",
+      "summary": "聊聊压力来源，设置放松提醒。",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T12:49:34",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:49:34.129138"
+    },
+    {
+      "id": "dialogue_20260816_1249_ljh6gc",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "user",
+      "original_text": "最近压力很大",
+      "summary": "近期工作压力巨大。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T12:49:31",
+      "mood": "焦虑",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:49:31.564638"
+    },
+    {
+      "id": "dialogue_20260816_1248_wgt7yy",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "assistant",
+      "original_text": "很高兴听到你心情不错！继续保持好心情，如果今天有任何美好的事情或者计划，记得告诉我，我可以帮你记录下来哦。有什么需要我帮忙的吗？",
+      "summary": "保持好心情，有事尽管说。",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T12:48:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:48:39.852879"
+    },
+    {
+      "id": "dialogue_20260816_1248_j3a9tj",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "user",
+      "original_text": "心情不错",
+      "summary": "用户心情很好。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T12:48:37",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:48:37.195046"
+    },
+    {
+      "id": "dialogue_20260816_1247_l7a5wd",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "assistant",
+      "original_text": "那真是太好了！开心的心情可以和朋友分享哦，或者做些让自己快乐的事。有啥特别想做的事情想要安排一下吗？比如看部电影、喝杯咖啡还是和其他人出去走走？有什么需要记录下来提醒自己的吗？",
+      "summary": "有啥打算？如看电影、聚会或新计划。",
+      "tags": [
+        "咖啡",
+        "娱乐",
+        "情绪",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T12:47:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:47:17.308659"
+    },
+    {
+      "id": "dialogue_20260816_1247_zzhmt0",
+      "dialogue_id": "session_20260816_1247_u3qmet",
+      "role": "user",
+      "original_text": "我今天心情很好",
+      "summary": "我今天心情很好",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T12:47:14",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T12:47:14.913270"
+    },
+    {
+      "id": "dialogue_20260816_1048_ybrbth",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "assistant",
+      "original_text": "听起来你今天挺累的，要不要试试早点休息，或者安排点轻松的事情放松一下呢？有需要记下来提醒自己明天注意休息吗？有什么我可以帮忙的吗？",
+      "summary": "如何帮助你有效休息和放松建议。",
+      "tags": [
+        "情绪",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T10:48:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:48:32.713030"
+    },
+    {
+      "id": "dialogue_20260816_1048_74jle6",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "user",
+      "original_text": "今天有点累",
+      "summary": "今天感到有些疲惫。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T10:48:30",
+      "mood": "疲惫",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:48:30.391686"
+    },
+    {
+      "id": "dialogue_20260816_1046_weiix5",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "assistant",
+      "original_text": "「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 深夜记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近",
+      "summary": "确认：「记账」关联记忆（按强度排序）:\n[强]",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T10:46:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:46:53.641973"
+    },
+    {
+      "id": "dialogue_20260816_1046_7fd4ek",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "user",
+      "original_text": "咖啡和什么相关",
+      "summary": "工具操作：咖啡和什么相关",
+      "tags": [
+        "咖啡",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T10:46:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:46:53.635792"
+    },
+    {
+      "id": "dialogue_20260816_1046_o4ylhw",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "assistant",
+      "original_text": "🔍 找到 3 条相关内容:\n  [2026-08-16] (对话) 你想聊天气/分享开心事/安排活动吧？\n  [2026-08-13] (对话) 很高兴听到你的好消息！\n  [2026-08-12] (对话) 分享小建议：尝试放松或倾诉心事。",
+      "summary": "确认：🔍 找到 3 条相关内容:\n  [202",
+      "tags": [
+        "情绪",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T10:46:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:46:28.228464"
+    },
+    {
+      "id": "dialogue_20260816_1046_55ewc7",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "user",
+      "original_text": "搜索开心",
+      "summary": "工具操作：搜索开心",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T10:46:28",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:46:28.222190"
+    },
+    {
+      "id": "dialogue_20260816_1040_ujv0u1",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "assistant",
+      "original_text": "没听懂金额，请说清楚一点，比如'今天早上吃饭花了6元'",
+      "summary": "确认：没听懂金额，请说清楚一点，比如'今天早上",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T10:40:56",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:40:56.144229"
+    },
+    {
+      "id": "dialogue_20260816_1040_ya7nde",
+      "dialogue_id": "session_20260816_1040_6omiyz",
+      "role": "user",
+      "original_text": "我今天心情很好",
+      "summary": "工具操作：我今天心情很好",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T10:40:56",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T10:40:56.136915"
+    },
+    {
+      "id": "dialogue_20260816_0933_gri8bk",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天饭花的20块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天饭花的20块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T09:33:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:33:23.056294"
+    },
+    {
+      "id": "dialogue_20260816_0933_oui32x",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "user",
+      "original_text": "今天吃饭花了20元",
+      "summary": "记账：饭20元",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T09:33:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:33:23.050133"
+    },
+    {
+      "id": "dialogue_20260816_0932_fb7mg9",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "assistant",
+      "original_text": "「记账」关联: 记账 | 记账 | 记账 | 记账\n「记账」关联: 记账 | 记账 | 记账 | 记账 | 记账\n「记账」关联: 记账 | 记账 | 记账 | 记账 | 记账",
+      "summary": "确认：「记账」关联: 记账 | 记账 | 记账",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T09:32:16",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:32:16.852400"
+    },
+    {
+      "id": "dialogue_20260816_0932_e4x936",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "user",
+      "original_text": "咖啡和什么相关",
+      "summary": "工具操作：咖啡和什么相关",
+      "tags": [
+        "咖啡",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T09:32:16",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:32:16.847668"
+    },
+    {
+      "id": "dialogue_20260816_0931_b29h4j",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "assistant",
+      "original_text": "🔍 找到 10 条相关内容:\n  [2026-08-16] (对话) 已为明天会议设置提醒，有其他需求吗？\n  [2026-08-15] (记忆) 记账\n  [2026-08-15] (记忆) 记账\n  [2026-08-15] (记忆) 记账\n  [2026-08-15] (对话) 确认：1. 喝咖啡 (26次)、2. 吃饭 (\n  [2026-08-15] (对话) 确认：好嘞，已记下你今天咖啡花的9块钱～ 还有\n  [2026-08-15] (对话) 记账：咖啡9元\n  [2026-08-15] (对话) 确认：好嘞，已记下你今天咖啡花的10块钱～ 还",
+      "summary": "确认：🔍 找到 10 条相关内容:\n  [20",
+      "tags": [
+        "咖啡",
+        "吃饭",
+        "会议",
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T09:31:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:31:45.512531"
+    },
+    {
+      "id": "dialogue_20260816_0931_pd89u2",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T09:31:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:31:45.505906"
+    },
+    {
+      "id": "dialogue_20260816_0930_fqwryi",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "assistant",
+      "original_text": "我能理解这样的感受，感到焦虑确实挺不容易的。有时候和朋友聊聊天、做些放松的事情，比如散步或是做一些深呼吸练习，都能帮助缓解一下压力哦。\n\n如果您愿意的话，可以跟我分享一些最近的压力来源，或许我可以给您一些建议或者找点轻松的话题聊聊？有什么需要我帮忙的吗？",
+      "summary": "分享压力源或建议轻松话题",
+      "tags": [
+        "运动",
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T09:30:40",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:30:40.242617"
+    },
+    {
+      "id": "dialogue_20260816_0930_f76b0h",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "user",
+      "original_text": "最近压力很大，有点焦虑",
+      "summary": "近期压力大，感到焦虑。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T09:30:37",
+      "mood": "焦虑",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:30:37.949854"
+    },
+    {
+      "id": "dialogue_20260816_0920_kpe1rb",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "assistant",
+      "original_text": "那真是太棒啦！心情好是每天的美好开始。有啥开心的事儿愿意和我分享一下吗？或者您想听听今天的天气预报，还是计划了什么有趣的活动呢？",
+      "summary": "你想聊天气/分享开心事/安排活动吧？",
+      "tags": [
+        "情绪",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T09:20:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:20:52.371705"
+    },
+    {
+      "id": "dialogue_20260816_0920_36hpb3",
+      "dialogue_id": "session_20260816_0920_7hsrpq",
+      "role": "user",
+      "original_text": "我今天心情很好",
+      "summary": "今天心情愉快。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T09:20:50",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T09:20:50.001904"
+    },
+    {
       "id": "dialogue_20260816_0044_wv2ou2",
       "dialogue_id": "session_20260816_0043_xba16c",
       "role": "assistant",
@@ -3892,5 +4480,5 @@
       "created_at": "2026-08-12T00:03:45.854646"
     }
   ],
-  "updated_at": "2026-08-16T00:44:43.017538"
+  "updated_at": "2026-08-16T13:28:45.452069"
 }

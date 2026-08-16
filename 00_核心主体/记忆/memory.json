@@ -148,6 +148,300 @@
       ]
     },
     {
+      "id": "memory_20260816_0933_hwss2l",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-16",
+      "time": "09:33",
+      "datetime": "2026-08-16T09:33:00",
+      "period": "上午",
+      "title": "记账",
+      "content": "上午记账",
+      "detail": "记录今天饭花费20元（分类:餐饮，日期:2026-08-16）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "餐饮"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-16T09:33:21.626231",
+      "updated_at": null,
+      "confidence": 0.5,
+      "tier": "L1",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
+        },
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
+        },
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260816_1247_q77obg",
+      "type": "memory",
+      "subtype": "emotion",
+      "date": "2026-08-16",
+      "time": "12:47",
+      "datetime": "2026-08-16T12:47:00",
+      "period": "中午",
+      "title": "情绪",
+      "content": "心情很好",
+      "detail": "我今天心情很好",
+      "mood": "开心",
+      "tags": [
+        "情绪",
+        "开心",
+        "聊天"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-16T12:47:14.913295",
+      "updated_at": "2026-08-16T12:51:21.463237",
+      "confidence": 0.55,
+      "tier": "L1",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 1,
+      "related_ids": [
+        {
+          "id": "memory_20260816_1248_gljqp3",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:48:37.204168"
+        },
+        {
+          "id": "memory_20260816_1249_ua7u5b",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:49:31.574387"
+        },
+        {
+          "id": "memory_20260816_1250_35aybo",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:50:17.968716"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260816_1248_gljqp3",
+      "type": "memory",
+      "subtype": "emotion",
+      "date": "2026-08-16",
+      "time": "12:48",
+      "datetime": "2026-08-16T12:48:00",
+      "period": "中午",
+      "title": "情绪",
+      "content": "心情不错",
+      "detail": "心情不错",
+      "mood": "开心",
+      "tags": [
+        "情绪",
+        "开心",
+        "聊天"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-16T12:48:37.195066",
+      "updated_at": "2026-08-16T12:51:21.468168",
+      "confidence": 0.55,
+      "tier": "L1",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 1,
+      "related_ids": [
+        {
+          "id": "memory_20260816_1247_q77obg",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:48:37.204168"
+        },
+        {
+          "id": "memory_20260816_1249_ua7u5b",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:49:31.574387"
+        },
+        {
+          "id": "memory_20260816_1250_35aybo",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:50:17.968716"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260816_1249_ua7u5b",
+      "type": "memory",
+      "subtype": "emotion",
+      "date": "2026-08-16",
+      "time": "12:49",
+      "datetime": "2026-08-16T12:49:00",
+      "period": "中午",
+      "title": "情绪",
+      "content": "压力很大",
+      "detail": "最近压力很大",
+      "mood": "焦虑",
+      "tags": [
+        "情绪",
+        "焦虑",
+        "聊天"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-16T12:49:31.564655",
+      "updated_at": null,
+      "confidence": 0.5,
+      "tier": "L1",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_1247_q77obg",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:49:31.574387"
+        },
+        {
+          "id": "memory_20260816_1248_gljqp3",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:49:31.574387"
+        },
+        {
+          "id": "memory_20260816_1250_35aybo",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:50:17.968716"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260816_1250_35aybo",
+      "type": "memory",
+      "subtype": "emotion",
+      "date": "2026-08-16",
+      "time": "12:50",
+      "datetime": "2026-08-16T12:50:00",
+      "period": "中午",
+      "title": "情绪",
+      "content": "很焦虑",
+      "detail": "今天很焦虑",
+      "mood": "焦虑",
+      "tags": [
+        "情绪",
+        "焦虑",
+        "聊天"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-16T12:50:17.958417",
+      "updated_at": null,
+      "confidence": 0.5,
+      "tier": "L1",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_1247_q77obg",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:50:17.968716"
+        },
+        {
+          "id": "memory_20260816_1248_gljqp3",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:50:17.968716"
+        },
+        {
+          "id": "memory_20260816_1249_ua7u5b",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:情绪",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T12:50:17.968716"
+        }
+      ]
+    },
+    {
       "id": "memory_20260815_0001_sfpc3u",
       "type": "memory",
       "subtype": "event",
@@ -165,11 +459,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-15T00:01:45.065058",
-      "updated_at": "2026-08-16T00:36:12.990624",
-      "confidence": 0.85,
+      "updated_at": "2026-08-16T12:51:43.409569",
+      "confidence": 1.0,
       "tier": "L2",
       "last_retrieved": "2026-08-16",
-      "retrieved_count": 7,
+      "retrieved_count": 14,
       "promotion_reason": "confidence≥0.8",
       "promoted_at": "2026-08-16T00:36:12.990624",
       "related_ids": [
@@ -228,11 +522,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-15T00:41:11.534635",
-      "updated_at": null,
-      "confidence": 0.495,
+      "updated_at": "2026-08-16T12:51:43.414062",
+      "confidence": 0.945,
       "tier": "L1",
-      "last_retrieved": "2026-08-15",
-      "retrieved_count": 0,
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 9,
       "related_ids": [
         {
           "id": "memory_20260815_0001_sfpc3u",
@@ -345,11 +639,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-15T00:44:02.108501",
-      "updated_at": "2026-08-16T00:36:12.990624",
-      "confidence": 0.7,
+      "updated_at": "2026-08-16T12:51:43.405002",
+      "confidence": 1.0,
       "tier": "L2",
       "last_retrieved": "2026-08-16",
-      "retrieved_count": 4,
+      "retrieved_count": 11,
       "promotion_reason": "主题频次≥3: 饮品",
       "promoted_at": "2026-08-16T00:36:12.990624",
       "related_ids": [
@@ -425,11 +719,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-15T01:08:19.100124",
-      "updated_at": null,
-      "confidence": 0.495,
+      "updated_at": "2026-08-16T12:51:43.419236",
+      "confidence": 0.795,
       "tier": "L1",
-      "last_retrieved": "2026-08-15",
-      "retrieved_count": 0,
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 6,
       "related_ids": [
         {
           "id": "memory_20260815_0041_tpdoop",
@@ -533,11 +827,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-15T01:11:05.338016",
-      "updated_at": null,
-      "confidence": 0.495,
+      "updated_at": "2026-08-16T12:51:43.424040",
+      "confidence": 0.795,
       "tier": "L1",
-      "last_retrieved": "2026-08-15",
-      "retrieved_count": 0,
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 6,
       "related_ids": [
         {
           "id": "memory_20260815_0041_tpdoop",
@@ -641,11 +935,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-15T01:12:07.155682",
-      "updated_at": "2026-08-16T00:36:12.990624",
-      "confidence": 0.7,
+      "updated_at": "2026-08-16T12:51:43.384106",
+      "confidence": 1.0,
       "tier": "L2",
       "last_retrieved": "2026-08-16",
-      "retrieved_count": 4,
+      "retrieved_count": 11,
       "promotion_reason": "主题频次≥3: 饮品",
       "promoted_at": "2026-08-16T00:36:12.990624",
       "related_ids": [
@@ -712,11 +1006,11 @@
       ],
       "importance": 5,
       "created_at": "2026-08-14T23:57:00.366933",
-      "updated_at": null,
-      "confidence": 0.49,
+      "updated_at": "2026-08-16T12:51:43.373969",
+      "confidence": 0.64,
       "tier": "L1",
-      "last_retrieved": "2026-08-14",
-      "retrieved_count": 0,
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 3,
       "related_ids": [
         {
           "id": "memory_20260815_0001_sfpc3u",
@@ -872,6 +1166,14 @@
             "同标签"
           ],
           "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260816_0933_hwss2l",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
         }
       ]
     },
@@ -1172,6 +1474,14 @@
             "同标签"
           ],
           "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260816_0933_hwss2l",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
         }
       ]
     },
@@ -4038,6 +4348,14 @@
             "同标签"
           ],
           "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260816_0933_hwss2l",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
         }
       ]
     },
@@ -4187,6 +4505,14 @@
             "时间临近"
           ],
           "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260816_0933_hwss2l",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
         }
       ]
     },
@@ -4470,6 +4796,14 @@
             "时间临近"
           ],
           "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260816_0933_hwss2l",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T09:33:21.634903"
         }
       ]
     },
@@ -4757,7 +5091,7 @@
       ]
     }
   ],
-  "updated_at": "2026-08-16T01:09:48.789644",
+  "updated_at": "2026-08-16T12:51:43.424066",
   "_migrated_from": [
     "facts.json",
     "patterns.json"

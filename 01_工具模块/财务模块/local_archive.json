@@ -1,5 +1,22 @@
 [
   {
+    "id": "finance_20260816_0933_nllmwm",
+    "type": "expense",
+    "date": "2026-08-16",
+    "time": "09:33",
+    "datetime": "2026-08-16T09:33:00",
+    "period": "上午",
+    "amount": 20,
+    "source": "饭",
+    "category": "餐饮",
+    "content": "上午饭花了20元",
+    "detail": null,
+    "created_at": "2026-08-16T09:33:00",
+    "updated_at": null,
+    "_original_text": "今天吃饭花了20元",
+    "_time_ref": "今天"
+  },
+  {
     "id": "finance_20260815_0001_pj3ghq",
     "type": "expense",
     "date": "2026-08-15",
