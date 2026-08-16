@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.13.0"
+VERSION = "3.13.1"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1785,23 +1785,12 @@ def main():
             print(f"[预路由] 检测到身份查询: {user_input!r}")
             name = None
             try:
-                from 记忆.记忆引擎 import get_memories  # load_long_term 已在模块顶层导入，勿在函数内重复 import
-                mems = get_memories(limit=50)
-                for m in mems:
-                    # v3.10.2: content 与 title 分开匹配，避免拼接导致贪婪捕获（"我叫霖我叫霖"→"霖我叫霖"）
-                    for field in ("content", "title"):
-                        c = m.get(field) or ""
-                        for pat in (r"我叫([一-鿿]{1,4})", r"我的名字(?:是|叫)?([一-鿿]{1,4})",
-                                    r"(?:我是|我是叫)([一-鿿]{1,4})"):
-                            mm = re.search(pat, c)
-                            if mm:
-                                name = mm.group(1).strip()
-                                break
-                        if name:
-                            break
-                    if name:
-                        break
+                # v3.13.1: 复用 get_user_name()（全量检索，不受 limit 截断）。
+                # 原实现用 get_memories(limit=50) 只查最近 50 条，而名字事实通常
+                # 很早写入（本例 rank#52），落在窗口外 → "我是谁"查不到名字。
+                name = get_user_name()
                 if not name:
+                    # 兜底：老数据从 patterns 中提取
                     for f in load_long_term().get("patterns", []):
                         c = f.get("content", "")
                         mm = re.search(r"我叫([一-鿿]+)", c)

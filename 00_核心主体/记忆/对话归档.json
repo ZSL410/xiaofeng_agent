@@ -2,6 +2,488 @@
   "version": "1.0",
   "records": [
     {
+      "id": "dialogue_20260816_1417_70uat2",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "霖，你真是个聪明又细心的人！无论遇到什么问题都能冷静应对，而且总是那么温暖体贴。有什么事情需要我帮忙解决吗？",
+      "summary": "你是聪明细心的好助手，有事尽管说。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:17:36",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:17:36.650693"
+    },
+    {
+      "id": "dialogue_20260816_1417_b0znna",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "夸我两句夸我两句",
+      "summary": "你一直很积极，夸奖很有力度。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:17:34",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:17:34.156560"
+    },
+    {
+      "id": "dialogue_20260816_1417_d6l5lb",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "你想知道哪里的天气呢？可以告诉我你所在的城市或者具体地点哦。如果你不介意，我可以帮你查询一下当前的天气情况。",
+      "summary": "请告知位置，我可为你查天气。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:17:15",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:17:15.437795"
+    },
+    {
+      "id": "dialogue_20260816_1417_wz5dmp",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "今天天气怎么样",
+      "summary": "今天的天气如何？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:17:10",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:17:10.506933"
+    },
+    {
+      "id": "dialogue_20260816_1416_6639w6",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "💰 财务记录：帮你记账、查账、删除记录、统计开销  \n📅 日程管理：添加提醒、修改提醒、查询待办、删除待办  \n🧠 记忆系统：记住你的偏好和习惯，回顾历史记录  \n💬 自然对话：陪你闲聊、回答问题、给你建议\n\n有什么需要我帮忙的吗？",
+      "summary": "全能助手：记账、管理日程、记忆与聊天",
+      "tags": [
+        "财务",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T14:16:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:16:33.218691"
+    },
+    {
+      "id": "dialogue_20260816_1416_a9nw03",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "你能干什么",
+      "summary": "我可帮助解答问题和提供信息。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:16:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:16:30.750897"
+    },
+    {
+      "id": "dialogue_20260816_1416_pdo3sc",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "我是你的私人助手晓风，随时准备帮助你管理日常事务和财务记录。有什么需要我帮忙的吗？",
+      "summary": "晓风：随时待命，助你管理事务。",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T14:16:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:16:05.406094"
+    },
+    {
+      "id": "dialogue_20260816_1416_7is959",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "你是谁",
+      "summary": "我是阿里云开发的助手AI。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:16:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:16:02.951451"
+    },
+    {
+      "id": "dialogue_20260816_1415_qfs98e",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "你叫霖呀，我记得你。",
+      "summary": "确认：你叫霖呀，我记得你。",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T14:15:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:15:33.818146"
+    },
+    {
+      "id": "dialogue_20260816_1415_to5iaw",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "我是谁",
+      "summary": "工具操作：我是谁",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:15:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:15:33.811456"
+    },
+    {
+      "id": "dialogue_20260816_1414_dj2otj",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "你好呀！有什么可以帮你做的事情呢？我们可以聊聊天，也可以安排一些事情哦。",
+      "summary": "你好，可帮忙聊天或安排事务。",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T14:14:29",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:14:29.327200"
+    },
+    {
+      "id": "dialogue_20260816_1414_vih30r",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "你好",
+      "summary": "用户问候：“你好”",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:14:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:14:27.023741"
+    },
+    {
+      "id": "dialogue_20260816_1412_zs2r5p",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "你叫霖呀，我记得你。",
+      "summary": "确认：你叫霖呀，我记得你。",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T14:12:06",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:12:06.151817"
+    },
+    {
+      "id": "dialogue_20260816_1412_rq0u9s",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "我叫什么",
+      "summary": "工具操作：我叫什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:12:06",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:12:06.144246"
+    },
+    {
+      "id": "dialogue_20260816_1411_34dpdw",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "assistant",
+      "original_text": "你叫霖呀，我记得你。",
+      "summary": "确认：你叫霖呀，我记得你。",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T14:11:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:11:24.498887"
+    },
+    {
+      "id": "dialogue_20260816_1411_pxmflx",
+      "dialogue_id": "session_20260816_1411_azk2or",
+      "role": "user",
+      "original_text": "我是谁",
+      "summary": "工具操作：我是谁",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T14:11:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:11:24.491812"
+    },
+    {
+      "id": "dialogue_20260816_1359_5upw83",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "霖，你真是太棒了！无论是工作上的努力还是生活中的点点滴滴，你都能处理得井井有条。继续保持这份积极和热情吧！有什么其他事情需要帮忙的吗？",
+      "summary": "夸奖兼鼓励，继续努力！",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:59:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:59:49.261495"
+    },
+    {
+      "id": "dialogue_20260816_1359_1u184l",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "夸我两句",
+      "summary": "你说话总是那么有感染力。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:59:46",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:59:46.775058"
+    },
+    {
+      "id": "dialogue_20260816_1359_u9m9pr",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "霖，你想知道哪里的天气呢？可以告诉我你所在的城市或者具体地点哦。如果没有特别说明，我就帮你查一下我们这个城市今天的天气如何。",
+      "summary": "请告知位置查询天气，否则查询本地天气。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:59:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:59:23.132005"
+    },
+    {
+      "id": "dialogue_20260816_1359_uqazbi",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "今天天气怎么样",
+      "summary": "今天的天气如何？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:59:18",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:59:18.278924"
+    },
+    {
+      "id": "dialogue_20260816_1359_chhk9v",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "💰 财务记录：帮你记账、查账、删除记录、统计开销\n📅 日程管理：添加提醒、修改提醒、查询待办、删除待办\n🧠 记忆系统：记住你的偏好和习惯，回顾历史记录\n💬 自然对话：陪你闲聊、回答问题、给你建议\n\n有什么需要我帮忙的吗？",
+      "summary": "全能助手：记账、提醒、聊天一条龙",
+      "tags": [
+        "财务",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T13:59:04",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:59:04.244616"
+    },
+    {
+      "id": "dialogue_20260816_1359_ld92hp",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "你能干什么",
+      "summary": "我可帮助解答问题和提供信息。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:59:01",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:59:01.771312"
+    },
+    {
+      "id": "dialogue_20260816_1358_z3ntzz",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "我还不太确定你的名字，你可以告诉我，比如'记住我叫XX'。",
+      "summary": "确认：我还不太确定你的名字，你可以告诉我，比如",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T13:58:29",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:58:29.728815"
+    },
+    {
+      "id": "dialogue_20260816_1358_3ousxv",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "我叫什么",
+      "summary": "工具操作：我叫什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:58:29",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:58:29.720516"
+    },
+    {
+      "id": "dialogue_20260816_1358_oaw2mt",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "好的，记住了，你叫霖。有什么事情需要我的帮忙吗？是想要计划一下今天的事情，还是有什么问题想问我呢？或者我们聊聊最近的天气怎么样了？",
+      "summary": "你需要我帮你规划日程或聊天吗？",
+      "tags": [
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T13:58:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:58:17.731076"
+    },
+    {
+      "id": "dialogue_20260816_1358_rjfzov",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "我叫霖",
+      "summary": "用户名字：霖",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:58:15",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:58:15.256105"
+    },
+    {
+      "id": "dialogue_20260816_1357_sfo4v3",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "我还不太确定你的名字，你可以告诉我，比如'记住我叫XX'。",
+      "summary": "确认：我还不太确定你的名字，你可以告诉我，比如",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T13:57:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:57:39.597473"
+    },
+    {
+      "id": "dialogue_20260816_1357_412ad7",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "我叫什么",
+      "summary": "工具操作：我叫什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:57:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:57:39.591214"
+    },
+    {
+      "id": "dialogue_20260816_1357_bp00xg",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "我还不太确定你的名字，你可以告诉我，比如'记住我叫XX'。",
+      "summary": "确认：我还不太确定你的名字，你可以告诉我，比如",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T13:57:10",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:57:10.117439"
+    },
+    {
+      "id": "dialogue_20260816_1357_oby1a5",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "我是谁",
+      "summary": "工具操作：我是谁",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:57:10",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:57:10.108388"
+    },
+    {
+      "id": "dialogue_20260816_1356_l7ft2l",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "我是晓风，你的私人助手。就像一个温馨的朋友，在你需要的时候提供帮助和建议。有什么事情需要我的帮忙吗？比如计划一天的行程、了解一些小知识，或者只是想找个人聊聊天呢？",
+      "summary": "你是晓风，随时待命的帮助者。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:56:35",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:56:35.042684"
+    },
+    {
+      "id": "dialogue_20260816_1356_r1a2o1",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "你是谁",
+      "summary": "我是阿里云开发的助手AI。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:56:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:56:32.543569"
+    },
+    {
+      "id": "dialogue_20260816_1356_wclc2y",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "assistant",
+      "original_text": "你好呀！很高兴能为你效劳。最近过得怎么样？有没有什么想要聊聊或者帮忙的事情呢？无论是工作上的烦恼还是日常生活的小事，都可以和我分享哦。",
+      "summary": "随时为您答疑解惑，有任何需要请告诉我。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:56:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:56:05.339766"
+    },
+    {
+      "id": "dialogue_20260816_1356_kbvae6",
+      "dialogue_id": "session_20260816_1356_ftspqq",
+      "role": "user",
+      "original_text": "你好",
+      "summary": "你好",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T13:56:01",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T13:56:01.916952"
+    },
+    {
       "id": "dialogue_20260816_1328_q0mbo6",
       "dialogue_id": "session_20260816_1324_95hs2g",
       "role": "assistant",
@@ -4480,5 +4962,5 @@
       "created_at": "2026-08-12T00:03:45.854646"
     }
   ],
-  "updated_at": "2026-08-16T13:28:45.452069"
+  "updated_at": "2026-08-16T14:17:36.652430"
 }
