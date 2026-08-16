@@ -707,8 +707,11 @@ def _list_events(date_str=None):
 # ===================== 待办事项 CRUD =====================
 
 
-def _add_todo(title, due_date="", due_time=""):
-    """创建待办（v3.9.25 存储标准化，11 字段标准格式）。"""
+def _add_todo(title, due_date="", due_time="", detail=None):
+    """创建待办（v3.9.25 存储标准化，11 字段标准格式）。
+
+    v3.10.4: detail 参数保存完整用户原始文本（提醒内容不截断）。
+    """
     due_date = _normalize_date(due_date) if due_date else ""
     due_time = _normalize_time(due_time)
     period = _get_period(due_time)
@@ -722,7 +725,7 @@ def _add_todo(title, due_date="", due_time=""):
         "period": period,
         "title": title,
         "content": _generate_todo_content(period, title),
-        "detail": None,
+        "detail": detail,  # v3.10.4: 完整用户原始文本（若提供）
         "status": "pending",
         "due_date": due_date,
         "due_time": due_time,
@@ -1113,6 +1116,11 @@ def _clean_title(raw_title):
         "上午", "下午", "晚上", "傍晚", "凌晨", "早上", "中午",
         "事件", "事项", "到期",
         "叫醒我", "叫醒", "叫我", "喊我", "通知", "闹钟", "叫一下",
+        # v3.10.4: 日期词（避免"明天记得叫我"的"明天"漏进标题）
+        "明天", "今天", "昨天", "后天", "大后天", "明日", "昨日", "今日",
+        "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日",
+        "周一", "周二", "周三", "周四", "周五", "周六", "周日",
+        "下周", "本周", "上周", "下周一", "下周二", "下周三", "下周四", "下周五", "下周六", "下周日",
     ]
     for w in noise_words:
         raw_title = raw_title.replace(w, "")
@@ -1346,7 +1354,8 @@ def process_command(text):
             if not title:
                 title = "提醒事项"
             _debug_log(f"[解析] 最终标题: {title!r}, date={date_str}, time={time_str}")
-            return _add_todo(title, date_str, time_str)
+            # v3.10.4: detail 保存完整用户原始文本，提醒内容不截断
+            return _add_todo(title, date_str, time_str, detail=text)
         else:
             return "⚠️ 请提供提醒时间,例如「提醒我5分钟后喝水」或「5分钟后叫我」"
 
@@ -1364,7 +1373,8 @@ def process_command(text):
             title = _clean_title(raw)
         if not title:
             return "⚠️ 请描述任务内容,例如「添加任务买牛奶」"
-        return _add_todo(title, due_date, due_time)
+        # v3.10.4: detail 保存完整用户原始文本
+        return _add_todo(title, due_date, due_time, detail=text)
 
     # 删除待办（按序号）
     m = re.search(r"(删除|移除)\s*(任务|待办)\s*(\d+)", text)

@@ -1,6 +1,6 @@
 """
-记忆引擎 — 晓风Agent v3.7.0
-=============================
+记忆引擎 — 晓风Agent v3.7.0（v3.11.0 新增 Phase 5 对比分析；v3.12.0 新增 Phase 6 情绪检测与记忆关联）
+======================================================================================================
 从"被动存储"升级为"主动学习"的核心记忆模块。
 
 架构变更（v3.6.0 → v3.7.0）:
@@ -76,6 +76,76 @@ def _get_period(time_str):
         if sh * 60 + sm <= minutes <= eh * 60 + em:
             return label
     return ""
+
+
+# ===================== 标签自动生成（v3.10.7, Phase 3）=====================
+
+# 类型标签规则：判定记录所属功能域
+_TYPE_TAG_RULES = [
+    (["记账", "花了", "消费", "付款", "支出", "买了", "财务", "账单",
+      "元", "块", "块钱", "收入", "开销"], "财务"),
+    (["日程", "会议", "开会", "提醒", "待办", "任务", "事件", "安排", "约会",
+      "聚会", "面试", "上课", "活动", "闹钟", "叫我"], "日程"),
+    (["记住", "记下", "回忆", "回顾", "搜索", "记忆", "忘了", "记得"], "记忆"),
+]
+
+# 实体标签规则：常见物品/话题 → 实体标签（更具体，优先于类型标签）
+_ENTITY_TAG_RULES = [
+    (["咖啡", "咖啡豆"], "咖啡"),
+    (["奶茶", "饮料", "果汁", "可乐", "啤酒", "红酒", "酒"], "饮品"),
+    (["吃饭", "午餐", "晚餐", "早餐", "外卖", "食堂", "吃了"], "吃饭"),
+    (["会议", "开会"], "会议"),
+    (["健身", "跑步", "锻炼", "运动", "瑜伽", "散步"], "运动"),
+    (["电影", "电视剧", "追剧", "视频", "综艺", "动画"], "娱乐"),
+    (["书", "阅读", "读书", "小说", "漫画", "看书"], "阅读"),
+    (["心情", "开心", "难过", "高兴", "郁闷", "烦躁", "焦虑", "生气", "累"], "情绪"),
+    (["购物", "网购", "购买", "淘宝", "京东", "下单", "买"], "购物"),
+    (["水", "喝水", "矿泉水"], "喝水"),
+]
+
+
+def _extract_tags(text, extra_text=None, limit=5):
+    """
+    自动提取关键词标签（Phase 3 标签生成）。
+
+    标签来源（按优先级）:
+      1. 实体标签: 咖啡/会议/吃饭/运动 等（实体规则表，更具体）
+      2. 类型标签: 财务/日程/记忆/聊天（类型规则表，聊天为兜底）
+
+    去重，按 实体→类型 排序，最多返回 limit 个。无任何命中 → 兜底「聊天」。
+    """
+    if not text:
+        return []
+    combined = str(text)
+    if extra_text:
+        combined = combined + " " + str(extra_text)
+
+    tags = []
+    # 1) 实体标签（更具体，优先）
+    for kws, tag in _ENTITY_TAG_RULES:
+        if any(kw in combined for kw in kws) and tag not in tags:
+            tags.append(tag)
+    # 2) 类型标签
+    for kws, tag in _TYPE_TAG_RULES:
+        if any(kw in combined for kw in kws) and tag not in tags:
+            tags.append(tag)
+    # 3) 聊天兜底：未命中任何领域类型 → 聊天
+    has_type = any(t in ("财务", "日程", "记忆") for t in tags)
+    if not has_type and "聊天" not in tags:
+        tags.append("聊天")
+    return tags[:limit]
+
+
+def _merge_tags(provided, auto, limit=5):
+    """合并标签：保留传入标签顺序，追加自动标签（去重），上限 limit 个。"""
+    out = []
+    for t in list(provided or []):
+        if t and t not in out:
+            out.append(t)
+    for t in list(auto or []):
+        if t and t not in out:
+            out.append(t)
+    return out[:limit]
 
 
 def _normalize_date(date_str):
@@ -228,7 +298,12 @@ def _fact_to_memory(f):
     period = _get_period(time_str)
     title = f.get("title") or content[:30]
     importance = max(1, min(10, int(round((f.get("importance") or 0.5) * 10))))
-    return {
+    # v3.10.7: 无显式标签时自动生成（类别 + 内容关键词）
+    tags = f.get("tags") or []
+    if not tags:
+        cat_tags = [f.get("category")] if f.get("category") and f.get("category") != "其他" else []
+        tags = _merge_tags(cat_tags, _extract_tags(content, f.get("title")))
+    record = {
         "id": _generate_id(date_str, time_str),
         "type": "memory",
         "subtype": "fact",
@@ -240,7 +315,7 @@ def _fact_to_memory(f):
         "content": content,
         "detail": f.get("detail") or content,
         "mood": f.get("mood"),
-        "tags": f.get("tags") or ([f.get("category")] if f.get("category") and f.get("category") != "其他" else []),
+        "tags": tags,
         "importance": importance,
         "created_at": created or now.isoformat(),
         "updated_at": f.get("updated_at"),
@@ -249,6 +324,8 @@ def _fact_to_memory(f):
         "source": f.get("source"),
         "embedding": f.get("embedding"),
     }
+    _init_memory_lifecycle(record)  # v3.10.11: 创建即补齐生命周期字段
+    return record
 
 
 def _pattern_to_memory(p):
@@ -275,7 +352,7 @@ def _pattern_to_memory(p):
         detail_parts.append(f"置信度:{p['confidence']}")
     if p.get("time_range"):
         detail_parts.append(f"时段:{p['time_range']}")
-    return {
+    record = {
         "id": _generate_id(date_str, time_str),
         "type": "memory",
         "subtype": "habit",
@@ -297,6 +374,8 @@ def _pattern_to_memory(p):
         "archived": p.get("archived", False),
         "embedding": p.get("embedding"),
     }
+    _init_memory_lifecycle(record)  # v3.10.11: 创建即补齐生命周期字段
+    return record
 
 
 def _migrate_to_standard_format():
@@ -389,6 +468,11 @@ def add_memory_event(title, detail=None, mood=None, tags=None,
     content = (content or "").strip() or _generate_content(period, title.strip())
     detail = (detail or "").strip() or content
     importance = max(1, min(10, int(importance)))
+    # v3.10.7: 自动标签生成——传入标签与内容关键词合并（去重、上限 5）
+    tags = _merge_tags(tags, _extract_tags(content, title))
+    # v3.12.0: Phase 6 情绪自动检测——未显式传入 mood 时，从 内容+标题 检测
+    if mood is None:
+        mood = detect_mood(f"{content} {title}")
 
     record = {
         "id": _generate_id(date_str, time_str),
@@ -402,16 +486,27 @@ def add_memory_event(title, detail=None, mood=None, tags=None,
         "content": content,
         "detail": detail,
         "mood": mood,
-        "tags": tags or [],
+        "tags": tags,
         "importance": importance,
         "created_at": now.isoformat(),
         "updated_at": None,
     }
+    # v3.10.11: 创建即补齐生命周期字段（confidence/tier/retrieved_count/last_retrieved），
+    # 保证每条新记忆都带置信度与检索计数——置信度机制对所有记录一致生效，
+    # 不再依赖后续 import 时的 backfill_memory_lifecycle 兜底。
+    _init_memory_lifecycle(record)
 
     data = _load_memory_raw()
     data.setdefault("memories", []).append(record)
     _save_memory_raw(data)
     logger.info(f"记忆条目已记录: [{record['id']}] {title[:30]}... (subtype={subtype})")
+    # v3.12.0: Phase 6 记忆关联——创建后立即建立关联（失败不阻塞主流程）
+    try:
+        related = find_related_memories(record, limit=5)
+        if related:
+            link_memories(record["id"], related)
+    except Exception as e:
+        logger.warning(f"记忆关联失败: {e}")
     return {"status": "added", "id": record["id"], "message": f"记忆已记录 (id={record['id']})"}
 
 
@@ -694,13 +789,18 @@ def add_dialogue_record(role, original_text, summary, tags=None, mood=None,
         return {"status": "skipped", "id": "", "message": "原始文本为空，跳过"}
     text = str(original_text).strip()
     now = datetime.now()
+    # v3.12.0: Phase 6 用户轮自动情绪检测（assistant 轮不检测，避免噪音）
+    if role == "user" and mood is None:
+        mood = detect_mood(text)
+    # v3.10.7: 自动标签生成——传入标签与 原文+摘要 关键词合并（去重、上限 5）
+    merged_tags = _merge_tags(tags, _extract_tags(text, summary))
     record = {
         "id": _generate_dialogue_id(),
         "dialogue_id": _get_session_id(),
         "role": role if role in ("user", "assistant") else "user",
         "original_text": text,
         "summary": (summary or "").strip() or text[:20],
-        "tags": tags or [],
+        "tags": merged_tags,
         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S"),
         "mood": mood,
         "related_memory_ids": related_memory_ids or [],
@@ -765,6 +865,567 @@ def search_dialogue(keyword: str, limit: int = 5) -> list:
         if len(hits) >= limit:
             break
     return hits
+
+
+# ===================== Phase 3 搜索接口（v3.10.7）=====================
+
+# 星期映射：中文星期 → weekday 序号（0=周一）
+_WEEKDAY_MAP = {
+    "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6, "周天": 6,
+    "星期一": 0, "星期二": 1, "星期三": 2, "星期四": 3, "星期五": 4, "星期六": 5, "星期日": 6, "星期天": 6,
+}
+
+
+def _resolve_date_range(date_range):
+    """
+    将时间查询词解析为 (start, end) 日期范围字符串（Phase 3 时间索引）。
+
+    支持:
+      - 相对词: 今天/昨日/本周/这周/上周/本月/这个月（复用 _date_range_for）
+      - 星期: 周一~周日 / 星期一~星期日（本周对应日）；上周X / 上星期X（上周对应日）
+      - 日期: YYYY-MM-DD（单日），或 (start, end) 元组
+      - 特殊: None / "all" / "全部" → (None, None)（不过滤日期）
+
+    返回: (start, end)；无法解析时返回 (None, None)。
+    """
+    if date_range is None:
+        return None, None
+    if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
+        return _normalize_date(date_range[0]), _normalize_date(date_range[1])
+    s = str(date_range).strip()
+    if s in ("all", "全部"):
+        return None, None
+
+    # 相对时间词（今天/昨天/本周/上周/本月）
+    start, end = _date_range_for(s)
+    if start:
+        return start, end
+
+    # 星期几：本周对应日；带"上"前缀 → 上周对应日
+    m = re.match(r"^(上)?(周|星期)([一二三四五六日天])$", s)
+    if m:
+        wd = f"周{m.group(3)}"
+        idx = _WEEKDAY_MAP.get(wd)
+        if idx is not None:
+            now = datetime.now()
+            d = now - timedelta(days=now.weekday() - idx)
+            if m.group(1):
+                d = d - timedelta(days=7)
+            ds = d.strftime("%Y-%m-%d")
+            return ds, ds
+
+    # 具体日期 YYYY-MM-DD
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", s):
+        return s, s
+
+    return None, None
+
+
+def search_by_time(date_range, period=None, limit=10) -> list:
+    """
+    按时间范围 / 时段搜索记忆记录（Phase 3 时间索引）。
+
+    参数:
+        date_range: 相对时间词（今天/昨天/本周/上周/本月/上周三/周一）或 YYYY-MM-DD，
+                    或 (start, end) 元组；None/"all"/"全部" 表示不过滤日期
+        period: 时段标签（凌晨/早上/上午/中午/下午/晚上/深夜），可选
+        limit: 最大返回条数
+
+    返回:
+        匹配的记忆记录列表（date 降序 + time 升序）。范围无法解析时返回空列表。
+    """
+    records = load_memories()
+    if date_range is not None and str(date_range).strip() not in ("all", "全部"):
+        start, end = _resolve_date_range(date_range)
+        if start:
+            records = [r for r in records if start <= (r.get("date") or "") <= end]
+        else:
+            return []  # 无法解析 → 空结果，不误返回全量
+    if period:
+        records = [r for r in records if r.get("period") == period]
+    if limit:
+        records = records[:limit]
+    return records
+
+
+def search_by_tags(tags, limit=10) -> list:
+    """
+    按标签搜索记忆记录（Phase 3 标签索引）。
+
+    参数:
+        tags: str 单个标签，或 list 多个标签（任一命中即匹配）
+        limit: 最大返回条数
+
+    返回:
+        匹配的记忆记录列表（date 降序 + time 升序）。标签匹配采用子串包含（"咖啡"可命中"咖啡豆"）。
+    """
+    if not tags:
+        return []
+    tag_list = [tags] if isinstance(tags, str) else list(tags)
+    tag_list = [t for t in tag_list if t]
+    if not tag_list:
+        return []
+    records = load_memories()
+    hits = []
+    for r in records:
+        rtags = r.get("tags") or []
+        if any(any(t in (rt or "") for t in tag_list) for rt in rtags):
+            hits.append(r)
+    return hits[:limit]
+
+
+def search_by_keyword(keyword, limit=10) -> list:
+    """
+    按关键词搜索记忆 + 对话归档（Phase 3 关键词索引）。
+
+    匹配字段:
+      - 记忆库: content / title / detail / tags
+      - 对话归档: original_text / summary / tags
+
+    参数:
+        keyword: 搜索关键词
+        limit: 最大返回条数
+
+    返回:
+        统一结构列表，每项 {source: memory|dialogue, id, date, title, content, tags, ...}，
+        按日期降序，记忆优先于对话。
+    """
+    if not keyword or not str(keyword).strip():
+        return []
+    kw = str(keyword).strip()
+
+    results = []
+    # 1) 记忆库
+    for m in load_memories():
+        hay = " ".join(str(m.get(f) or "") for f in ("content", "title", "detail"))
+        if kw in hay or any(kw in (t or "") for t in (m.get("tags") or [])):
+            results.append({
+                "source": "memory",
+                "id": m.get("id"),
+                "subtype": m.get("subtype"),
+                "date": m.get("date"),
+                "time": m.get("time"),
+                "period": m.get("period"),
+                "title": m.get("title"),
+                "content": m.get("content"),
+                "tags": m.get("tags", []),
+                "timestamp": m.get("datetime") or m.get("created_at"),
+            })
+    # 2) 对话归档
+    ddata = _load_dialogue_raw()
+    drecs = sorted(ddata.get("records", []), key=_dialogue_sort_key, reverse=True)
+    for r in drecs:
+        # v3.10.9: 跳过搜索自噪音——"工具操作：搜索X"（用户搜索动作）与"确认：🔍 找到…"（助手搜索回复）
+        # 否则每次搜索都会归档此类记录，污染后续搜索结果、淹没真正的内容记录。
+        _s = (r.get("summary") or "").strip()
+        if _s.startswith("工具操作：") or _s.startswith("确认：🔍"):
+            continue
+        hay = " ".join(str(r.get(f) or "") for f in ("original_text", "summary"))
+        if kw in hay or any(kw in (t or "") for t in (r.get("tags") or [])):
+            results.append({
+                "source": "dialogue",
+                "id": r.get("id"),
+                "role": r.get("role"),
+                "date": (r.get("timestamp") or "")[:10],
+                "time": (r.get("timestamp") or "")[11:16],
+                "title": r.get("summary"),
+                "content": r.get("original_text"),
+                "tags": r.get("tags", []),
+                "timestamp": r.get("timestamp"),
+            })
+
+    # 排序：日期降序（最新在前）+ 记忆优先于对话
+    def _key(x):
+        return (-_date_to_ordinal(x.get("date") or ""), 0 if x.get("source") == "memory" else 1)
+
+    results.sort(key=_key)
+    return results[:limit]
+
+
+# ===================== Phase 4 置信度衰减与记忆整合（v3.10.8）=====================
+
+ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
+MEMORY_ARCHIVE_FILE = os.path.join(ARCHIVE_DIR, "memory_archive.json")
+
+_DAILY_DECAY = 0.005          # 每日未检索衰减
+_RETRIEVAL_BOOST = 0.05       # 每次检索提升
+_PROMOTE_CONFIDENCE = 0.8     # 提升 L2 的置信度阈值
+_TOPIC_FREQUENCY_THRESHOLD = 3  # 主题频次阈值
+_ARCHIVE_CONFIDENCE = 0.2     # 归档置信度阈值
+_ARCHIVE_DAYS = 90            # 归档未检索天数
+_L2_TIER = "L2"
+_L1_TIER = "L1"
+
+# 主题频次判定只统计实体主题标签（咖啡/会议/吃饭…），排除类型/语义类别标签
+# （财务/日程/记忆/聊天/事件/待办 等），避免"事件"类泛化标签误触发批量提升。
+_TOPIC_TAGS = {tag for _, tag in _ENTITY_TAG_RULES}
+
+
+def _init_memory_lifecycle(record):
+    """为记忆记录补齐生命周期字段（幂等，additive）。
+
+    - confidence: 缺省按 importance(1-10)/10 推导
+    - tier: 缺省 L1（情景记忆）
+    - last_retrieved: 缺省取 created_at 日期（避免创建即开始衰减）
+    - retrieved_count: 缺省 0
+    """
+    if not isinstance(record, dict):
+        return
+    if record.get("confidence") is None:
+        imp = record.get("importance") or 5
+        record["confidence"] = round(max(0.0, min(1.0, imp / 10.0)), 3)
+    if not record.get("tier"):
+        record["tier"] = _L1_TIER
+    if not record.get("last_retrieved"):
+        created = (record.get("created_at") or record.get("datetime") or "")
+        record["last_retrieved"] = (created[:10] if len(created) >= 10
+                                    else date.today().isoformat())
+    if record.get("retrieved_count") is None:
+        record["retrieved_count"] = 0
+
+
+def backfill_memory_lifecycle() -> int:
+    """为历史记忆记录补齐生命周期字段（幂等，additive）。返回补齐条数。"""
+    data = _load_memory_raw()
+    changed = 0
+    for m in data.get("memories", []):
+        before = dict(m)
+        _init_memory_lifecycle(m)
+        if m != before:
+            changed += 1
+    if changed:
+        _save_memory_raw(data)
+        logger.info(f"记忆生命周期字段已补齐: {changed} 条")
+    return changed
+
+
+def decay_confidence(memory_id: str, delta=None) -> dict:
+    """
+    对单条记忆应用置信度调整（v3.10.8）。
+
+    参数:
+        memory_id: 记忆 ID
+        delta: 手动调整量（正加负减，封顶 1.0，下限 0.0）；
+               None → 默认日衰减 -0.005
+
+    返回:
+        {"status": "ok"|"not_found", "id", "confidence"}
+    """
+    data = _load_memory_raw()
+    for m in data.get("memories", []):
+        if m.get("id") == memory_id:
+            _init_memory_lifecycle(m)
+            d = _DAILY_DECAY if delta is None else delta
+            conf = round(max(0.0, min(1.0, (m.get("confidence") or 0.5) + d)), 3)
+            m["confidence"] = conf
+            m["updated_at"] = datetime.now().isoformat()
+            _save_memory_raw(data)
+            return {"status": "ok", "id": memory_id, "confidence": conf}
+    return {"status": "not_found", "id": memory_id}
+
+
+def promote_to_l2(memory_id: str, reason=None) -> dict:
+    """
+    将记忆从 L1（情景）提升到 L2（语义长期）（v3.10.8）。
+
+    - 设置 tier="L2"
+    - confidence 保底至 0.8
+    - 记录提升原因与时间
+
+    返回:
+        {"status": "promoted"|"not_found", "id", "tier", "confidence"}
+    """
+    data = _load_memory_raw()
+    for m in data.get("memories", []):
+        if m.get("id") == memory_id:
+            _init_memory_lifecycle(m)
+            m["tier"] = _L2_TIER
+            m["confidence"] = round(max(m.get("confidence") or 0.0, _PROMOTE_CONFIDENCE), 3)
+            m["promotion_reason"] = reason or "confidence≥0.8 或主题频次达标"
+            m["promoted_at"] = datetime.now().isoformat()
+            m["updated_at"] = datetime.now().isoformat()
+            _save_memory_raw(data)
+            return {"status": "promoted", "id": memory_id, "tier": _L2_TIER,
+                    "confidence": m["confidence"]}
+    return {"status": "not_found", "id": memory_id}
+
+
+def _resolve_now(now_date):
+    """将可选 now_date 解析为 datetime（支持 date/datetime/str）。"""
+    if now_date is None:
+        return datetime.now()
+    if isinstance(now_date, datetime):
+        return now_date
+    if isinstance(now_date, date):
+        return datetime(now_date.year, now_date.month, now_date.day)
+    return datetime.strptime(str(now_date)[:10], "%Y-%m-%d")
+
+
+def _apply_daily_decay(memories, now, last_run):
+    """
+    增量式日衰减（v3.10.8）。
+
+    规则: 每经过一天、记录未检索，confidence -= 0.005。
+    last_run 为上次维护日期；本段期间内被检索过的记录只对"检索后的未检索天数"衰减。
+    返回衰减条数（原地修改 memories）。
+    """
+    if last_run is None:
+        return 0
+    days_elapsed = (now.date() - last_run.date()).days
+    if days_elapsed <= 0:
+        return 0
+    decayed = 0
+    for m in memories:
+        _init_memory_lifecycle(m)
+        lr = (m.get("last_retrieved") or "")[:10]
+        if lr:
+            try:
+                unretrieved = (now.date() - datetime.strptime(lr, "%Y-%m-%d").date()).days
+            except ValueError:
+                unretrieved = days_elapsed
+        else:
+            unretrieved = days_elapsed
+        decay_days = min(days_elapsed, max(0, unretrieved))
+        if decay_days > 0:
+            conf = max(0.0, (m.get("confidence") or 0.5) - _DAILY_DECAY * decay_days)
+            m["confidence"] = round(conf, 3)
+            decayed += 1
+    return decayed
+
+
+def _promotion_pass(memories, now):
+    """
+    检查 L1 记忆提升条件（v3.10.8）:
+      1) confidence ≥ 0.8 → L2
+      2) 同一实体主题标签出现 ≥ 3 次 → L2
+    返回提升条数（原地修改 memories）。
+    """
+    promoted = 0
+    # 实体主题频次统计（仅统计非 L2 记忆）
+    tag_count = {}
+    for m in memories:
+        if m.get("tier") == _L2_TIER:
+            continue
+        for t in (m.get("tags") or []):
+            if t in _TOPIC_TAGS:
+                tag_count[t] = tag_count.get(t, 0) + 1
+
+    for m in memories:
+        if m.get("tier") == _L2_TIER:
+            continue
+        _init_memory_lifecycle(m)
+        conf = m.get("confidence") or 0.0
+        if conf >= _PROMOTE_CONFIDENCE:
+            m["tier"] = _L2_TIER
+            m["promotion_reason"] = "confidence≥0.8"
+            m["promoted_at"] = now.isoformat()
+            m["updated_at"] = now.isoformat()
+            promoted += 1
+            continue
+        topic_hits = sorted({t for t in (m.get("tags") or [])
+                             if tag_count.get(t, 0) >= _TOPIC_FREQUENCY_THRESHOLD})
+        if topic_hits:
+            m["tier"] = _L2_TIER
+            m["promotion_reason"] = f"主题频次≥{_TOPIC_FREQUENCY_THRESHOLD}: {'/'.join(topic_hits[:3])}"
+            m["promoted_at"] = now.isoformat()
+            m["updated_at"] = now.isoformat()
+            promoted += 1
+    return promoted
+
+
+def run_consolidation(now_date=None) -> dict:
+    """
+    记忆整合（v3.10.8）: 日衰减 + L1→L2 提升。
+
+    参数:
+        now_date: 测试用当前日期（date/datetime/str），默认今天
+
+    返回:
+        {"checked", "decayed", "promoted", "last_run"}
+    """
+    now = _resolve_now(now_date)
+    data = _load_memory_raw()
+    memories = data.get("memories", [])
+    if not memories:
+        return {"checked": 0, "decayed": 0, "promoted": 0, "last_run": now.date().isoformat()}
+
+    for m in memories:
+        _init_memory_lifecycle(m)
+
+    last_run = None
+    if data.get("last_decay_run"):
+        try:
+            last_run = datetime.strptime(str(data["last_decay_run"])[:10], "%Y-%m-%d")
+        except ValueError:
+            last_run = None
+    decayed = _apply_daily_decay(memories, now, last_run)
+    promoted = _promotion_pass(memories, now)
+
+    data["last_decay_run"] = now.date().isoformat()
+    data["updated_at"] = datetime.now().isoformat()
+    _save_memory_raw(data)
+    return {"checked": len(memories), "decayed": decayed, "promoted": promoted,
+            "last_run": now.date().isoformat()}
+
+
+def _append_memory_archive(records):
+    """将归档记录追加写入 archive/memory_archive.json（按 id 去重）。"""
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
+    existing = []
+    try:
+        with open(MEMORY_ARCHIVE_FILE, "r", encoding="utf-8") as f:
+            d = json.load(f)
+            existing = d.get("archived", []) if isinstance(d, dict) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    existing_ids = {a.get("id") for a in existing}
+    for r in records:
+        if r.get("id") not in existing_ids:
+            existing.append(r)
+    with open(MEMORY_ARCHIVE_FILE, "w", encoding="utf-8") as f:
+        json.dump({"version": "1.0", "archived_count": len(existing),
+                   "last_updated": datetime.now().isoformat(), "archived": existing},
+                  f, ensure_ascii=False, indent=2)
+
+
+def run_archive(now_date=None) -> dict:
+    """
+    归档低置信度 / 长期未检索记忆（v3.10.8）。
+
+    条件:
+      - confidence < 0.2
+      - 距 last_retrieved 超过 90 天
+    满足任一 → 移入 archive/memory_archive.json，从 memory.json 移除。
+
+    参数:
+        now_date: 测试用当前日期，默认今天
+
+    返回:
+        {"checked", "archived", "skipped"}
+    """
+    now = _resolve_now(now_date)
+    data = _load_memory_raw()
+    memories = data.get("memories", [])
+    keep = []
+    to_archive = []
+    today = now.date()
+    for m in memories:
+        _init_memory_lifecycle(m)
+        conf = m.get("confidence") or 0.0
+        lr = (m.get("last_retrieved") or "")[:10]
+        days = 999
+        if lr:
+            try:
+                days = (today - datetime.strptime(lr, "%Y-%m-%d").date()).days
+            except ValueError:
+                pass
+        if conf < _ARCHIVE_CONFIDENCE or days > _ARCHIVE_DAYS:
+            m["archived_at"] = now.isoformat()
+            m["archive_reason"] = ("confidence<0.2" if conf < _ARCHIVE_CONFIDENCE
+                                   else f"{days}天未检索")
+            to_archive.append(m)
+        else:
+            keep.append(m)
+
+    if to_archive:
+        _append_memory_archive(to_archive)
+    data["memories"] = keep
+    data["updated_at"] = datetime.now().isoformat()
+    _save_memory_raw(data)
+    logger.info(f"记忆归档: {len(to_archive)} 条移入 archive/memory_archive.json, 保留 {len(keep)} 条")
+    return {"checked": len(memories), "archived": len(to_archive), "skipped": len(keep)}
+
+
+def record_retrieval(memory_id: str) -> dict:
+    """
+    记录一次记忆检索（v3.10.8 检索提升）:
+    retrieved_count +1，confidence +0.05（封顶 1.0），last_retrieved 更新为今天。
+
+    返回:
+        {"status": "ok"|"not_found", "id", "confidence"}
+    """
+    data = _load_memory_raw()
+    for m in data.get("memories", []):
+        if m.get("id") == memory_id:
+            _init_memory_lifecycle(m)
+            m["retrieved_count"] = (m.get("retrieved_count") or 0) + 1
+            m["confidence"] = round(min(1.0, (m.get("confidence") or 0.5) + _RETRIEVAL_BOOST), 3)
+            m["last_retrieved"] = datetime.now().strftime("%Y-%m-%d")
+            m["updated_at"] = datetime.now().isoformat()
+            _save_memory_raw(data)
+            return {"status": "ok", "id": memory_id, "confidence": m["confidence"]}
+    return {"status": "not_found", "id": memory_id}
+
+
+# ===================== 渐进披露上下文（v3.10.2）=====================
+
+_USER_TOOL_PREFIXES = ("记账：", "添加日程：", "记忆：", "日程：", "工具操作：")
+
+
+def get_context_summaries(limit: int = 3) -> list:
+    """
+    返回最近 N 轮对话摘要（Phase 2 渐进披露：上下文只注入摘要，不注入全量记忆）。
+
+    每项: {id, role, summary, timestamp}，最新在前。
+    """
+    data = _load_dialogue_raw()
+    records = data.get("records", [])
+    records.sort(key=_dialogue_sort_key, reverse=True)
+    out = []
+    for r in records[:limit]:
+        out.append({
+            "id": r.get("id"),
+            "role": r.get("role"),
+            "summary": r.get("summary"),
+            "timestamp": r.get("timestamp"),
+        })
+    return out
+
+
+def get_recent_tool_ops(limit: int = 3) -> list:
+    """
+    返回最近 N 条工具操作摘要（从对话归档中识别工具轮，Phase 2 上下文注入用）。
+
+    判定：role=user 且 summary 以工具摘要前缀开头（记账：/添加日程：/记忆：/日程：/工具操作：）。
+
+    每项: {id, summary, timestamp}，最新在前。
+    """
+    data = _load_dialogue_raw()
+    records = data.get("records", [])
+    records.sort(key=_dialogue_sort_key, reverse=True)
+    out = []
+    for r in records:
+        if r.get("role") != "user":
+            continue
+        s = (r.get("summary") or "").strip()
+        if s.startswith(_USER_TOOL_PREFIXES):
+            out.append({
+                "id": r.get("id"),
+                "summary": s,
+                "timestamp": r.get("timestamp"),
+            })
+        if len(out) >= limit:
+            break
+    return out
+
+
+def get_user_name() -> str:
+    """从记忆库检索用户名字（"我叫XX"/"我的名字是XX"/"我是XX"），未找到返回空串。
+
+    注意：content 与 title 分开匹配，避免拼接成"我叫霖我叫霖"导致贪婪捕获"霖我叫霖"。
+    """
+    try:
+        for m in load_memories():
+            for field in ("content", "title"):
+                c = m.get(field) or ""
+                for pat in (r"我叫([一-鿿]{1,4})", r"我的名字(?:是|叫)?([一-鿿]{1,4})",
+                            r"(?:我是|我是叫)([一-鿿]{1,4})"):
+                    mm = re.search(pat, c)
+                    if mm:
+                        return mm.group(1).strip()
+    except Exception:
+        pass
+    return ""
 
 
 # ===================== 长期记忆（v3.6.0 兼容）=====================
@@ -1535,10 +2196,873 @@ def boost_pattern(content_substring: str) -> dict:
     return {"affected": affected, "message": f"已提升 {affected} 条规律的置信度 (+0.10)"}
 
 
+# ===================== 标签补齐（v3.10.7）=====================
+
+
+def backfill_tags() -> dict:
+    """
+    为历史记录补齐标签（Phase 3 标签生成，幂等）。
+
+    扫描 memory.json 与 对话归档.json，为 tags 为空的记录自动生成标签。
+    只填写空标签，不改动已有标签。
+
+    返回:
+        {"memory": 补齐条数, "dialogue": 补齐条数}
+    """
+    mem_filled = 0
+    mdata = _load_memory_raw()
+    for m in mdata.get("memories", []):
+        if not m.get("tags"):
+            m["tags"] = _extract_tags(m.get("content") or "", m.get("title"))
+            mem_filled += 1
+    if mem_filled:
+        _save_memory_raw(mdata)
+
+    dia_filled = 0
+    ddata = _load_dialogue_raw()
+    for r in ddata.get("records", []):
+        if not r.get("tags"):
+            r["tags"] = _extract_tags(r.get("original_text") or "", r.get("summary"))
+            dia_filled += 1
+    if dia_filled:
+        _save_dialogue_raw(ddata)
+
+    if mem_filled or dia_filled:
+        logger.info(f"标签补齐完成: memory {mem_filled} 条, dialogue {dia_filled} 条")
+    return {"memory": mem_filled, "dialogue": dia_filled}
+
+
+# ===================== 每日记忆维护（v3.10.8）=====================
+
+
+def _maybe_run_daily_maintenance():
+    """启动时每日记忆维护（v3.10.8）：按日期幂等，每天只执行一次整合 + 归档。
+
+    依赖 memory.json 元数据 last_maintenance 记录上次维护日期；
+    同一天内重复导入不重复执行（避免每次启动都跑一遍）。
+    """
+    try:
+        data = _load_memory_raw()
+        last = data.get("last_maintenance")
+        today = date.today().isoformat()
+        if last == today:
+            return
+        run_consolidation()
+        run_archive()
+        build_association_network()  # v3.12.0: Phase 6 每日补全记忆关联网络
+        d = _load_memory_raw()
+        d["last_maintenance"] = today
+        d["updated_at"] = datetime.now().isoformat()
+        _save_memory_raw(d)
+        logger.info(f"每日记忆维护完成: consolidation + archive + 关联网络 ({today})")
+    except Exception as e:
+        logger.warning(f"每日记忆维护失败: {e}")
+
+
+# ===================== Phase 6 情绪检测 + 记忆关联（v3.12.0）=====================
+
+# ---- 情绪检测 ----
+
+# 情绪关键词映射：9 类情绪 → 触发关键词（关键词优先，命中即返回）
+_MOOD_KEYWORDS = {
+    "开心": ["开心", "高兴", "快乐", "棒", "好心情", "心情好", "心情很好", "心情不错",
+             "太好了", "太棒了", "真棒", "爽", "哈哈", "嘿嘿", "笑死"],
+    "难过": ["难过", "伤心", "哭", "失落", "难受", "沮丧", "心酸", "想哭", "不开心",
+             "伤心死了", "难过死了"],
+    "生气": ["生气", "愤怒", "烦", "受不了", "气死", "恼火", "烦躁", "火大", "烦死",
+             "气人", "真气人"],
+    "焦虑": ["焦虑", "担心", "紧张", "慌", "压力", "压力大", "睡不着", "失眠", "害怕",
+             "不安", "担忧", "好担心"],
+    "平静": ["平静", "放松", "舒服", "安心", "惬意", "轻松", "悠闲", "舒心"],
+    "兴奋": ["兴奋", "激动", "期待", "迫不及待", "超期待", "太兴奋", "好激动",
+             "太期待了"],
+    "疲惫": ["累", "困", "疲惫", "没精神", "精疲力尽", "好累", "累死", "疲倦",
+             "困死", "乏"],
+    "专注": ["专注", "投入", "认真", "沉浸", "专心"],
+    "困惑": ["困惑", "不懂", "奇怪", "迷茫", "疑惑", "搞不明白", "想不通", "什么鬼",
+             "咋回事", "怎么回事"],
+}
+_MOOD_VALID = set(_MOOD_KEYWORDS.keys())  # 9 类合法情绪
+
+# 情绪信号词：无直接关键词但暗示情绪起伏时，值得用 LLM 兜底判断。
+# 刻意排除「今天/最近」等高频中性词，避免对每条记录都触发 LLM、拖慢主循环。
+_MOOD_SIGNAL_WORDS = ["被骂", "被夸", "被", "失败", "成功", "崩溃", "糟了", "完蛋",
+                      "终于", "居然", "竟然", "吓", "哭", "烦", "气", "累", "困",
+                      "失眠", "受打击", "想死", "难过", "开心死了", "吓死", "不对劲",
+                      "麻烦", "倒霉", "糟糕", "差点"]
+
+_MOOD_LLM_HOOK = None  # 模块级 LLM 钩子（脑.py 启动时注入 _call_ollama_3b）
+
+
+def set_mood_llm_fn(fn):
+    """注入情绪检测 LLM 钩子（v3.12.0, Phase 6）。
+
+    脑.py 启动时将 _call_ollama_3b 注入，使 detect_mood 在关键词未命中时可
+    用 LLM 兜底分类。未设置时 detect_mood 保持纯关键词检测（引擎可独立运行）。
+    """
+    global _MOOD_LLM_HOOK
+    _MOOD_LLM_HOOK = fn
+
+
+def detect_mood(text, llm_fn=None):
+    """
+    从文本检测用户情绪（v3.12.0, Phase 6, hybrid）。
+
+    策略:
+      1. 关键词优先：命中任一情绪关键词 → 直接返回该情绪
+      2. LLM 兜底：无关键词命中、但文本含情绪信号词且 LLM 可用
+         （llm_fn 或模块级钩子）→ 调 LLM 分类（2s 超时）
+      3. 都无 → 返回 None
+
+    参数:
+        text: 待检测文本
+        llm_fn: 可选 LLM 调用函数（缺省用 set_mood_llm_fn 注入的钩子）
+
+    返回:
+        9 类情绪之一（开心/难过/生气/焦虑/平静/兴奋/疲惫/专注/困惑），无命中返回 None。
+    """
+    if not text or not str(text).strip():
+        return None
+    t = str(text).strip()
+
+    # 1) 关键词优先：命中直接返回（首个命中的情绪）
+    for mood, kws in _MOOD_KEYWORDS.items():
+        if any(kw in t for kw in kws):
+            return mood
+
+    # 2) LLM 兜底：仅当文本含情绪信号词且 LLM 可用（避免对每条记录都调 LLM）
+    fn = llm_fn or _MOOD_LLM_HOOK
+    if fn is None:
+        return None
+    if not any(sig in t for sig in _MOOD_SIGNAL_WORDS):
+        return None
+
+    prompt = (
+        "判断这句话中说话人的情绪，只从以下类别选一个，只输出类别名：\n"
+        "开心/难过/生气/焦虑/平静/兴奋/疲惫/专注/困惑\n"
+        "如果不确定或没有明显情绪，输出：无\n\n"
+        f"句子：{t}\n情绪："
+    )
+    try:
+        resp = (fn(prompt) or "").strip()
+    except Exception:
+        return None
+    for mood in _MOOD_VALID:
+        if mood in resp:
+            return mood
+    return None
+
+
+# ---- 记忆关联（知识图谱）----
+
+_ASSOC_TIME_WINDOW = 3600          # 时间临近窗口：1 小时（秒）
+_STRONG_STRENGTH = 1.0             # 强关联：同实体 + 同标签 + 时间临近
+_MEDIUM_STRENGTH = 0.7             # 中关联：同实体（部分条件）
+_WEAK_STRENGTH = 0.4               # 弱关联：仅同标签 ≥2 或仅时间临近
+
+
+def _mem_datetime_ts(record):
+    """记忆记录 → 时间戳（秒）。解析 datetime 字段；失败返回 None。"""
+    dt_str = record.get("datetime") or ""
+    if not dt_str:
+        dt_str = f"{record.get('date') or ''}T{record.get('time') or '12:00'}:00"
+    try:
+        return datetime.strptime(str(dt_str)[:19], "%Y-%m-%dT%H:%M:%S").timestamp()
+    except (ValueError, TypeError):
+        return None
+
+
+def _mem_entities(record):
+    """记忆记录 → 实体主题标签（_ENTITY_TAG_RULES 命中的标签，排除类型/语义类别标签）。"""
+    return [t for t in (record.get("tags") or []) if t in _TOPIC_TAGS]
+
+
+def find_related_memories(new_memory, limit=5):
+    """
+    查找与新记忆相关的已有记忆（v3.12.0, Phase 6）。
+
+    匹配维度:
+      - 同实体: 实体主题标签重叠 ≥1（咖啡/会议/吃饭/运动…）
+      - 同标签: 标签重叠 ≥2
+      - 时间临近: datetime 相差 ≤1 小时
+
+    关联强度（与规格一致）:
+      - strong (1.0): 同实体 + 同标签 + 时间临近
+      - medium (0.7): 同实体（含部分条件）
+      - weak (0.4): 仅同标签 ≥2，或仅时间临近
+
+    返回:
+        [{"id", "strength", "reasons", "linked_at"}, ...] 按 strength 降序，最多 limit 个。
+    """
+    if not new_memory or not isinstance(new_memory, dict):
+        return []
+    new_id = new_memory.get("id")
+    new_tags = {t for t in (new_memory.get("tags") or []) if t}
+    new_entities = set(_mem_entities(new_memory))
+    new_ts = _mem_datetime_ts(new_memory)
+
+    results = []
+    for m in load_memories():
+        mid = m.get("id")
+        if not mid or mid == new_id:
+            continue
+        m_tags = {t for t in (m.get("tags") or []) if t}
+        m_entities = set(_mem_entities(m))
+        shared_entities = new_entities & m_entities
+        shared_tags = new_tags & m_tags
+
+        reasons = []
+        if shared_entities:
+            reasons.append("同实体:" + "/".join(sorted(shared_entities)))
+        if len(shared_tags) >= 2:
+            reasons.append("同标签")
+        m_ts = _mem_datetime_ts(m)
+        time_close = False
+        if new_ts is not None and m_ts is not None:
+            time_close = abs(new_ts - m_ts) <= _ASSOC_TIME_WINDOW
+        if time_close:
+            reasons.append("时间临近")
+
+        if not reasons:
+            continue
+        if shared_entities and len(shared_tags) >= 2 and time_close:
+            strength = _STRONG_STRENGTH
+        elif shared_entities:
+            strength = _MEDIUM_STRENGTH
+        else:
+            strength = _WEAK_STRENGTH
+
+        results.append({"id": mid, "strength": strength,
+                        "reasons": reasons, "linked_at": datetime.now().isoformat()})
+
+    results.sort(key=lambda x: x["strength"], reverse=True)
+    return results[:limit]
+
+
+def _merge_related_link(record, target_id, strength, reasons, now):
+    """additive 合并单条关联到记录 related_ids（原地修改，不覆盖已有）。返回是否变更。"""
+    links = record.setdefault("related_ids", [])
+    for l in links:
+        if l.get("id") == target_id:
+            before = (l.get("strength"), tuple(l.get("reasons") or []))
+            l["strength"] = round(max(l.get("strength", 0) or 0, strength), 2)
+            l["reasons"] = list(dict.fromkeys((l.get("reasons") or []) + reasons))
+            l["linked_at"] = now
+            return before != (l["strength"], tuple(l["reasons"]))
+    links.append({"id": target_id, "strength": round(strength, 2),
+                  "reasons": list(dict.fromkeys(reasons)), "linked_at": now})
+    return True
+
+
+def link_memories(memory_id, related):
+    """
+    将关联列表写入记忆记录（v3.12.0, Phase 6, additive 双向）。
+
+    对 memory_id 与其每个关联目标：在双方记录的 related_ids 中合并关联
+    （不覆盖已有；同对已存在时 strength 取 max、reasons 合并去重）。
+
+    参数:
+        memory_id: 主记忆 ID
+        related: find_related_memories 返回的关联列表
+
+    返回:
+        {"status": "ok"|"not_found", "linked": int, "updated": int}
+    """
+    if not related:
+        return {"status": "ok", "linked": 0, "updated": 0}
+    data = _load_memory_raw()
+    by_id = {m.get("id"): m for m in data.get("memories", [])}
+    if memory_id not in by_id:
+        return {"status": "not_found", "linked": 0, "updated": 0}
+
+    now = datetime.now().isoformat()
+    updated = 0
+    for rel in related:
+        target_id = rel.get("id")
+        if not target_id or target_id not in by_id:
+            continue
+        strength = rel.get("strength", _WEAK_STRENGTH)
+        reasons = rel.get("reasons", [])
+        changed = _merge_related_link(by_id[memory_id], target_id, strength, reasons, now)
+        changed |= _merge_related_link(by_id[target_id], memory_id, strength, reasons, now)
+        if changed:
+            updated += 1
+
+    data["updated_at"] = datetime.now().isoformat()
+    _save_memory_raw(data)
+    return {"status": "ok", "linked": updated, "updated": updated}
+
+
+def build_association_network(limit_per=5):
+    """
+    批量重建记忆关联网络（v3.12.0, Phase 6）。
+
+    遍历全部记忆，两两调用 find_related_memories + link_memories（幂等、additive）。
+    用于每日维护，补全历史记忆的关联。
+
+    参数:
+        limit_per: 每条记忆最多关联条数
+
+    返回:
+        {"checked": int, "linked": int}
+    """
+    memories = load_memories()
+    linked = 0
+    for m in memories:
+        try:
+            related = find_related_memories(m, limit=limit_per)
+            if related:
+                r = link_memories(m.get("id"), related)
+                linked += r.get("linked", 0)
+        except Exception as e:
+            logger.warning(f"关联网络构建单条失败: {e}")
+    logger.info(f"关联网络构建完成: checked={len(memories)}, linked={linked}")
+    return {"checked": len(memories), "linked": linked}
+
+
+def get_related_memories(memory_id, limit=None):
+    """
+    查询某记忆的关联记忆（v3.12.0, Phase 6）。
+
+    参数:
+        memory_id: 记忆 ID
+        limit: 最大返回条数
+
+    返回:
+        关联记忆记录列表（按关联强度降序）；无关联或未找到返回 []。
+    """
+    data = _load_memory_raw()
+    by_id = {m.get("id"): m for m in data.get("memories", [])}
+    rec = by_id.get(memory_id)
+    if not rec:
+        return []
+    links = sorted(rec.get("related_ids") or [], key=lambda x: x.get("strength", 0),
+                   reverse=True)
+    out = []
+    for l in links:
+        target = by_id.get(l.get("id"))
+        if target:
+            out.append(target)
+        if limit and len(out) >= limit:
+            break
+    return out
+
+
 # ===================== 启动时自动初始化 =====================
 
-# 模块导入时自动执行数据迁移
+# 模块导入时自动执行数据迁移 + 标签补齐 + 生命周期字段补齐（均幂等）
 _migrate_if_needed()
+backfill_tags()
+backfill_memory_lifecycle()
+_maybe_run_daily_maintenance()
+
+
+# ===================== Phase 5 对比分析（v3.11.0）=====================
+
+# 数据源路径：财务 / 日程（跨模块只读，不做写回）
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(BASE_DIR))
+FINANCE_FILE = os.path.join(_PROJECT_ROOT, "01_工具模块", "财务模块", "local_archive.json")
+SCHEDULE_EVENTS_FILE = os.path.join(_PROJECT_ROOT, "01_工具模块", "日程模块", "events.json")
+SCHEDULE_TODOS_FILE = os.path.join(_PROJECT_ROOT, "01_工具模块", "日程模块", "todos.json")
+
+# 时段显示顺序（凌晨→深夜）
+_PERIOD_ORDER = ["凌晨", "早上", "上午", "中午", "下午", "晚上", "深夜"]
+
+# 相对时间词 → 中文标签（用于回复措辞）
+_PERIOD_LABEL_MAP = {
+    "today": "今天", "yesterday": "昨天",
+    "this_week": "本周", "last_week": "上周",
+    "this_month": "本月", "last_month": "上月",
+}
+
+# 活动显示名：数据源里的原始词 → 用户友好的活动表述
+_ACTIVITY_LABEL = {
+    "咖啡": "喝咖啡", "奶茶": "喝奶茶", "饮品": "喝东西", "水": "喝水",
+    "饭": "吃饭", "吃饭": "吃饭", "餐饮": "吃饭", "外卖": "点外卖",
+    "会议": "开会", "运动": "运动", "跑步": "跑步", "健身": "健身",
+    "购物": "购物", "买": "购物", "看电影": "看电影", "娱乐": "娱乐",
+    "阅读": "阅读", "读书": "读书", "喝水": "喝水",
+}
+
+# 类别关键词 → 标准分类（与财务模块 _CATEGORY_RULES 一致，本地独立副本避免跨模块 import）
+_CATEGORY_KW_MAP = [
+    (["饭", "吃饭", "餐饮", "食堂", "外卖", "午餐", "晚餐", "早餐", "晚饭", "午饭"], "餐饮"),
+    (["交通", "打车", "地铁", "公交", "停车", "高铁", "火车", "飞机", "车费", "车"], "交通"),
+    (["咖啡", "奶茶", "饮料", "饮品", "喝"], "饮品"),
+    (["购物", "超市", "商场", "网购", "淘宝", "京东", "买"], "购物"),
+    (["娱乐", "电影", "游戏", "旅游", "门票", "KTV"], "娱乐"),
+    (["房租", "物业", "水电", "电费", "水费", "网费", "燃气", "居住"], "居住"),
+    (["医疗", "药", "医院", "体检", "诊所"], "医疗"),
+    (["教育", "书", "课程", "培训", "学费", "读书"], "教育"),
+    (["水果", "零食", "小吃", "面包", "甜品"], "食品"),
+    (["话费", "流量", "宽带", "通讯"], "通讯"),
+]
+
+
+def _load_json_list(path):
+    """加载 JSON 列表文件，文件缺失/损坏返回空列表。"""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def _load_finance_records():
+    """加载财务记录（local_archive.json 标准 15 字段格式）。"""
+    return _load_json_list(FINANCE_FILE)
+
+
+def _finance_in_range(records, start, end, types=("expense",)):
+    """筛选指定日期范围 [start, end] 的财务记录（默认只算支出，income 不计入开销）。"""
+    out = []
+    for r in records:
+        if types and (r.get("type") or "expense") not in types:
+            continue
+        d = (r.get("date") or "")[:10]
+        if start and d < start:
+            continue
+        if end and d > end:
+            continue
+        out.append(r)
+    return out
+
+
+def _fmt_amount(x):
+    """金额显示：整数去小数（350 → "350"，3.5 → "3.5"）。"""
+    try:
+        x = float(x)
+    except (TypeError, ValueError):
+        x = 0
+    return str(int(x)) if x == int(x) else str(x)
+
+
+def _percent_change(current, previous):
+    """相比 previous 的变化百分比（%）。previous=0 时返回 None（无法计算）。"""
+    if not previous:
+        return None
+    return round((current - previous) / previous * 100)
+
+
+def _has_any(text, keywords):
+    """text 中是否包含任一关键词。"""
+    return any(kw in text for kw in keywords)
+
+
+def _period_range(period):
+    """将 period（相对词）解析为 (start, end)；无法解析时回退到本月范围。"""
+    start, end = _resolve_date_range(period) if period else (None, None)
+    if not start:
+        start, end = _date_range_for("this_month")
+    return start, end
+
+
+def _period_cn(period):
+    """相对词 → 中文标签；未知词显示原词。"""
+    key = str(period or "").strip()
+    if key in _PERIOD_LABEL_MAP:
+        return _PERIOD_LABEL_MAP[key]
+    if key in ("本周", "这周"):
+        return "本周"
+    if key in ("上周",):
+        return "上周"
+    if key in ("本月", "这个月"):
+        return "本月"
+    if key in ("上月", "上个月"):
+        return "上月"
+    return key or ""
+
+
+def compare_week_over_week():
+    """对比本周 vs 上周支出（Phase 5 功能 1）。
+
+    返回 dict:
+        {this_total, last_total, this_count, last_count, difference, percent, has_data}
+    """
+    start, end = _date_range_for("this_week")
+    last_start, last_end = _date_range_for("last_week")
+    records = _load_finance_records()
+    this_week = _finance_in_range(records, start, end)
+    last_week = _finance_in_range(records, last_start, last_end)
+    this_total = sum(r.get("amount", 0) or 0 for r in this_week)
+    last_total = sum(r.get("amount", 0) or 0 for r in last_week)
+    return {
+        "this_total": this_total, "last_total": last_total,
+        "this_count": len(this_week), "last_count": len(last_week),
+        "difference": this_total - last_total,
+        "percent": _percent_change(this_total, last_total),
+        "has_data": bool(this_week or last_week),
+    }
+
+
+def compare_month_over_month():
+    """对比本月 vs 上月支出（Phase 5 功能 2）。
+
+    返回 dict: {this_total, last_total, this_count, last_count, difference, percent, has_data}
+    """
+    start, end = _date_range_for("this_month")
+    first_this = datetime.now().replace(day=1)
+    last_month_end = first_this - timedelta(days=1)
+    last_start = last_month_end.replace(day=1).strftime("%Y-%m-%d")
+    last_end = last_month_end.strftime("%Y-%m-%d")
+    records = _load_finance_records()
+    this_month = _finance_in_range(records, start, end)
+    last_month = _finance_in_range(records, last_start, last_end)
+    this_total = sum(r.get("amount", 0) or 0 for r in this_month)
+    last_total = sum(r.get("amount", 0) or 0 for r in last_month)
+    return {
+        "this_total": this_total, "last_total": last_total,
+        "this_count": len(this_month), "last_count": len(last_month),
+        "difference": this_total - last_total,
+        "percent": _percent_change(this_total, last_total),
+        "has_data": bool(this_month or last_month),
+    }
+
+
+def get_category_summary(period="this_month"):
+    """按分类统计某时间段支出（Phase 5 功能 3）。
+
+    参数:
+        period: 相对时间词（本月/上周/本周…），默认本月
+
+    返回 dict: {period, label, total, count, breakdown: [(分类, 金额), ...]}
+    """
+    start, end = _period_range(period)
+    records = _finance_in_range(_load_finance_records(), start, end)
+    by_cat = {}
+    for r in records:
+        cat = r.get("category") or "其他"
+        by_cat[cat] = by_cat.get(cat, 0) + (r.get("amount", 0) or 0)
+    breakdown = sorted(by_cat.items(), key=lambda x: x[1], reverse=True)
+    return {
+        "period": period, "label": _period_cn(period),
+        "total": sum(by_cat.values()), "count": len(records),
+        "breakdown": breakdown,
+    }
+
+
+def compare_category_across_periods(category, base_period="this_month", compare_period="last_month"):
+    """对比某分类在相邻两个时段的支出（Phase 5 功能 3 进阶）。
+
+    参数:
+        category: 分类名（餐饮/交通/饮品…）
+        base_period: 基准时段（默认本月）
+        compare_period: 对比时段（默认上月）
+
+    返回 dict: {category, base_label, compare_label, base_total, compare_total, percent, has_data}
+    """
+    start, end = _period_range(base_period)
+    c_start, c_end = _period_range(compare_period)
+    records = _load_finance_records()
+    base = [r for r in _finance_in_range(records, start, end)
+            if (r.get("category") or "") == category]
+    comp = [r for r in _finance_in_range(records, c_start, c_end)
+            if (r.get("category") or "") == category]
+    base_total = sum(r.get("amount", 0) or 0 for r in base)
+    comp_total = sum(r.get("amount", 0) or 0 for r in comp)
+    return {
+        "category": category,
+        "base_label": _period_cn(base_period), "compare_label": _period_cn(compare_period),
+        "base_total": base_total, "compare_total": comp_total,
+        "percent": _percent_change(base_total, comp_total),
+        "has_data": bool(base or comp),
+    }
+
+
+def get_highest_expense(period="this_month"):
+    """某时段内最大单笔开支（Phase 5 功能 4）。
+
+    参数:
+        period: 相对时间词（本月/本周/上周…），默认本月
+
+    返回: {amount, source, date, category} 或 None（无数据）
+    """
+    start, end = _period_range(period)
+    records = _finance_in_range(_load_finance_records(), start, end)
+    if not records:
+        return None
+    top = max(records, key=lambda r: (r.get("amount", 0) or 0))
+    return {
+        "amount": top.get("amount", 0),
+        "source": top.get("source", "?"),
+        "date": (top.get("date") or "")[:10],
+        "category": top.get("category", ""),
+    }
+
+
+def get_frequent_activities(limit=5):
+    """提取高频活动（Phase 5 功能 5）。
+
+    统计来源:
+      1. 记忆实体标签（咖啡/会议/吃饭/运动…）
+      2. 财务来源（咖啡/饭/奶茶…，排除 日常消费/其他）
+      3. 对话归档用户轮的实体标签
+
+    返回: [{activity, count}, ...] 按次数降序
+    """
+    counts = {}
+    # 1) 记忆实体标签
+    for m in load_memories():
+        for t in (m.get("tags") or []):
+            if t in _TOPIC_TAGS:
+                counts[t] = counts.get(t, 0) + 1
+    # 2) 财务来源
+    for r in _load_finance_records():
+        src = (r.get("source") or "").strip()
+        if src and src not in ("日常消费", "其他", "收入来源"):
+            counts[src] = counts.get(src, 0) + 1
+    # 3) 对话归档用户轮
+    for r in _load_dialogue_raw().get("records", []):
+        if r.get("role") != "user":
+            continue
+        for t in (r.get("tags") or []):
+            if t in _TOPIC_TAGS:
+                counts[t] = counts.get(t, 0) + 1
+    top = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:limit]
+    return [{"activity": act, "count": cnt} for act, cnt in top]
+
+
+def get_spending_pattern(period="this_week"):
+    """按时段分析支出分布（Phase 5 功能 6）。
+
+    参数:
+        period: 相对时间词（本周/本月…），默认本周
+
+    返回 dict: {period, label, total, count, breakdown: [{period, amount, percent}, ...]}
+    """
+    start, end = _period_range(period)
+    records = _finance_in_range(_load_finance_records(), start, end)
+    by_period = {}
+    for r in records:
+        p = r.get("period") or _get_period(r.get("time"))
+        if not p:
+            p = "其他"
+        by_period[p] = by_period.get(p, 0) + (r.get("amount", 0) or 0)
+    total = sum(by_period.values())
+    breakdown = []
+    for p in _PERIOD_ORDER:
+        amt = by_period.get(p, 0)
+        if amt > 0:
+            pct = round(amt / total * 100) if total else 0
+            breakdown.append({"period": p, "amount": amt, "percent": pct})
+    # 未知时段兜底放最后
+    for p, amt in by_period.items():
+        if p not in _PERIOD_ORDER and amt > 0:
+            breakdown.append({"period": p, "amount": amt, "percent": round(amt / total * 100) if total else 0})
+    breakdown.sort(key=lambda x: x["percent"], reverse=True)
+    return {
+        "period": period, "label": _period_cn(period),
+        "total": total, "count": len(records), "breakdown": breakdown,
+    }
+
+
+def generate_weekly_summary():
+    """本周综合总结（Phase 5 功能 7）：财务 + 日程 + 记忆活动。"""
+    start, end = _date_range_for("this_week")
+    # 1) 财务：总额 + 主要分类
+    fin = _finance_in_range(_load_finance_records(), start, end)
+    fin_total = sum(r.get("amount", 0) or 0 for r in fin)
+    by_cat = {}
+    for r in fin:
+        cat = r.get("category") or "其他"
+        by_cat[cat] = by_cat.get(cat, 0) + (r.get("amount", 0) or 0)
+    top_cats = sorted(by_cat.items(), key=lambda x: x[1], reverse=True)[:2]
+    # 2) 日程：本周事件/待办 + 会议数
+    sched_items = [s for s in _load_json_list(SCHEDULE_EVENTS_FILE) + _load_json_list(SCHEDULE_TODOS_FILE)
+                   if start <= ((s.get("date") or "")[:10]) <= end]
+    meetings = sum(1 for s in sched_items
+                   if _has_any((s.get("title") or "") + (s.get("content") or ""), ["会议", "开会"]))
+    # 3) 记忆活动：本周实体标签
+    mem_counts = {}
+    for m in load_memories():
+        if not (start <= (m.get("date") or "")[:10] <= end):
+            continue
+        for t in (m.get("tags") or []):
+            if t in _TOPIC_TAGS:
+                mem_counts[t] = mem_counts.get(t, 0) + 1
+    activities = sorted(mem_counts.items(), key=lambda x: x[1], reverse=True)[:2]
+    return {
+        "total": fin_total, "count": len(fin), "top_categories": top_cats,
+        "schedule_count": len(sched_items), "meetings": meetings,
+        "activities": activities,
+        "has_data": bool(fin or sched_items or mem_counts),
+    }
+
+
+def run_analysis(user_input):
+    """
+    对比分析统一入口（v3.11.0，Phase 5 路由集成）。
+
+    依据用户输入中的分析信号词，下发到对应分析函数并拼装自然语言回复。
+    非分析类输入返回 None（交由上层正常路由）。
+
+    返回: 自然语言回复字符串，或 None（非分析意图）。
+    """
+    text = str(user_input or "")
+    if not text.strip():
+        return None
+
+    # 记忆记录/日程添加/删除等强意图 → 不是分析类，交还上层路由
+    if _has_any(text, ["记住", "记下", "请记住", "帮我记住", "添加", "新增", "安排",
+                       "创建", "预约", "删除", "删掉", "取消"]):
+        return None
+
+    NO_DATA_MSG = "这段时间还没有数据记录哦"
+
+    # 消费语境检测：类别分析必须伴随消费语义（"我喜欢喝拿铁"不是支出分析）
+    _SPENDING_CTX = ["花了", "花销", "消费", "开销", "支出", "花费", "账单", "记账",
+                     "买了", "用了", "付了", "花了多少", "一共花", "总共花"]
+    has_spending_ctx = _has_any(text, _SPENDING_CTX)
+
+    # ---- 0) 类别对比："这个月吃饭花了多少？比上个月呢？" ----
+    # 检测具体类别词 + 相邻时段对比词 → 类别跨期对比
+    cat_word = None
+    for kws, cat in _CATEGORY_KW_MAP:
+        if any(kw in text for kw in kws):
+            cat_word = cat
+            break
+    has_period_cmp = _has_any(text, ["比上个月", "和上个月", "跟上个月", "较上月", "上月比",
+                                     "比上周", "和上周", "跟上礼拜", "上周比"])
+    if cat_word and has_period_cmp and has_spending_ctx:
+        # 决定基准/对比时段：输入含"本月/这个月"且对比上月，或含"本周/这周"且对比上周
+        if _has_any(text, ["本周", "这周"]) and _has_any(text, ["上周", "上礼拜"]):
+            data = compare_category_across_periods(cat_word, "this_week", "last_week")
+        else:
+            data = compare_category_across_periods(cat_word, "this_month", "last_month")
+        if not data["has_data"]:
+            return NO_DATA_MSG
+        base_amt = _fmt_amount(data["base_total"])
+        comp_amt = _fmt_amount(data["compare_total"])
+        pct = data["percent"]
+        if pct is None:
+            trend = "上月没有支出"
+        elif pct > 0:
+            trend = f"比{data['compare_label']}增加{pct}%"
+        elif pct < 0:
+            trend = f"比{data['compare_label']}减少{abs(pct)}%"
+        else:
+            trend = "与上月持平"
+        return (f"{data['base_label']}{data['category']}支出{base_amt}元，"
+                f"{data['compare_label']}{data['category']}支出{comp_amt}元，{trend}")
+
+    # ---- 1) 频繁活动："我最近经常做什么？" ----
+    if _has_any(text, ["经常", "频繁", "常做", "老是", "总在", "常干什么", "经常干什么", "经常做"]):
+        acts = get_frequent_activities(limit=8)
+        if not acts:
+            return "暂时还没发现你经常做的活动，多记录一些生活轨迹吧"
+        # 按显示名合并（"饭"+"吃饭" → "吃饭"），避免同一活动出现两次
+        merged = {}
+        for a in acts:
+            label = _ACTIVITY_LABEL.get(a["activity"], a["activity"])
+            merged[label] = merged.get(label, 0) + a["count"]
+        top = sorted(merged.items(), key=lambda x: x[1], reverse=True)[:5]
+        lines = [f"{i}. {label} ({cnt}次)" for i, (label, cnt) in enumerate(top, 1)]
+        return "、".join(lines)
+
+    # ---- 2) 消费时段模式："我一般什么时候花钱最多？" ----
+    if _has_any(text, ["什么时候", "几点", "时段", "时间段", "哪个时间"]) and _has_any(
+            text, ["花", "消费", "开销", "支出", "买东西", "花钱"]):
+        data = get_spending_pattern("this_week")
+        if not data["breakdown"]:
+            return NO_DATA_MSG
+        parts = [f"{b['period']} ({b['percent']}%)" for b in data["breakdown"][:3]]
+        return "、".join(parts)
+
+    # ---- 3) 周对比："本周花了多少？比上周多吗？" ----
+    if _has_any(text, ["比上周", "和上周", "跟上周", "较上周", "上周比", "比上礼拜",
+                       "上周多", "上周少", "比上周多", "比上周少"]):
+        data = compare_week_over_week()
+        if not data["has_data"]:
+            return NO_DATA_MSG
+        t = _fmt_amount(data["this_total"])
+        l = _fmt_amount(data["last_total"])
+        pct = data["percent"]
+        if pct is None:
+            trend = f"上周共花费{l}元" if data["last_total"] else "上周没有支出记录"
+            return f"本周共花费{t}元，{trend}"
+        if pct > 0:
+            trend = f"比上周多{pct}%"
+        elif pct < 0:
+            trend = f"比上周少{abs(pct)}%"
+        else:
+            trend = "与上周持平"
+        return f"本周共花费{t}元，上周共花费{l}元，{trend}"
+
+    # ---- 4) 月对比："这个月开销比上个月大吗？" ----
+    if _has_any(text, ["比上个月", "和上个月", "跟上个月", "较上月", "上月比", "上个月多", "上个月少"]):
+        data = compare_month_over_month()
+        if not data["has_data"]:
+            return NO_DATA_MSG
+        t = _fmt_amount(data["this_total"])
+        l = _fmt_amount(data["last_total"])
+        pct = data["percent"]
+        if pct is None:
+            trend = f"上月共花费{l}元" if data["last_total"] else "上月没有支出记录"
+            return f"本月共花费{t}元，{trend}"
+        if pct > 0:
+            trend = f"比上月多{pct}%"
+        elif pct < 0:
+            trend = f"比上月少{abs(pct)}%"
+        else:
+            trend = "与上月持平"
+        return f"本月共花费{t}元，上月共花费{l}元，{trend}"
+
+    # ---- 5) 最高开支："这个月最大的开支是什么？" ----
+    if _has_any(text, ["最大", "最高", "最贵", "最大开支", "开销最大", "花钱最多",
+                       "花得最多", "支出最多", "消费最多", "最贵一笔"]):
+        # 时段推断：含"周"→本周；含"月"→本月；否则本周
+        if _has_any(text, ["上个月", "上月"]):
+            period = "last_month"
+        elif _has_any(text, ["上周"]):
+            period = "last_week"
+        elif _has_any(text, ["这个月", "本月"]):
+            period = "this_month"
+        elif _has_any(text, ["本周", "这周"]):
+            period = "this_week"
+        else:
+            period = "this_week"
+        top = get_highest_expense(period)
+        if not top:
+            return NO_DATA_MSG
+        amt = _fmt_amount(top["amount"])
+        return f"最大开支：{top['source']} {amt}元 ({top['date']})"
+
+    # ---- 6) 分类汇总："这个月吃饭花了多少？"（无对比词） ----
+    if cat_word and has_spending_ctx:
+        if _has_any(text, ["本月", "这个月"]):
+            period = "this_month"
+        elif _has_any(text, ["本周", "这周"]):
+            period = "this_week"
+        else:
+            period = "this_month"
+        data = get_category_summary(period)
+        cat_amt = next((a for c, a in data["breakdown"] if c == cat_word), 0)
+        label = _period_cn(period)
+        if not data["count"]:
+            return NO_DATA_MSG
+        return f"{label}{cat_word}支出{_fmt_amount(cat_amt)}元"
+
+    # ---- 7) 周总结："这周我做了什么？" / "总结一下这周" ----
+    if (re.search(r"(这周|本周)[^。？!?\n]{0,10}?(做了|干了|发生了什么|有什么|都做了什么|都干了)", text)
+            or _has_any(text, ["总结", "周报", "小结", "概况"])):
+        data = generate_weekly_summary()
+        if not data["has_data"]:
+            return NO_DATA_MSG
+        parts = [f"本周总结：共花费{_fmt_amount(data['total'])}元"]
+        if data["top_categories"]:
+            cat_desc = "、".join(f"{c}({_fmt_amount(a)}元)" for c, a in data["top_categories"])
+            parts.append(f"主要支出在{cat_desc}")
+        if data["schedule_count"]:
+            parts.append(f"共{data['schedule_count']}项日程")
+        if data["meetings"]:
+            parts.append(f"完成{data['meetings']}次会议")
+        if data["activities"]:
+            act_desc = "、".join(f"{_ACTIVITY_LABEL.get(a, a)}({c}次)" for a, c in data["activities"])
+            parts.append(f"经常{act_desc}")
+        return "，".join(parts)
+
+    return None
 
 
 # ===================== 独立测试入口 =====================

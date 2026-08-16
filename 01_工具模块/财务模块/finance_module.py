@@ -17,14 +17,15 @@ _STORAGE_VERSION = 2
 # ===============================================
 
 # v3.9.29: 记忆系统集成 —— 记录成功记账后写入统一记忆库（失败不影响记账）
+# v3.10.9: 返回写入结果并打印完整 traceback（不再静默吞异常），保证"每笔成功记账必有记忆"可诊断。
 def _record_memory_event(title, detail, tags=None):
-    """将一笔记账写入统一记忆库 memory.json（add_memory_event）。"""
+    """将一笔记账写入统一记忆库 memory.json（add_memory_event）。返回 add_memory_event 结果。"""
     try:
         _core_dir = os.path.normpath(os.path.join(BASE_DIR, "..", "..", "00_核心主体"))
         if _core_dir not in sys.path:
             sys.path.insert(0, _core_dir)
         from 记忆.记忆引擎 import add_memory_event
-        add_memory_event(
+        return add_memory_event(
             title=title,
             detail=detail,
             tags=tags or ["财务"],
@@ -32,8 +33,11 @@ def _record_memory_event(title, detail, tags=None):
             subtype="event",
         )
     except Exception as e:
-        # 记忆记录失败不阻塞记账主流程
+        # 记忆记录失败不阻塞记账主流程，但必须可见（打印完整 traceback）
+        import traceback
+        traceback.print_exc()
         print(f"⚠️ 记忆记录失败(忽略):{e}")
+        return {"status": "skipped", "id": "", "message": f"记忆写入失败: {e}"}
 
 # ===================== 数据管理 =====================
 def load_data():
@@ -884,19 +888,43 @@ def process_command(text):
 
     data = load_data()
     data.append(new_record)
-    save_data(data)
+
+    # v3.10.10: 保存并验证——避免"幻觉记账"（回复成功但实际未写入磁盘）。
+    try:
+        save_data(data)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"⚠️ 财务记录保存异常: {e}")
+        return {
+            "status": "error",
+            "message": "保存失败，请重试",
+        }
+
+    # 重载磁盘数据，确认新记录确实已写入（若未写入则视为失败，绝不返回成功）
+    try:
+        saved_ids = {r.get("id") for r in load_data()}
+    except Exception:
+        saved_ids = set()
+    if record_id not in saved_ids:
+        print(f"⚠️ 财务记录验证失败: {record_id} 未写入 {DATA_FILE}")
+        return {
+            "status": "error",
+            "message": "保存失败，请重试",
+        }
 
     # 生成简短摘要，供上层拼装自然语言回复
     time_ref = parsed.get("time_ref", "")
     amt_str = str(int(amount)) if amount == int(amount) else str(amount)
     summary = f"记录{time_ref}{source}{amt_str}元"
 
-    # v3.9.29: 记录到统一记忆库
-    _record_memory_event(
+    # v3.9.29: 记录到统一记忆库（v3.10.9: 每笔成功记账都写入记忆，返回结果供上层可观察）
+    mem_res = _record_memory_event(
         title="记账",
         detail=f"记录{time_ref}{source}花费{amt_str}元（分类:{category}，日期:{date_str}）",
         tags=["财务", category],
     )
+    mem_status = mem_res.get("status") if isinstance(mem_res, dict) else "unknown"
 
     return {
         "status": "success",
@@ -906,6 +934,7 @@ def process_command(text):
             "source": source,
             "date": date_str,
             "category": category,
+            "memory_event": mem_status,
         },
         "summary": summary,
     }

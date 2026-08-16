@@ -1,5 +1,22 @@
 [
   {
+    "id": "schedule_event_20260817_1500_zscwn7",
+    "type": "event",
+    "date": "2026-08-17",
+    "time": "15:00",
+    "datetime": "2026-08-17T15:00:00",
+    "period": "下午",
+    "title": "会议",
+    "content": "下午会议",
+    "detail": null,
+    "location": null,
+    "status": "pending",
+    "repeat": "none",
+    "notified": false,
+    "created_at": "2026-08-16T00:25:51",
+    "updated_at": null
+  },
+  {
     "id": "schedule_event_20260813_0036_s5afas",
     "type": "event",
     "date": "2026-08-13",
@@ -63,7 +80,7 @@
     "location": null,
     "status": "pending",
     "repeat": "none",
-    "notified": false,
+    "notified": true,
     "created_at": "2026-08-12T00:36:47",
     "updated_at": null
   },
@@ -80,7 +97,7 @@
     "location": null,
     "status": "pending",
     "repeat": "none",
-    "notified": false,
+    "notified": true,
     "created_at": "2026-08-12T00:08:26",
     "updated_at": null
   },

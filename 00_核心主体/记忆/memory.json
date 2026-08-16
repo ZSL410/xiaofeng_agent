@@ -2,6 +2,978 @@
   "version": "2.0",
   "memories": [
     {
+      "id": "memory_20260816_0025_ayeomr",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-16",
+      "time": "00:25",
+      "datetime": "2026-08-16T00:25:00",
+      "period": "凌晨",
+      "title": "添加日程",
+      "content": "凌晨添加日程",
+      "detail": "添加日程「会议」(2026-08-17 15:00)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "事件"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-16T00:25:51.054197",
+      "updated_at": null,
+      "confidence": 0.5,
+      "tier": "L1",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.185187"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.198292"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0036_gnnpsj",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0036_wj4upz",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0036_3jvlb7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0036_fvpu5y",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0036_rlick3",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0036_3g5xsh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0036_l4ohwp",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0036_64sv9y",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0058_studp8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0634_ullleh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260807_2354_xijt2b",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260815_0001_sfpc3u",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-15",
+      "time": "00:01",
+      "datetime": "2026-08-15T00:01:00",
+      "period": "凌晨",
+      "title": "记账",
+      "content": "凌晨记账",
+      "detail": "记录今天咖啡花费10元（分类:饮品，日期:2026-08-15）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "饮品"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-15T00:01:45.065058",
+      "updated_at": "2026-08-16T00:36:12.990624",
+      "confidence": 0.85,
+      "tier": "L2",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 7,
+      "promotion_reason": "confidence≥0.8",
+      "promoted_at": "2026-08-16T00:36:12.990624",
+      "related_ids": [
+        {
+          "id": "memory_20260815_0044_7xnpya",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:饮品",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.091509"
+        },
+        {
+          "id": "memory_20260815_0112_ok7e8u",
+          "strength": 0.7,
+          "reasons": [
+            "同实体:饮品",
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.080887"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260815_0041_tpdoop",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-15",
+      "time": "00:41",
+      "datetime": "2026-08-15T00:41:00",
+      "period": "凌晨",
+      "title": "记账",
+      "content": "凌晨记账",
+      "detail": "记录昨天日常消费花费20元（分类:生活，日期:2026-08-14）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-15T00:41:11.534635",
+      "updated_at": null,
+      "confidence": 0.495,
+      "tier": "L1",
+      "last_retrieved": "2026-08-15",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0001_sfpc3u",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.080887"
+        },
+        {
+          "id": "memory_20260815_0044_7xnpya",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.091509"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.103074"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.114016"
+        },
+        {
+          "id": "memory_20260815_0112_ok7e8u",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260812_0047_w1iwru",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260812_0714_eh4jgu",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260812_2052_6iwakr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260812_2102_7kh467",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260815_0044_7xnpya",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-15",
+      "time": "00:44",
+      "datetime": "2026-08-15T00:44:00",
+      "period": "凌晨",
+      "title": "记账",
+      "content": "凌晨记账",
+      "detail": "记录今天咖啡花费10元（分类:饮品，日期:2026-08-15）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "饮品"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-15T00:44:02.108501",
+      "updated_at": "2026-08-16T00:36:12.990624",
+      "confidence": 0.7,
+      "tier": "L2",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 4,
+      "promotion_reason": "主题频次≥3: 饮品",
+      "promoted_at": "2026-08-16T00:36:12.990624",
+      "related_ids": [
+        {
+          "id": "memory_20260815_0001_sfpc3u",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:饮品",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.091509"
+        },
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.091509"
+        },
+        {
+          "id": "memory_20260815_0112_ok7e8u",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:饮品",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.103074"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.114016"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260815_0108_o31q7f",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-15",
+      "time": "01:08",
+      "datetime": "2026-08-15T01:08:00",
+      "period": "凌晨",
+      "title": "记账",
+      "content": "凌晨记账",
+      "detail": "记录昨天日常消费花费20元（分类:生活，日期:2026-08-14）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-15T01:08:19.100124",
+      "updated_at": null,
+      "confidence": 0.495,
+      "tier": "L1",
+      "last_retrieved": "2026-08-15",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.103074"
+        },
+        {
+          "id": "memory_20260815_0044_7xnpya",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.103074"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.114016"
+        },
+        {
+          "id": "memory_20260815_0112_ok7e8u",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260812_0047_w1iwru",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260812_0714_eh4jgu",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260812_2052_6iwakr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260812_2102_7kh467",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260815_0111_gtj4dt",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-15",
+      "time": "01:11",
+      "datetime": "2026-08-15T01:11:00",
+      "period": "凌晨",
+      "title": "记账",
+      "content": "凌晨记账",
+      "detail": "记录昨天日常消费花费21元（分类:生活，日期:2026-08-14）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-15T01:11:05.338016",
+      "updated_at": null,
+      "confidence": 0.495,
+      "tier": "L1",
+      "last_retrieved": "2026-08-15",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.114016"
+        },
+        {
+          "id": "memory_20260815_0044_7xnpya",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.114016"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.114016"
+        },
+        {
+          "id": "memory_20260815_0112_ok7e8u",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260812_0047_w1iwru",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260812_0714_eh4jgu",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260812_2052_6iwakr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260812_2102_7kh467",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260815_0112_ok7e8u",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-15",
+      "time": "01:12",
+      "datetime": "2026-08-15T01:12:00",
+      "period": "凌晨",
+      "title": "记账",
+      "content": "凌晨记账",
+      "detail": "记录今天咖啡花费9元（分类:饮品，日期:2026-08-15）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "饮品"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-15T01:12:07.155682",
+      "updated_at": "2026-08-16T00:36:12.990624",
+      "confidence": 0.7,
+      "tier": "L2",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 4,
+      "promotion_reason": "主题频次≥3: 饮品",
+      "promoted_at": "2026-08-16T00:36:12.990624",
+      "related_ids": [
+        {
+          "id": "memory_20260815_0001_sfpc3u",
+          "strength": 0.7,
+          "reasons": [
+            "同实体:饮品",
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260815_0044_7xnpya",
+          "strength": 1.0,
+          "reasons": [
+            "同实体:饮品",
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.126463"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260814_2357_8vraoh",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-14",
+      "time": "23:57",
+      "datetime": "2026-08-14T23:57:00",
+      "period": "深夜",
+      "title": "记账",
+      "content": "深夜记账",
+      "detail": "记录昨天日常消费花费20元（分类:生活，日期:2026-08-13）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-14T23:57:00.366933",
+      "updated_at": null,
+      "confidence": 0.49,
+      "tier": "L1",
+      "last_retrieved": "2026-08-14",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0001_sfpc3u",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260815_0044_7xnpya",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.137048"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260812_0047_w1iwru",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260812_0714_eh4jgu",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260812_2052_6iwakr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260812_2102_7kh467",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260813_2329_sgoq21",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-13",
+      "time": "23:29",
+      "datetime": "2026-08-13T23:29:00",
+      "period": "深夜",
+      "title": "记账",
+      "content": "深夜记账",
+      "detail": "记录晚上饭花费6元（分类:餐饮，日期:2026-08-13）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "餐饮"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-13T23:29:56.105424",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-13",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.172884"
+        },
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.582366"
+        },
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260807_2353_ld12f7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260813_2340_vq9g86",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-13",
+      "time": "23:40",
+      "datetime": "2026-08-13T23:40:00",
+      "period": "深夜",
+      "title": "记账",
+      "content": "深夜记账",
+      "detail": "记录日常消费花费25元（分类:生活，日期:2026-08-13）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-13T23:40:01.808713",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-13",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.160585"
+        },
+        {
+          "id": "memory_20260812_0047_w1iwru",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260812_0714_eh4jgu",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260812_2052_6iwakr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260812_2102_7kh467",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        }
+      ]
+    },
+    {
       "id": "memory_20260812_0003_c5add4",
       "type": "memory",
       "subtype": "event",
@@ -19,7 +991,189 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:03:32.507516",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.172884"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.185187"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.198292"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.209330"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0036_gnnpsj",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0036_wj4upz",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0036_3jvlb7",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0036_fvpu5y",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0036_rlick3",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0036_3g5xsh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0036_l4ohwp",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0036_64sv9y",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0058_studp8",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.582366"
+        },
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260807_2353_ld12f7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0008_svhuxa",
@@ -39,7 +1193,185 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:08:26.154336",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.185187"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.185187"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.198292"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.209330"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0036_gnnpsj",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0036_wj4upz",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0036_3jvlb7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0036_fvpu5y",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0036_rlick3",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0036_3g5xsh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0036_l4ohwp",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0036_64sv9y",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0058_studp8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0634_ullleh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260807_2354_xijt2b",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0035_jb83mk",
@@ -59,7 +1391,185 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:35:53.047566",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.198292"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.198292"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.198292"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.209330"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0036_gnnpsj",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0036_wj4upz",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0036_3jvlb7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0036_fvpu5y",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0036_rlick3",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0036_3g5xsh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0036_l4ohwp",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0036_64sv9y",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0058_studp8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0634_ullleh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260807_2354_xijt2b",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0035_r8n1ui",
@@ -79,7 +1589,232 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:35:53.053372",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.209330"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.209330"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.209330"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0036_gnnpsj",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0036_wj4upz",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0036_3jvlb7",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0036_fvpu5y",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0036_rlick3",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0036_3g5xsh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0036_l4ohwp",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0036_64sv9y",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0058_studp8",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_2047_6i1u79",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_2051_jl2136",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_2052_2xrbwh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_2052_t5kkb9",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_2127_xtp64v",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_2233_tjukce",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260811_1106_uje6bv",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0035_sl48ic",
@@ -99,7 +1834,95 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:35:53.059278",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.221918"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0634_ullleh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260807_2354_xijt2b",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_cxq0dm",
@@ -119,7 +1942,71 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:11.994731",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.233078"
+        },
+        {
+          "id": "memory_20260812_0634_ullleh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260807_2354_xijt2b",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_z9q0z0",
@@ -139,7 +2026,134 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:12.001290",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.244752"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_2047_6i1u79",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_2051_jl2136",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_2052_2xrbwh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_2052_t5kkb9",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_2127_xtp64v",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_2233_tjukce",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260811_1106_uje6bv",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_gnnpsj",
@@ -159,7 +2173,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:12.008284",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.255982"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_wj4upz",
@@ -179,7 +2241,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:20.853789",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.268032"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_vzwmdh",
@@ -199,7 +2309,134 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:20.859693",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.280668"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_2047_6i1u79",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_2051_jl2136",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_2052_2xrbwh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_2052_t5kkb9",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_2127_xtp64v",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_2233_tjukce",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260811_1106_uje6bv",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_3jvlb7",
@@ -219,7 +2456,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:20.865449",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.293456"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_pqrvlt",
@@ -239,7 +2524,134 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:20.886938",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.306051"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_2047_6i1u79",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_2051_jl2136",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_2052_2xrbwh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_2052_t5kkb9",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_2127_xtp64v",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_2233_tjukce",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260811_1106_uje6bv",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_fvpu5y",
@@ -259,7 +2671,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:29.356827",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.318301"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_rlick3",
@@ -279,7 +2739,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:29.362732",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.330846"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_3g5xsh",
@@ -299,7 +2807,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:47.760749",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.345172"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_l4ohwp",
@@ -319,7 +2875,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:47.769240",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.358749"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0036_64sv9y",
@@ -339,7 +2943,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:36:47.777649",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.371025"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0047_w1iwru",
@@ -359,7 +3011,53 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:47:56.269444",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.383271"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0058_studp8",
@@ -379,7 +3077,55 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T00:58:44.630943",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.396064"
+        }
+      ]
     },
     {
       "id": "memory_20260812_0634_ullleh",
@@ -399,7 +3145,827 @@
       ],
       "importance": 5,
       "created_at": "2026-08-12T06:34:43.941021",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.408848"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_0714_eh4jgu",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "07:14",
+      "datetime": "2026-08-12T07:14:00",
+      "period": "早上",
+      "title": "记账",
+      "content": "早上记账",
+      "detail": "记录日常消费花费5元（分类:生活，日期:2026-08-12）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T07:14:57.370498",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.421799"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2017_y33fus",
+      "type": "memory",
+      "subtype": "fact",
+      "date": "2026-08-12",
+      "time": "20:17",
+      "datetime": "2026-08-12T20:17:00",
+      "period": "晚上",
+      "title": "晚上买了根雪糕花两块钱，挺好吃的",
+      "content": "晚上买了根雪糕花两块钱，挺好吃的",
+      "detail": "晚上买了根雪糕花两块钱，挺好吃的",
+      "mood": null,
+      "tags": [
+        "购物",
+        "财务"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:17:43.316239",
+      "updated_at": "2026-08-12T20:17:43.316239",
+      "category": "其他",
+      "pinned": false,
+      "source": "对话",
+      "embedding": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_2047_6i1u79",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_2051_jl2136",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_2052_2xrbwh",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_2052_t5kkb9",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2018_pf461j",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "20:18",
+      "datetime": "2026-08-12T20:18:00",
+      "period": "晚上",
+      "title": "添加待办",
+      "content": "晚上添加待办",
+      "detail": "添加待办「记得叫我」(到期:2026-08-13 12:30)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:18:19.942451",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_2017_y33fus",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.448748"
+        },
+        {
+          "id": "memory_20260812_2127_xtp64v",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_2233_tjukce",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260811_1106_uje6bv",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2047_6i1u79",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "20:47",
+      "datetime": "2026-08-12T20:47:00",
+      "period": "晚上",
+      "title": "添加待办",
+      "content": "晚上添加待办",
+      "detail": "添加待办「明天有个小测试」(到期:2026-08-13 12:30)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:47:51.284325",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_2017_y33fus",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.463102"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2051_jl2136",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "20:51",
+      "datetime": "2026-08-12T20:51:00",
+      "period": "晚上",
+      "title": "添加待办",
+      "content": "晚上添加待办",
+      "detail": "添加待办「有个小测试」(到期:2026-08-13 12:30)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:51:44.691581",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_2017_y33fus",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.476312"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2052_2xrbwh",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "20:52",
+      "datetime": "2026-08-12T20:52:00",
+      "period": "晚上",
+      "title": "添加待办",
+      "content": "晚上添加待办",
+      "detail": "添加待办「有个小测试」(到期:2026-08-13 12:30)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:52:03.013184",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_2017_y33fus",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.489131"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2052_t5kkb9",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "20:52",
+      "datetime": "2026-08-12T20:52:00",
+      "period": "晚上",
+      "title": "添加待办",
+      "content": "晚上添加待办",
+      "detail": "添加待办「要去机场接客户张经理顺便买杯咖啡」(到期:2026-08-13 15:00)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:52:03.018382",
+      "updated_at": "2026-08-16T00:26:07.394065",
+      "confidence": 1.0,
+      "tier": "L2",
+      "last_retrieved": "2026-08-16",
+      "retrieved_count": 11,
+      "promotion_reason": "confidence≥0.8",
+      "promoted_at": "2026-08-15T00:40:19.616856",
+      "related_ids": [
+        {
+          "id": "memory_20260812_2017_y33fus",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.503278"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2052_6iwakr",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "20:52",
+      "datetime": "2026-08-12T20:52:00",
+      "period": "晚上",
+      "title": "记账",
+      "content": "晚上记账",
+      "detail": "记录晚上日常消费花费2元（分类:生活，日期:2026-08-12）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T20:52:11.168804",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.518135"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2102_7kh467",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "21:02",
+      "datetime": "2026-08-12T21:02:00",
+      "period": "晚上",
+      "title": "记账",
+      "content": "晚上记账",
+      "detail": "记录晚上日常消费花费2元（分类:生活，日期:2026-08-12）",
+      "mood": null,
+      "tags": [
+        "财务",
+        "生活"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T21:02:46.583346",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260815_0041_tpdoop",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        },
+        {
+          "id": "memory_20260815_0108_o31q7f",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        },
+        {
+          "id": "memory_20260815_0111_gtj4dt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        },
+        {
+          "id": "memory_20260814_2357_8vraoh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        },
+        {
+          "id": "memory_20260813_2340_vq9g86",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.534440"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2127_xtp64v",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "21:27",
+      "datetime": "2026-08-12T21:27:00",
+      "period": "晚上",
+      "title": "添加待办",
+      "content": "晚上添加待办",
+      "detail": "添加待办「有个小测试」(到期:2026-08-13 12:30)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T21:27:47.992334",
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-12",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.550702"
+        }
+      ]
+    },
+    {
+      "id": "memory_20260812_2233_tjukce",
+      "type": "memory",
+      "subtype": "event",
+      "date": "2026-08-12",
+      "time": "22:33",
+      "datetime": "2026-08-12T22:33:00",
+      "period": "深夜",
+      "title": "添加待办",
+      "content": "深夜添加待办",
+      "detail": "添加待办「去买咖啡豆」(到期:2026-08-13 15:00)",
+      "mood": null,
+      "tags": [
+        "日程",
+        "待办"
+      ],
+      "importance": 5,
+      "created_at": "2026-08-12T22:33:27.162441",
+      "updated_at": "2026-08-16T00:36:12.990624",
+      "confidence": 0.94,
+      "tier": "L2",
+      "last_retrieved": "2026-08-15",
+      "retrieved_count": 9,
+      "promotion_reason": "confidence≥0.8",
+      "promoted_at": "2026-08-16T00:36:12.990624",
+      "related_ids": [
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.567349"
+        }
+      ]
     },
     {
       "id": "memory_20260811_1100_oe7g59",
@@ -419,7 +3985,61 @@
       ],
       "importance": 5,
       "created_at": "2026-08-11T11:00:43.718421",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-11",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.582366"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.582366"
+        },
+        {
+          "id": "memory_20260811_1106_uje6bv",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.582366"
+        },
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260807_2353_ld12f7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        }
+      ]
     },
     {
       "id": "memory_20260811_1106_uje6bv",
@@ -439,7 +4059,61 @@
       ],
       "importance": 5,
       "created_at": "2026-08-11T11:06:18.339933",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-11",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.582366"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.599209"
+        }
+      ]
     },
     {
       "id": "memory_20260808_0006_esnoyw",
@@ -459,7 +4133,62 @@
       ],
       "importance": 5,
       "created_at": "2026-08-08T00:06:11.105472",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-08",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260807_2353_ld12f7",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        }
+      ]
     },
     {
       "id": "memory_20260808_0006_dh2s6z",
@@ -479,7 +4208,69 @@
       ],
       "importance": 5,
       "created_at": "2026-08-08T00:06:20.895822",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-08",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.615535"
+        },
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.631213"
+        },
+        {
+          "id": "memory_20260807_2353_ld12f7",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        }
+      ]
     },
     {
       "id": "memory_20260808_2017_k0z7g8",
@@ -499,7 +4290,69 @@
       ],
       "importance": 5,
       "created_at": "2026-08-08T20:17:55.344829",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-08",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260812_0035_r8n1ui",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        },
+        {
+          "id": "memory_20260812_0036_z9q0z0",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        },
+        {
+          "id": "memory_20260812_0036_vzwmdh",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        },
+        {
+          "id": "memory_20260812_0036_pqrvlt",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        },
+        {
+          "id": "memory_20260812_2018_pf461j",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.649483"
+        },
+        {
+          "id": "memory_20260808_2018_097paj",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.666289"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        }
+      ]
     },
     {
       "id": "memory_20260808_2018_097paj",
@@ -513,14 +4366,38 @@
       "content": "我叫霖",
       "detail": "我叫霖",
       "mood": null,
-      "tags": [],
+      "tags": [
+        "聊天"
+      ],
       "importance": 5,
       "created_at": "2026-08-08T20:18:13.496834",
       "updated_at": "2026-08-08T20:18:13.496834",
       "category": "其他",
       "pinned": false,
       "source": "对话",
-      "embedding": null
+      "embedding": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-08",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.666289"
+        },
+        {
+          "id": "memory_20260808_2116_w2pazd",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.666289"
+        }
+      ]
     },
     {
       "id": "memory_20260808_2116_w2pazd",
@@ -540,7 +4417,61 @@
       ],
       "importance": 5,
       "created_at": "2026-08-08T21:16:18.930479",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-08",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260808_2018_097paj",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.666289"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        },
+        {
+          "id": "memory_20260808_2017_k0z7g8",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.684511"
+        }
+      ]
     },
     {
       "id": "memory_20260807_2353_ld12f7",
@@ -560,7 +4491,54 @@
       ],
       "importance": 5,
       "created_at": "2026-08-07T23:53:32.699861",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-07",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260813_2329_sgoq21",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260812_0003_c5add4",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260811_1100_oe7g59",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260808_0006_esnoyw",
+          "strength": 0.4,
+          "reasons": [
+            "同标签",
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        },
+        {
+          "id": "memory_20260808_0006_dh2s6z",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.700618"
+        }
+      ]
     },
     {
       "id": "memory_20260807_2354_xijt2b",
@@ -580,7 +4558,53 @@
       ],
       "importance": 5,
       "created_at": "2026-08-07T23:54:23.223814",
-      "updated_at": null
+      "updated_at": null,
+      "confidence": 0.485,
+      "tier": "L1",
+      "last_retrieved": "2026-08-07",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260816_0025_ayeomr",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        },
+        {
+          "id": "memory_20260812_0008_svhuxa",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        },
+        {
+          "id": "memory_20260812_0035_jb83mk",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        },
+        {
+          "id": "memory_20260812_0035_sl48ic",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        },
+        {
+          "id": "memory_20260812_0036_cxq0dm",
+          "strength": 0.4,
+          "reasons": [
+            "同标签"
+          ],
+          "linked_at": "2026-08-16T01:09:48.717709"
+        }
+      ]
     },
     {
       "id": "memory_20260624_2342_oiuixt",
@@ -599,11 +4623,27 @@
       ],
       "importance": 8,
       "created_at": "2026-06-24T23:42:35.927654",
-      "updated_at": "2026-06-24T23:42:35.927654",
+      "updated_at": "2026-08-13T23:11:21.277828",
       "category": "偏好",
       "pinned": true,
       "source": "对话",
-      "embedding": null
+      "embedding": null,
+      "confidence": 0.785,
+      "tier": "L2",
+      "last_retrieved": "2026-06-24",
+      "retrieved_count": 0,
+      "promotion_reason": "confidence≥0.8",
+      "promoted_at": "2026-08-13T23:11:21.277828",
+      "related_ids": [
+        {
+          "id": "memory_20260624_2342_v4bbgg",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.753786"
+        }
+      ]
     },
     {
       "id": "memory_20260624_2342_v4bbgg",
@@ -625,9 +4665,22 @@
       "updated_at": null,
       "pattern_type": "time_based",
       "frequency": 1,
-      "confidence": 0.34,
+      "confidence": 0.325,
       "archived": false,
-      "embedding": null
+      "embedding": null,
+      "tier": "L1",
+      "last_retrieved": "2026-06-24",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260624_2342_oiuixt",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.753786"
+        }
+      ]
     },
     {
       "id": "memory_20260622_2324_gm8jaz",
@@ -649,9 +4702,22 @@
       "updated_at": null,
       "pattern_type": "time_based",
       "frequency": 3,
-      "confidence": 0.43,
+      "confidence": 0.415,
       "archived": false,
-      "embedding": null
+      "embedding": null,
+      "tier": "L1",
+      "last_retrieved": "2026-06-22",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260622_2328_zbtaxj",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.789563"
+        }
+      ]
     },
     {
       "id": "memory_20260622_2328_zbtaxj",
@@ -673,14 +4739,29 @@
       "updated_at": null,
       "pattern_type": "time_based",
       "frequency": 2,
-      "confidence": 0.38,
+      "confidence": 0.365,
       "archived": false,
-      "embedding": null
+      "embedding": null,
+      "tier": "L1",
+      "last_retrieved": "2026-06-22",
+      "retrieved_count": 0,
+      "related_ids": [
+        {
+          "id": "memory_20260622_2324_gm8jaz",
+          "strength": 0.4,
+          "reasons": [
+            "时间临近"
+          ],
+          "linked_at": "2026-08-16T01:09:48.789563"
+        }
+      ]
     }
   ],
-  "updated_at": "2026-08-12T06:34:43.949232",
+  "updated_at": "2026-08-16T01:09:48.789644",
   "_migrated_from": [
     "facts.json",
     "patterns.json"
-  ]
+  ],
+  "last_decay_run": "2026-08-16",
+  "last_maintenance": "2026-08-16"
 }

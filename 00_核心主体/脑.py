@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.10.1"
+VERSION = "3.12.0"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,7 +17,12 @@ from 器官.手 import call_tool
 from 记忆.记忆引擎 import (load_short_term, save_short_term, load_long_term,
                               decay_patterns, reject_pattern,
                               build_injection_context, get_memory_stats,
-                              add_dialogue_record)
+                              add_dialogue_record, get_context_summaries,
+                              get_recent_tool_ops, get_user_name,
+                              search_dialogue, expand_dialogue,
+                              search_by_tags, search_by_time, search_by_keyword,
+                              _extract_tags, record_retrieval, run_analysis,
+                              set_mood_llm_fn, get_related_memories)
 from 记忆.数据提炼 import refine
 from 记忆.衰减调度 import scheduler_check, manual_cleanup, get_decay_status
 
@@ -136,6 +141,17 @@ _ROUTE_PROMPT_V2 = """你是晓风Agent的意图路由器。分析用户输入�
 
 **默认**: 有金额→record，无金额且无查询触发词→ask_clarify
 
+### 对比分析(analyze)
+用户想了解数据间的比较/统计洞察（跨期对比、最高开支、高频活动、消费时段、周期总结）。
+**优先级最高**：含"比上周/比上个月/对比/总结/经常做什么/最大的开支/什么时候花钱最多/这周我做了什么"等分析词时，判定为分析，**不要**判为财务查询或聊天。
+- action: "analyze"
+- params: 无需结构化参数，原样传入 raw_text
+例: "本周花了多少比上周多吗" → analyze
+例: "这个月最大的开支是什么" → analyze
+例: "我最近经常做什么" → analyze
+例: "我一般什么时候花钱最多" → analyze
+例: "总结一下这周" → analyze
+
 ### 澄清问询(ask_clarify)
 用户发出删除/清空指令但缺少明确目标（没有具体id、内容关键词或时间描述）。
 
@@ -200,7 +216,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 当前时间:{current_time}
 {context_section}
 ## 输出格式
-{{"intent":"record|query|delete|remind|correct|recall|search|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false,"raw_text":"用户原始输入"}},"confidence":0.0~1.0}}
+{{"intent":"record|query|delete|remind|correct|recall|search|analyze|chat|clarify","target":"finance|schedule|memory|null","params":{{"amount":数字或null,"time":"today|yesterday|this_week|this_month|last_week|null","source":"类别或null","scope":"all|today|latest|last_week|keyword|null","keyword":"搜索词或null","time_offset":分钟数或null,"absolute_time":"HH:MM或null","content":"提醒内容或null","detail":true|false,"raw_text":"用户原始输入"}},"confidence":0.0~1.0}}
 
 ## 意图判定规则
 
@@ -282,6 +298,14 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - target为null
 - confidence一般为0.85-0.95（回顾意图明确）
 
+### analyze（对比分析，v3.11.0）
+- 用户想了解跨期对比/统计洞察（比上周多吗、最大的开支、经常做什么、什么时候花钱最多、周期总结）
+- 触发词（含任一即判定为analyze）：比上周、和上周、比上个月、和上个月、对比、比较、总结、周报、小结、经常做什么、经常干什么、最大开支、开销最大、花钱最多、支出最多、什么时候花钱、几点花钱、消费时段、占比、这周我做了什么
+- 🚨 分析优先级：含上述分析词时，**必须**判定为 analyze（即使同时含"花了/花了多少"等财务词——"本周花了多少比上周多吗"是分析，不是财务查询）
+- params 无需结构化参数，raw_text 原样保留即可
+- target 为 null
+- confidence一般为0.85-0.95
+
 ### chat（聊天）
 - ⚠️ chat 优先级规则（v3.9.21，最高优先级）：
   当输入可能同时匹配"工具关键词"和"聊天关键词"时，优先判定为聊天。
@@ -293,6 +317,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
   你会什么功能、你有什么功能、你能帮我什么、你能帮我做什么、你有什么用、你会干嘛、你懂什么、
   你会帮人干什么、你有什么能力、你能处理什么、你能回答什么、
   今天天气不错、今天天气怎么样、讲个笑话、说个笑话、你累吗、你开心吗、
+- 🆕 天气类触发词（v3.11.1）：天气、天气预报、气温、下雨、下雪、晴天、阴天、多云、刮风、温度、降温、升温、台风、雷雨、会下雨吗、天气如何、天气怎么样、明天天气 → **必须判定为 chat**（绝不是 query/finance！）
   你吃了吗、你在吗、在不在、忙吗、有空吗、跟我说说、聊聊、随便聊、聊聊天、
   随便说说、你的功能是什么
 - 🆕 观点/评价类触发词（v3.10.1）：好喝、好吃、好看、好听、好玩、怎么样、觉得、认为、你怎么看、你感觉
@@ -496,7 +521,7 @@ def _route_intent(user_input, timeout=8):
             parsed = json.loads(result)
             if isinstance(parsed, dict):
                 tool = parsed.get("tool")
-                if tool in ("日程", "财务", "聊天", "ask_clarify"):
+                if tool in ("日程", "财务", "聊天", "分析", "ask_clarify"):
                     intent = {"tool": tool}
                     action = parsed.get("action")
                     if action:
@@ -621,6 +646,10 @@ def _call_ollama_3b(prompt, timeout=3):
         return None
 
 
+# v3.12.0: Phase 6 注入情绪检测 LLM 钩子——关键词未命中时用 3b 兜底分类
+set_mood_llm_fn(_call_ollama_3b)
+
+
 def _route_with_3b(user_input, context=None, last_result=None):
     """
     使用 qwen2.5:3b + _ROUTE_PROMPT_3B 进行意图路由（v3.9.6: +结构化上下文）。
@@ -741,15 +770,8 @@ _DIALOGUE_MEMORY_KW = ["记住", "记下", "请记住", "帮我记住"]
 # 消费来源物品表（与财务模块 parse_user_input 一致，保证规则摘要口径统一）
 _DIALOGUE_SOURCE_ITEMS = ["水", "饭", "奶茶", "咖啡", "水果", "外卖", "零食"]
 
-# 基础关键词标签（Phase 3 完整标签生成前的最小实现）
-_DIALOGUE_TAG_RULES = [
-    (["咖啡"], "咖啡"),
-    (["吃饭", "吃", "餐"], "餐饮"),
-    (["买", "购物", "网购", "购买"], "购物"),
-    (["日程", "会议", "提醒", "待办", "任务"], "日程"),
-    (["记账", "花了", "消费", "财务"], "财务"),
-    (["心情", "开心", "难过", "高兴", "郁闷", "烦躁"], "情绪"),
-]
+# v3.10.7: 标签生成统一收敛到 记忆引擎._extract_tags（类型标签 + 实体标签），
+# 此处不再维护独立规则表（原 _DIALOGUE_TAG_RULES 已移除）。
 
 
 def _extract_finance_source(text):
@@ -792,12 +814,40 @@ def _rule_summary(text):
 
 
 def _generate_dialogue_tags(text):
-    """基础关键词标签提取（Phase 3 前的简单实现）"""
-    tags = []
-    for kws, tag in _DIALOGUE_TAG_RULES:
-        if any(kw in text for kw in kws) and tag not in tags:
-            tags.append(tag)
-    return tags[:5]
+    """对话标签提取（v3.10.7: 委托 记忆引擎._extract_tags 统一生成）"""
+    return _extract_tags(text)
+
+
+def _extract_memory_time_expr(text):
+    """
+    从文本提取记忆查询时间词（v3.10.7 时间索引）。
+    返回 今天/昨天/前天/本周/上周/本月/上周三/周三/2026-08-01 等表达式，
+    可直接传给 search_by_time；未找到返回 None（不过滤日期）。
+    """
+    m = re.search(r"(今天|今日|昨天|昨日|前天|"
+                  r"(?:上)?(?:周|星期)[一二三四五六日天]|"   # 上周三/周三（最具体，优先于"上周"）
+                  r"本周|这周|上个礼拜|上周|本月|这个月|"
+                  r"\d{4}-\d{2}-\d{2})", text or "")
+    return m.group(1) if m else None
+
+
+def _boost_memory_retrieval(records):
+    """检索展示时提升记忆置信度（v3.10.8）：对记忆库记录调用 record_retrieval。
+
+    只提升 source 为 memory 的记录（或缺少 source 的原始记忆记录）；
+    失败静默降级，不阻塞主流程。
+    """
+    if not records:
+        return
+    try:
+        for r in records:
+            if not isinstance(r, dict):
+                continue
+            rid = r.get("id")
+            if rid and r.get("source", "memory") == "memory":
+                record_retrieval(rid)
+    except Exception:
+        pass
 
 
 def _summarize_text(text, is_tool_round, role):
@@ -858,6 +908,49 @@ def _handle_chat(user_input, short_term):
     save_short_term(short_term)
     _record_dialogue_archive(user_input, response, is_tool_round=False)
     return response
+
+
+def _extract_expand_keywords(query, expand_re):
+    """
+    从展开请求提取候选关键词（v3.10.6）。
+
+    清洗掉展开触发词/指代词/助词后，按"特异性高→低"生成候选关键词：
+    - 完整清洗结果
+    - 按 怎么/如何/怎样/啥 切分后的实体段（"怎么夸的"→"夸"）
+    - 渐进去掉尾部助词/单字的结果
+
+    返回去重列表；空则返回 []（调用方回退最近 user 记录）。
+    """
+    kw = re.sub(expand_re, "", query)
+    kw = re.sub(r"(那个|这个|刚才|之前|关于|那件|那|的?事|的内容|的细节|一下|一说|说一下|跟|我|你|他|她|我们|你们|跟他|和她|和他|和我|干了|说了|讲了|做了什么|什么|东西|内容|聊了|给我)", "", kw).strip()
+    candidates = []
+
+    def _add(c):
+        c = (c or "").strip()
+        if c and c not in candidates:
+            candidates.append(c)
+
+    if not kw:
+        return candidates
+    _add(kw)
+    # 按疑问词切分，提取实体关键词（"怎么夸的"→"夸"）
+    for splitter in ("怎么", "如何", "怎样", "咋", "啥"):
+        if splitter in kw:
+            for seg in kw.split(splitter):
+                seg = re.sub(r"(的|了|呢|啊|吧|吗|呀|啦)$", "", seg).strip()
+                _add(seg)
+            break
+    # 渐进去掉尾部助词/单字
+    cur = kw
+    for _ in range(8):
+        nxt = re.sub(r"(的|了|呢|啊|吧|吗|呀|啦|怎么|如何|怎样|啥)$", "", cur).strip()
+        if nxt == cur:
+            nxt = cur[:-1].strip()
+        if not nxt:
+            break
+        _add(nxt)
+        cur = nxt
+    return candidates
 
 
 def _generate_tool_reply(result, prefix="好的"):
@@ -1062,22 +1155,67 @@ def _fmt_record(summary, data):
 
     # 构建温暖回复
     if source_friendly and time_word:
-        return f"好嘞，已记下你{time_word}{source_friendly}花的{amt_str}块钱～"
+        reply = f"好嘞，已记下你{time_word}{source_friendly}花的{amt_str}块钱～"
     elif source_friendly:
-        return f"好嘞，已记下你这笔{source_friendly}{amt_str}块钱～"
+        reply = f"好嘞，已记下你这笔{source_friendly}{amt_str}块钱～"
     elif time_word:
-        return f"好嘞，已记下你{time_word}这笔{amt_str}块钱～"
+        reply = f"好嘞，已记下你{time_word}这笔{amt_str}块钱～"
     else:
-        return f"好嘞，已记下你这笔{amt_str}块钱～"
+        reply = f"好嘞，已记下你这笔{amt_str}块钱～"
+
+    # v3.10.10: 记忆记录同步失败时明确告知用户（财务已保存，记忆可能缺失）
+    mem_status = data.get("memory_event") if isinstance(data, dict) else None
+    if mem_status not in (None, "added", "merged"):
+        reply += "（记忆记录同步失败，财务已保存）"
+
+    return reply
+
+
+def build_lightweight_context(user_input="", max_summaries=3, max_tool_ops=3):
+    """
+    Phase 2 渐进披露：轻量上下文注入（v3.10.2）。
+
+    只注入：
+    - 用户名（若已知）
+    - 最近 N 轮对话摘要（来自 对话归档.json）
+    - 最近 N 条工具操作摘要
+
+    不再注入全量 memory.json / facts / patterns（相比 v3.10.1 的全量注入约省 80% 上下文）。
+    完整内容按需通过 expand_dialogue(record_id) 展开。
+
+    返回: 注入用的纯文本（无内容时返回空串）。
+    """
+    parts = []
+    try:
+        name = get_user_name()
+        if name:
+            parts.append(f"当前用户：{name}")
+
+        summaries = get_context_summaries(limit=max_summaries)
+        if summaries:
+            lines = []
+            for i, s in enumerate(summaries, 1):
+                role = "user" if s.get("role") == "user" else "assistant"
+                lines.append(f"{i}. [{role}] {s.get('summary') or ''}")
+            parts.append("最近对话摘要：\n" + "\n".join(lines))
+
+        ops = get_recent_tool_ops(limit=max_tool_ops)
+        if ops:
+            ops_lines = [f"{i}. {o.get('summary') or ''}" for i, o in enumerate(ops, 1)]
+            parts.append("最近操作：\n" + "\n".join(ops_lines))
+    except Exception as e:
+        print(f"⚠️ 轻量上下文构建失败: {e}")
+        return ""
+    return "\n\n".join(parts)
 
 
 def chat_with_xiaofeng(user_input, history):
-    # v3.7.0: 注入记忆上下文
+    # v3.10.2: 渐进披露 —— 只注入轻量摘要上下文（不再全量注入记忆）
     memory_context = ""
     try:
-        memory_context = build_injection_context(user_input, max_tokens=2000)
+        memory_context = build_lightweight_context(user_input)
     except Exception:
-        pass  # 记忆注入失败不影响正常对话
+        pass  # 轻量上下文注入失败不影响正常对话
 
     system_prompt = """
 你是晓风,一个温暖、体贴的私人助手.你的职责是:
@@ -1097,6 +1235,8 @@ def chat_with_xiaofeng(user_input, history):
 """
     if memory_context:
         system_prompt += f"\n\n{memory_context}"
+        system_prompt += ("\n\n--- 以下为详细对话历史（用户追问细节时才展开）---\n"
+                          "如需了解某条记录的完整内容，请使用 expand_dialogue(record_id) 工具。")
 
     messages = [{"role": "system", "content": system_prompt}]
     for turn in history[-10:]:
@@ -1542,6 +1682,60 @@ def main():
             speak(reply)
             continue
 
+        # ============================================================
+        # v3.11.0: 确定性预路由 —— 对比分析类意图（Phase 5）
+        # "本周花了多少比上周多吗" / "这个月最大的开支" / "我最近经常做什么" /
+        # "我一般什么时候花钱最多" / "总结一下这周" → 记忆引擎 run_analysis
+        # LLM(3b) 对这类交叉统计极不稳定（常误判为财务查询），用确定性匹配兜底。
+        # ============================================================
+        _ANALYSIS_RE = re.compile(
+            r"(?:比(?:上周|上礼拜|上星期|上个月|上月|本周|这周|本月|这个月)|"
+            r"(?:本周|这周|本月|这个月)[^，。？!?\n]{0,8}?(?:比|对比|比较|多吗|少吗|大吗|小吗|涨|降|增|减)|"
+            r"对比|比较|相比|差别|差距|"
+            r"总结|周报|小结|概况|"
+            r"经常|频繁|常做|常干什么|老是做|"
+            r"最大(?:的)?开支|开支最大|开销最大|花(?:得|的)最多|花钱最多|支出最多|消费最多|最贵(?:的)?一笔|"
+            r"什么时候(?:花|消费|开销|买)|几点(?:花|消费|开销)|(?:花|消费|开销).{0,4}时段|"
+            r"(?:这周|本周)[^，。？!?\n]{0,10}?(?:做了|干了|做了什么|发生了什么|有什么|都做了|都干了)|"
+            r"分类花|类别花|哪类|占比)"
+        )
+        _ANALYSIS_EXCL_RE = re.compile(
+            r"(记住|记下|请记住|帮我记住|添加|新增|安排|创建|预约|删除|删掉|取消|"
+            r"搜索|查找|查一下|查看|显示|提醒|叫我|叫醒|通知|"
+            r"天气|天气预报|气温|下雨|下雪|晴天|阴天|多云|刮风|温度|降温|升温|台风|雷雨)"
+        )
+        if _ANALYSIS_RE.search(user_input) and not _ANALYSIS_EXCL_RE.search(user_input):
+            print(f"[预路由] 检测到对比分析意图: {user_input!r}")
+            try:
+                reply = run_analysis(user_input)
+                if not reply:
+                    reply = ("你想分析哪方面的数据呢？比如「本周花了多少比上周多吗」"
+                             "「这个月最大的开支」「我最近经常做什么」「总结一下这周」")
+            except Exception as e:
+                print(f"⚠️ 对比分析失败:{e}")
+                reply = "对比分析暂时不可用，稍后再试试吧"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # ============================================================
+        # v3.11.1: 确定性预路由 —— 天气类问题 → chat
+        # "今天天气怎么样" 曾被 3b 判为 query+target=null → 默认财务查询 → "没有查到记录"
+        # 天气意图当前无外部服务，直接走聊天（7b 自然回应）；确定性匹配兜底（不依赖 LLM）。
+        # 排除消费/记账/日程等强意图："下雨天花了20打车" 仍走财务记账。
+        # ============================================================
+        _WEATHER_RE = re.compile(r"(天气|天气预报|气温|下雨|下雪|晴天|阴天|多云|刮风|温度|降温|升温|台风|雷雨)")
+        _WEATHER_EXCL_RE = re.compile(
+            r"(花了|消费|记账|买了|付了|支出|费用|报销|预算|金额|多少钱|"
+            r"任务|待办|会议|提醒|日程|"
+            r"记住|记一下|帮我记|记得|删除|删掉|取消)"
+        )
+        if _WEATHER_RE.search(user_input) and not _WEATHER_EXCL_RE.search(user_input):
+            print(f"[预路由] 检测到天气问题 → chat: {user_input!r}")
+            _handle_chat(user_input, short_term)
+            continue
+
         # v3.9.27: 确定性预路由——"添加/新增/安排/创建 + 日程词" 直接走日程模块，
         # 不依赖 LLM 路由（"添加会议明天下午3点"曾被误判为财务记账）
         _ADD_PREFIX_RE = r"(?:添加|新增|安排|创建|预约|订)\s*(?:一个)?\s*"
@@ -1588,12 +1782,16 @@ def main():
                 from 记忆.记忆引擎 import get_memories  # load_long_term 已在模块顶层导入，勿在函数内重复 import
                 mems = get_memories(limit=50)
                 for m in mems:
-                    c = (m.get("content") or "") + (m.get("title") or "")
-                    for pat in (r"我叫([一-鿿]+)", r"我的名字(?:是|叫)?([一-鿿]+)",
-                                r"(?:我是|我是叫)([一-鿿]{1,4})"):
-                        mm = re.search(pat, c)
-                        if mm:
-                            name = mm.group(1).strip()
+                    # v3.10.2: content 与 title 分开匹配，避免拼接导致贪婪捕获（"我叫霖我叫霖"→"霖我叫霖"）
+                    for field in ("content", "title"):
+                        c = m.get(field) or ""
+                        for pat in (r"我叫([一-鿿]{1,4})", r"我的名字(?:是|叫)?([一-鿿]{1,4})",
+                                    r"(?:我是|我是叫)([一-鿿]{1,4})"):
+                            mm = re.search(pat, c)
+                            if mm:
+                                name = mm.group(1).strip()
+                                break
+                        if name:
                             break
                     if name:
                         break
@@ -1615,29 +1813,66 @@ def main():
             _record_tool_operation(short_term, user_input, reply)
             continue
 
-        # (C) 搜索/找 → search+memory（关键词搜索）
+        # (J) 关联记忆查询（v3.12.0, Phase 6）—— "咖啡和什么相关"/"查看关联记忆" → get_related_memories
+        if re.search(r"(关联记忆|相关记忆|和什么相关|和什么有关|跟什么相关|跟什么有关|的关联|关联的)", user_input) \
+                and not re.search(r"(添加|新增|记住|记下|请记住|删除|删掉|取消|提醒|会议|待办|日程|记账|花了)", user_input):
+            print(f"[预路由] 检测到关联记忆查询: {user_input!r}")
+            try:
+                topic = re.sub(r"(关联记忆|相关记忆|和什么相关|和什么有关|跟什么相关|跟什么有关|的关联|关联的|"
+                               r"记忆|查看|看看|查询|查一下|有什么|一下|和|与|跟|的)", "", user_input).strip()
+                if topic:
+                    cands = [h for h in search_by_keyword(topic, limit=5) if h.get("source") == "memory"]
+                    mem_ids = [h["id"] for h in cands]
+                else:
+                    cands = []
+                    mem_ids = [m["id"] for m in search_by_time(None, limit=8)]
+                if not mem_ids:
+                    reply = "目前还没有可查看关联的记忆～"
+                else:
+                    lines = []
+                    for mid in mem_ids:
+                        rels = get_related_memories(mid, limit=5)
+                        if not rels:
+                            continue
+                        _boost_memory_retrieval(rels)  # v3.10.8: 关联检索同样提升置信度
+                        src = next((h for h in cands if h["id"] == mid), None)
+                        label = (src.get("title") or src.get("content", ""))[:16] if src else mid[-6:]
+                        rparts = []
+                        for r in rels:
+                            rtitle = (r.get("title") or r.get("content", ""))[:20]
+                            rparts.append(rtitle)
+                        lines.append(f"「{label}」关联: " + " | ".join(rparts))
+                    reply = "\n".join(lines) if lines else "这些记忆暂时还没有建立关联～"
+            except Exception as e:
+                print(f"⚠️ 关联记忆查询失败:{e}")
+                reply = "关联记忆查询暂时不可用"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # (C) 搜索/找 → search+memory（v3.10.7: search_by_keyword 搜记忆 + 对话归档）
+        # 排除 日程/待办/提醒/记账/花了（"搜索会议"仍走关键词搜索，满足验收 #5）
         if re.search(r"(搜索|搜一下|搜|查找|找一下|帮我找|找找)", user_input) and not re.search(
-                r"(日程|会议|待办|提醒|记账|花了)", user_input):
+                r"(日程|待办|提醒|记账|花了)", user_input):
             print(f"[预路由] 检测到记忆搜索意图: {user_input!r}")
             kw = re.sub(r"^(搜索|搜一下|搜|查找|找一下|帮我找|找找)\s*(关于)?\s*", "", user_input)
             kw = re.sub(r"(的记忆|的记忆有|相关记忆|里.*|中的.*)$", "", kw).strip()
             if not kw:
                 kw = user_input.strip()
             try:
-                from 记忆.记忆引擎 import get_memories
-                mems = get_memories(limit=50)
-                hits = [m for m in mems if kw in (m.get("content") or "")
-                        or kw in (m.get("title") or "")
-                        or any(kw in (t or "") for t in (m.get("tags") or []))]
+                hits = search_by_keyword(kw, limit=10)
+                if hits:
+                    _boost_memory_retrieval(hits)  # v3.10.8: 检索提升置信度
                 if not hits:
                     reply = f"没有找到关于「{kw}」的记忆～"
                 else:
-                    lines = [f"🔍 找到 {len(hits)} 条相关记忆:"]
-                    for m in hits[:8]:
-                        title = m.get("title") or m.get("content", "")
-                        date = m.get("date", "")
-                        sub = m.get("subtype", "")
-                        lines.append(f"  [{date}] ({sub}) {title}")
+                    lines = [f"🔍 找到 {len(hits)} 条相关内容:"]
+                    for h in hits[:8]:
+                        date = h.get("date") or ""
+                        src = "记忆" if h.get("source") == "memory" else "对话"
+                        title = h.get("title") or h.get("content", "")
+                        lines.append(f"  [{date}] ({src}) {title}")
                     reply = "\n".join(lines)
             except Exception as e:
                 print(f"⚠️ 记忆搜索失败:{e}")
@@ -1647,30 +1882,54 @@ def main():
             _record_tool_operation(short_term, user_input, reply)
             continue
 
-        # (D) 查看/回忆记忆 → query+memory（时间筛选）
+        # (D) 查看/回忆记忆 → query+memory（v3.10.7: search_by_time 时间索引）
         if re.search(r"(查看|看看|显示|查一下|查询|翻看).*(记忆|回忆)|(记忆|回忆).*(查看|看看|查询|查一下)|"
                      r"今天的记忆|最近的记忆|昨天的事|上次.*记忆|"
                      r"回忆(一下|一下昨天|昨天|今天|最近|上周|本月|起来)|"
                      r"看看.*(我记得|记了|记忆)|查一下.*(记了|记忆)", user_input):
             print(f"[预路由] 检测到记忆查询意图: {user_input!r}")
-            time_f = None
-            if re.search(r"(今天|今日)", user_input):
-                time_f = "today"
-            elif re.search(r"(昨天|昨日)", user_input):
-                time_f = "yesterday"
-            elif re.search(r"(本周|这周)", user_input):
-                time_f = "this_week"
-            elif re.search(r"(上周)", user_input):
-                time_f = "last_week"
-            elif re.search(r"(本月|这个月)", user_input):
-                time_f = "this_month"
+            time_expr = _extract_memory_time_expr(user_input)
             try:
-                from 记忆.记忆引擎 import get_memories
-                mems = get_memories(time_filter=time_f, limit=10)
+                mems = search_by_time(time_expr, limit=10)
+                if mems:
+                    _boost_memory_retrieval(mems)  # v3.10.8: 检索提升置信度
                 if not mems:
                     reply = "目前还没有相关的记忆记录～"
                 else:
                     lines = ["🧠 记忆记录:"]
+                    for m in mems:
+                        title = m.get("title") or m.get("content", "")
+                        date = m.get("date", "")
+                        sub = m.get("subtype", "")
+                        lines.append(f"  [{date}] ({sub}) {title}")
+                    reply = "\n".join(lines[:12])
+            except Exception as e:
+                print(f"⚠️ 记忆查询失败:{e}")
+                reply = "记忆查询暂时不可用"
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # (I) 时间+发生了什么 → query+memory（v3.10.7，按日期/星期回查）
+        #   "上周三发生了什么" / "周一干了什么" / "昨天都做了啥" → search_by_time
+        _TIME_RECALL_RE = re.compile(
+            r"(?:今天|今日|昨天|昨日|前天|本周|这周|上周|本月|这个月|"
+            r"(?:上)?(?:周|星期)[一二三四五六日天])"
+            r"[^。？!?\n]*?(?:发生了什么|发生了什么事|干了什么|做了什么|做了啥|"
+            r"有什么大事|有哪些(?:事)?|记录了什么|记录了些什么|都做了些什么)"
+        )
+        if _TIME_RECALL_RE.search(user_input) and not re.search(r"(日程|待办|提醒|记账|花了)", user_input):
+            print(f"[预路由] 检测到时间回查意图: {user_input!r}")
+            time_expr = _extract_memory_time_expr(user_input)
+            try:
+                mems = search_by_time(time_expr, limit=10)
+                if mems:
+                    _boost_memory_retrieval(mems)  # v3.10.8: 检索提升置信度
+                if not mems:
+                    reply = f"{time_expr or '那段时间'}好像没什么记忆记录～"
+                else:
+                    lines = [f"🧠 {time_expr or '那个时段'}的记录:"]
                     for m in mems:
                         title = m.get("title") or m.get("content", "")
                         date = m.get("date", "")
@@ -1703,23 +1962,31 @@ def main():
         elif _DEBUG:
             _debug_log(f"[DEBUG-预路由] (E)观点 未命中: {user_input!r}（无'你觉得/好喝吗/怎么样'等观点词）→ 继续后续路由")
 
-        # (F) 财务记账必须有金额 —— "买了/消费/花了" 无金额 → 闲聊（购物陈述），不是记账
+        # (F) 消费金额判定（v3.10.4 增强）—— "买了/消费/花了"+金额 → 财务记账；无金额 → 闲聊（购物陈述）
         _F_VERB_RE = re.compile(r"(买了|消费|花了|支付|用了)")
-        _F_EXCL_RE = re.compile(r"(日程|会议|待办|任务|提醒|记住|记得|记忆|查看|查询|显示|搜索|多少|一共|合计|删|取消|叫我|帮我买|买一下|有没有|账单|报表)")
+        _F_EXCL_RE = re.compile(r"(日程|会议|待办|任务|提醒|记住|记得|记忆|查看|查询|显示|搜索|多少|一共|合计|删|取消|叫我|帮我买|买一下|有没有|账单|报表|吗|呢|？|\?)")
         f_verb = _F_VERB_RE.search(user_input)
         f_has_amount = _contains_amount(user_input)
         f_excl = _F_EXCL_RE.search(user_input)
-        if f_verb and not f_has_amount and not f_excl:
+        if f_verb and not f_excl:
+            if f_has_amount:
+                # v3.10.4: 消费带金额 → 确定性记账（绕过 3b 误判 memory，"买了根雪糕花两块钱" 必进财务）
+                print(f"[预路由] 消费带金额 → 财务记账: {user_input!r}")
+                result = call_tool("财务", user_input)
+                reply = _generate_tool_reply(result)
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+            # 无金额 → 闲聊（购物陈述）
             print(f"[预路由] 无金额消费陈述 → chat: {user_input!r}")
             _handle_chat(user_input, short_term)
             continue
         elif _DEBUG:
             if not f_verb:
-                _debug_log(f"[DEBUG-预路由] (F)无金额消费 未命中: {user_input!r}（无'买了/消费/花了'等消费动词）→ 继续")
-            elif f_has_amount:
-                _debug_log(f"[DEBUG-预路由] (F)无金额消费 触发但检测到金额: {user_input!r} → 不劫持，交给记账路由（record+finance）")
+                _debug_log(f"[DEBUG-预路由] (F)消费金额 未命中: {user_input!r}（无'买了/消费/花了'等消费动词）→ 继续")
             else:
-                _debug_log(f"[DEBUG-预路由] (F)无金额消费 触发但被排除词拦截: {user_input!r} 含 {f_excl.group(0)!r} → 不劫持，交给正常路由（日程/记忆/查询/提醒）")
+                _debug_log(f"[DEBUG-预路由] (F)消费金额 触发但被排除词拦截: {user_input!r} 含 {f_excl.group(0)!r} → 不劫持（日程/记忆/查询/提醒/疑问）")
 
         # (G) "有+日程词" 自然表达 → 日程模块（"明天有个重要的会议"/"后天有个任务"/"下周一有个面试"）
         _G_ITEM_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(会议|事件|日程|安排|约会|聚会|面试|上课|活动|任务|待办|事项|todo)", re.IGNORECASE)
@@ -1739,6 +2006,87 @@ def main():
                 _debug_log(f"[DEBUG-预路由] (G)有+日程词 未命中: {user_input!r}（无'有+会议/任务'等日程词模式）→ 继续")
             else:
                 _debug_log(f"[DEBUG-预路由] (G)有+日程词 触发但被排除词拦截: {user_input!r} 含 {g_excl.group(0)!r} → 不劫持（查询/提醒/财务）")
+
+        # (H) 详细展开对话 → expand_dialogue（渐进披露按需展开，v3.10.2 / 触发增强 v3.10.3）
+        # v3.10.3: 结构化触发模式（详细说一下...干了什么 / 展开说一下 / 把那件事详细说说 / 具体说说...那件事 / 详细说说他...）
+        _EXPAND_RE = re.compile(
+            r"(?:"
+            r"详细说[一下]?[^，。！？]{0,12}?(?:干了什么|说了什么|讲了什么|做了什么)|"
+            r"详细讲讲[^，。！？]{0,12}?(?:干了什么|说了什么|讲了什么|做了什么)|"
+            r"展开说[一下]?|"
+            r"展开讲讲|展开|"
+            r"具体说说[^，。！？]{0,10}?(?:那件事|这件事|刚才|之前|聊了什么|说了什么)|"
+            r"把那?(?:件事|句话|段话)[^，。！？]{0,6}?(?:详细说说|详细讲|展开|展开一下)|"
+            r"详细说说\s*(?:他|她|我们|你们|大家)|"
+            r"详细地\s*(?:说|讲|讲讲|一说|说一下|说说)|"                      # v3.10.4: 详细地说一说 / 详细地讲讲
+            r"详细地\s*(?:跟我|和我说|跟我说|给我)[^，。！？]{0,6}?(?:说|一说|讲讲|说说|讲)|"  # v3.10.4: 详细地跟我说一说
+            r"跟\s*我[^，。！？]{0,6}?详细|"                                   # v3.10.4: 跟我详细说说 / 跟我说一下详细
+            r"详细跟(?:我|我们)[^，。！？]{0,6}?(?:说|讲|说说|讲讲|一说|说一下|讲一下)|"  # v3.10.5: 详细跟我说一说 / 详细跟我讲一下
+            r"详细给(?:我|我们)[^，。！？]{0,6}?(?:说|讲|说说|讲讲|一说|说一下|讲一下)|"  # v3.10.5: 详细给我讲一下
+            r"跟(?:我|我们)详细[^，。！？]{0,6}?(?:说|讲|说说|讲讲|一说|说一下|讲一下)|"  # v3.10.5: 跟我详细说说
+            r"详细(?:说说|讲讲)[^，。！？]{0,8}?(?:刚才|之前|那件事|这件事)|"  # v3.10.5: 详细说说刚才的事
+            r"详细说说|详细讲讲|详细讲|详细说|具体说说|具体讲讲|细说|说详细|详细内容|原话|原文|当时具体|当时说了|当时说的"
+            r")"
+        )
+        _EXPAND_EXCL_RE = re.compile(r"(日程|会议|待办|记账|花了|消费|财务|删除|查询|查看|显示|搜索|多少钱|提醒|任务)")
+        expand_hit = _EXPAND_RE.search(user_input)
+        expand_excl = _EXPAND_EXCL_RE.search(user_input)
+        if expand_hit and not expand_excl:
+            print(f"[预路由] 检测到展开请求 → expand_dialogue: {user_input!r} (匹配模式: {expand_hit.group(0)!r})")
+            _debug_log(f"[DEBUG-预路由] (H)展开 触发, 匹配子串={expand_hit.group(0)!r}")
+            target = None
+            # v3.10.6: 从请求提取候选关键词，逐个搜索（优先 user 记录，跳过与当前查询相同的记录）
+            for cand in _extract_expand_keywords(user_input, _EXPAND_RE):
+                try:
+                    hits = search_dialogue(cand, limit=10)
+                except Exception:
+                    hits = []
+                if not hits:
+                    continue
+                # 优先 user 记录；跳过与当前查询相同的记录（防止上一轮残留查询污染结果）
+                user_hit = next((h for h in hits if h.get("role") == "user"
+                                 and h.get("original_text") != user_input), None)
+                other_hit = next((h for h in hits if h.get("original_text") != user_input), None)
+                best = user_hit or other_hit
+                if best:
+                    target = best
+                    _debug_log(f"[展开] 关键词匹配: {cand!r} → 找到记录: {best.get('id')}")
+                    break
+            if not target:
+                # 泛化引用 → 优先最近一条 user 记录（避免展开助手工具回复/摘要），无则最近一条
+                try:
+                    recent_user = None
+                    for s in get_context_summaries(limit=10):
+                        if s.get("role") == "user":
+                            recent_user = s
+                            break
+                    if recent_user:
+                        target = expand_dialogue(recent_user["id"])
+                    else:
+                        recent = get_context_summaries(limit=1)
+                        if recent:
+                            target = expand_dialogue(recent[0]["id"])
+                except Exception:
+                    target = None
+            if target:
+                ts = (target.get("timestamp") or "").replace("T", " ")[:16]
+                role = "你说" if target.get("role") == "user" else "晓风说"
+                # v3.10.4: 展示 original_text（而非 summary）；缺失时给出占位而非回落摘要
+                text = target.get("original_text") or "（该条记录无原文）"
+                reply = f"📖 {role}：\n「{text}」\n（{ts}）"
+                _debug_log(f"[DEBUG-预路由] (H)展开 命中记录 {target.get('id')}（role={target.get('role')}）→ 已展开 original_text")
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+            else:
+                # v3.10.3: 未找到可展开的记录 → 回退正常路由（finance/schedule/chat），不让展开空转
+                _debug_log(f"[DEBUG-预路由] (H)展开 触发但未找到记录 → 回退正常路由（不拦截）")
+        elif _DEBUG:
+            if not expand_hit:
+                _debug_log(f"[DEBUG-预路由] (H)展开 未命中: {user_input!r}（无展开请求词）→ 继续")
+            else:
+                _debug_log(f"[DEBUG-预路由] (H)展开 触发但被排除词拦截: {user_input!r} 含 {expand_excl.group(0)!r} → 不劫持（财务/日程/查询）")
 
         # v3.9.6: 提取上一轮用户输入 + 上一轮路由结果作为结构化上下文
         last_user_context = None
@@ -1800,6 +2148,22 @@ def main():
                     _record_tool_operation(short_term, user_input, reply)
                 continue
 
+            # ---- analyze: 对比分析（v3.11.0, Phase 5）----
+            if intent_3b == "analyze":
+                print("🔧 正在分析数据（3b路由）...")
+                try:
+                    reply = run_analysis(user_input)
+                    if not reply:
+                        reply = ("你想分析哪方面的数据呢？比如「本周花了多少比上周多吗」"
+                                 "「这个月最大的开支」「我最近经常做什么」「总结一下这周」")
+                except Exception as e:
+                    print(f"⚠️ 对比分析失败:{e}")
+                    reply = "对比分析暂时不可用，稍后再试试吧"
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+
             # ---- query: 查询 ----
             elif intent_3b == "query":
                 if target_3b == "finance":
@@ -1812,12 +2176,15 @@ def main():
                     # v3.9.30: "查看今天的记忆" → 查询记忆库
                     print("🧠 正在查询记忆（3b路由）...")
                     try:
-                        from 记忆.记忆引擎 import get_memories
                         time_f = params_3b.get("time") if isinstance(params_3b, dict) else None
                         scope = params_3b.get("scope") if isinstance(params_3b, dict) else None
                         if scope == "latest":
                             time_f = "last_week"
-                        mems = get_memories(time_filter=time_f, limit=10)
+                        if not time_f:
+                            time_f = _extract_memory_time_expr(user_input)
+                        mems = search_by_time(time_f, limit=10)
+                        if mems:
+                            _boost_memory_retrieval(mems)  # v3.10.8: 检索提升置信度
                         if not mems:
                             reply = "目前还没有相关的记忆记录～"
                         else:
@@ -1989,23 +2356,19 @@ def main():
                     keyword = re.sub(r"^(搜索|查找|找一下|搜一下|有没有关于)\s*", "", user_input)
                     keyword = re.sub(r"(关于.*的记忆|的记忆|相关记忆)$", "", keyword).strip()
                 try:
-                    from 记忆.记忆引擎 import get_memories
-                    mems = get_memories(limit=10)
-                    if keyword:
-                        hits = [m for m in mems if keyword in (m.get("content") or "")
-                                or keyword in (m.get("title") or "")
-                                or keyword in (m.get("tags") or [])]
-                    else:
-                        hits = mems
+                    # v3.10.7: search_by_keyword 搜记忆 + 对话归档（含标签匹配）
+                    hits = search_by_keyword(keyword, limit=10)
+                    if hits:
+                        _boost_memory_retrieval(hits)  # v3.10.8: 检索提升置信度
                     if not hits:
                         reply = f"没有找到关于「{keyword}」的记忆～"
                     else:
-                        lines = [f"🔍 找到 {len(hits)} 条相关记忆:"]
-                        for m in hits[:10]:
-                            title = m.get("title") or m.get("content", "")
-                            date = m.get("date", "")
-                            sub = m.get("subtype", "")
-                            lines.append(f"  [{date}] ({sub}) {title}")
+                        lines = [f"🔍 找到 {len(hits)} 条相关内容:"]
+                        for h in hits[:10]:
+                            date = h.get("date") or ""
+                            src = "记忆" if h.get("source") == "memory" else "对话"
+                            title = h.get("title") or h.get("content", "")
+                            lines.append(f"  [{date}] ({src}) {title}")
                         reply = "\n".join(lines)
                 except Exception as e:
                     print(f"⚠️ 记忆搜索失败:{e}")
@@ -2043,15 +2406,26 @@ def main():
             # ---- recall: 回顾最近操作 ----
             elif intent_3b == "recall":
                 print("🔍 正在回顾最近操作（3b路由）...")
-                # 从短期记忆中提取最近几轮对话
+                # v3.10.2: 优先从对话归档取最近摘要（可回顾 20 轮之外的记录），归档为空则回退短期记忆
                 recent_turns = []
-                for turn in short_term[-12:]:  # 最近 12 轮（含工具操作记录）
-                    role = turn.get("role", "")
-                    content = turn.get("content", "")
-                    if role == "user":
-                        recent_turns.append(f"你说：{content}")
-                    elif role == "assistant":
-                        recent_turns.append(f"晓风回复：{content}")
+                try:
+                    for s in get_context_summaries(limit=8):
+                        role = s.get("role", "")
+                        content = (s.get("summary") or "")
+                        if role == "user":
+                            recent_turns.append(f"你说：{content}")
+                        else:
+                            recent_turns.append(f"晓风回复：{content}")
+                except Exception:
+                    recent_turns = []
+                if not recent_turns:
+                    for turn in short_term[-12:]:  # 最近 12 轮（含工具操作记录）
+                        role = turn.get("role", "")
+                        content = turn.get("content", "")
+                        if role == "user":
+                            recent_turns.append(f"你说：{content}")
+                        elif role == "assistant":
+                            recent_turns.append(f"晓风回复：{content}")
                 if not recent_turns:
                     reply = "刚才我们还没有对话记录。"
                 else:
@@ -2224,6 +2598,13 @@ def main():
                     intent = {"tool": "日程", "action": "delete_reminder",
                               "params": {"query": user_input},
                               "confidence": 0.6, "explanation": "降级删除关键词匹配"}
+            # v3.11.0: 对比分析降级匹配（须在财务之前：含"比上周"的分析查询也含"花了"）
+            elif any(kw in user_input for kw in
+                     ["比上周", "和上周", "比上个月", "和上个月", "对比", "总结",
+                      "经常做", "最大开支", "开销最大", "花钱最多", "什么时候花",
+                      "这周我做了", "本周总结", "周报", "占比", "分类花", "类别花"]):
+                intent = {"tool": "分析", "action": "analyze",
+                          "confidence": 0.5, "explanation": "降级分析关键词匹配"}
             elif any(kw in user_input for kw in FINANCE_KW):
                 # v3.8.1: 区分记录和查询意图
                 QUERY_KW = ["查看", "查一下", "查", "显示", "统计", "花了多少",
@@ -2279,6 +2660,8 @@ def main():
             _last_router_result = {"intent": act_map.get(action, "query"), "target": "schedule"}
         elif tool == "聊天":
             _last_router_result = {"intent": "chat", "target": None}
+        elif tool == "分析":
+            _last_router_result = {"intent": "analyze", "target": None}
         elif tool == "ask_clarify":
             target_type = intent.get("params", {}).get("target_type")
             _last_router_result = {"intent": "delete", "target": target_type}
@@ -2335,6 +2718,21 @@ def main():
                 print("🔧 正在处理财务指令...")
                 result = call_tool("财务", user_input)
             reply = _generate_tool_reply(result)
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+
+        elif tool == "分析":
+            # v3.11.0: 对比分析（Phase 5）——记忆引擎 run_analysis 统一下发
+            print("🔧 正在分析数据...")
+            try:
+                reply = run_analysis(user_input)
+                if not reply:
+                    reply = ("你想分析哪方面的数据呢？比如「本周花了多少比上周多吗」"
+                             "「这个月最大的开支」「我最近经常做什么」「总结一下这周」")
+            except Exception as e:
+                print(f"⚠️ 对比分析失败:{e}")
+                reply = "对比分析暂时不可用，稍后再试试吧"
             print(reply)
             speak(reply)
             _record_tool_operation(short_term, user_input, reply)
