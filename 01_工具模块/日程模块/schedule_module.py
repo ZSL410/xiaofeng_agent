@@ -1218,9 +1218,11 @@ def process_command(text):
     # 没有"添加/创建"等显式动作词，但"有+日程/会议/任务"明显是记录日程/待办的请求
     # 中间允许形容词等修饰（"有个重要的会议"），最多 10 字
     HAS_EVENT_WORD_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(会议|事件|日程|安排|约会|聚会|面试|上课|活动|开会)")
-    HAS_TODO_WORD_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(任务|待办|事项|todo)", re.IGNORECASE)
-    # 排除：查询/疑问（"有什么会议"）、财务（"会议支出花了X元"）、提醒（"记得有个会议"）
-    _HAS_QUERY_NOISE_RE = re.compile(r"(什么|哪些|有没有|几个|吗|呢|多少钱)")
+    HAS_TODO_WORD_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(任务|待办|代办|事项|todo)", re.IGNORECASE)
+    # 排除：查询/疑问（"有什么会议"/"显示所有待办"）、财务（"会议支出花了X元"）、提醒（"记得有个会议"）
+    # v3.13.8: 补查询词——"显示所有待办"中的"有"（"所有"）曾误匹配"有+日程词"导致反问类型
+    _HAS_QUERY_NOISE_RE = re.compile(r"(什么|哪些|有没有|几个|吗|呢|多少钱|"
+                                     r"显示|查看|列出|展示|查询|查一下|所有|全部)")
     _HAS_REMIND_NOISE_RE = re.compile(r"(提醒|记得|叫我|叫醒|喊我|通知|闹钟|到时|到点)")
     if (HAS_EVENT_WORD_RE.search(text) or HAS_TODO_WORD_RE.search(text)) \
             and not _HAS_QUERY_NOISE_RE.search(text) \
@@ -1362,7 +1364,7 @@ def process_command(text):
     # ==================== 待办事项 ====================
 
     # 添加待办
-    m = re.search(r"(添加|新增|创建|加一个)\s*(任务|待办|事项|todo)\s*(.*)", text, re.IGNORECASE)
+    m = re.search(r"(添加|新增|创建|加一个)\s*(任务|待办|代办|事项|todo)\s*(.*)", text, re.IGNORECASE)
     if m:
         raw = m.group(3).strip()
         # 尝试提取到期时间（链式调用：先日期后时间，传递剩余文本以清洁标题）
@@ -1397,9 +1399,10 @@ def process_command(text):
         return _complete_todo(int(m.group(3)))
 
     # 查看待办
+    # v3.13.8: "代办"是"待办"的常见缩写/错别字，一并作为查询触发词
     if any(kw in text for kw in ["显示待办", "查看待办", "列出待办", "待办列表",
                                    "我的任务", "显示任务", "查看任务",
-                                   "有什么任务", "待办事项", "待办", "todo",
+                                   "有什么任务", "待办事项", "待办", "代办", "todo",
                                    "tasks"]):
         show_all = "全部" in text or "所有" in text
         # 日期限定：今天/明天/后天 → 仅显示该日期的待办（v3.9.25）

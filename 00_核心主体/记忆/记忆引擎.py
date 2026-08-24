@@ -281,6 +281,15 @@ def _date_range_for(time_filter):
         else:
             end = (datetime(now.year, now.month + 1, 1) - timedelta(days=1)).strftime("%Y-%m-%d")
         return start, end
+    # v3.13.11: 支持上个月（时间回查"上个月"使用）
+    if time_filter in ("last_month", "上个月"):
+        if now.month == 1:
+            start = f"{now.year - 1}-12-01"
+            end = f"{now.year - 1}-12-31"
+        else:
+            start = f"{now.year}-{now.month - 1:02d}-01"
+            end = (datetime(now.year, now.month, 1) - timedelta(days=1)).strftime("%Y-%m-%d")
+        return start, end
     return None, None
 
 
@@ -1020,10 +1029,15 @@ def search_by_keyword(keyword, limit=10) -> list:
     ddata = _load_dialogue_raw()
     drecs = sorted(ddata.get("records", []), key=_dialogue_sort_key, reverse=True)
     for r in drecs:
-        # v3.10.9: 跳过搜索自噪音——"工具操作：搜索X"（用户搜索动作）与"确认：🔍 找到…"（助手搜索回复）
-        # 否则每次搜索都会归档此类记录，污染后续搜索结果、淹没真正的内容记录。
+        # v3.10.9 / v3.13.9: 跳过搜索自噪音——工具操作摘要（"工具操作：搜索X"/"添加日程："/"记账："…）
+        # 与助手确认回声（"确认：🔍 找到…"/"确认：✅ 已添加待办"/"确认：🧠 记忆记录…"）。
+        # 否则每次搜索都会归档此类记录，污染搜索结果、淹没真正的内容记录。
         _s = (r.get("summary") or "").strip()
-        if _s.startswith("工具操作：") or _s.startswith("确认：🔍"):
+        if _s.startswith(_SEARCH_NOISE_PREFIXES):
+            continue
+        # v3.13.12/3.13.14: 跳过时间回查/记忆查询/展开对话摘要回声（归档污染搜索）
+        if ("做了这些事" in _s or "的记忆记录" in _s or _s.startswith("找到 ")
+                or "📖 你说" in _s or "📖 晓风说" in _s):
             continue
         hay = " ".join(str(r.get(f) or "") for f in ("original_text", "summary"))
         if kw in hay or any(kw in (t or "") for t in (r.get("tags") or [])):
@@ -1045,6 +1059,345 @@ def search_by_keyword(keyword, limit=10) -> list:
 
     results.sort(key=_key)
     return results[:limit]
+
+
+# ===================== 检索答案格式化（v3.13.9, Fix A） =====================
+
+# 搜索噪音前缀：工具操作摘要与助手确认回声（搜索/记忆查询/记账/日程 都会归档此类记录）
+_SEARCH_NOISE_PREFIXES = (
+    "工具操作：", "记账：", "添加日程：", "添加待办：", "记忆：", "日程：",
+    "确认：🔍", "确认：🟢", "确认：⚪", "确认：🧠", "确认：✅", "确认：📋", "确认：📅",
+)
+
+# 通用操作回声：内容仅表述"添加待办/记账"而无具体信息（凌晨添加待办 / 记账）
+_GENERIC_ECHO_RE = re.compile(
+    r"^(?:凌晨|早上|上午|中午|下午|晚上|深夜)?\s*(?:添加|新增|创建)\s*(?:待办|日程|事件|任务)$|"
+    r"^(?:凌晨|早上|上午|中午|下午|晚上|深夜)?\s*记账$"
+)
+
+
+def _display_text(record):
+    """从记忆/搜索记录中选取最可读的展示文本（v3.13.9）。
+
+    事实 → content；事件/其他 → 优先 detail（含具体信息，如"添加待办「买咖啡豆」"），
+    再 content；通用操作回声（凌晨添加待办 / 记账）视为低信息量跳过 → 回退 title。
+    """
+    if not isinstance(record, dict):
+        return ""
+    subtype = record.get("subtype") or ""
+    content = (record.get("content") or "").strip()
+    detail = (record.get("detail") or "").strip()
+    title = (record.get("title") or "").strip()
+    if subtype == "fact":
+        return content or detail or title
+    if subtype == "emotion":
+        # v3.13.12: 情绪记忆展示为「开心（今天心情很好）」
+        mood = (record.get("mood") or "").strip()
+        if mood and content and mood not in content:
+            return f"{mood}（{content}）"
+        return content or mood or detail or title
+    for candidate in (detail, content):
+        if candidate and not _GENERIC_ECHO_RE.match(candidate):
+            return candidate
+    return title or content or detail
+
+
+def _memory_domain(record):
+    """将搜索命中的记录归类到展示域：事实/财务/日程/待办/情绪/习惯/对话/其他。"""
+    if not isinstance(record, dict):
+        return "其他"
+    if record.get("source") == "dialogue":
+        return "对话"
+    subtype = record.get("subtype") or ""
+    if subtype == "fact":
+        return "事实"
+    if subtype == "emotion":
+        return "情绪"
+    if subtype == "habit":
+        return "习惯"
+    text = " ".join(str(record.get(f) or "") for f in ("title", "content", "detail"))
+    if any(kw in text for kw in ("记账", "花费", "花销", "支出", "花了", "买了")):
+        return "财务"
+    if any(kw in text for kw in ("待办", "任务", "事项")):
+        return "待办"
+    if any(kw in text for kw in ("日程", "事件", "会议", "提醒")):
+        return "日程"
+    return "其他"
+
+
+def format_keyword_search(keyword, hits):
+    """将关键词搜索结果格式化为分组摘要（v3.13.9，回答生成层）。
+
+    按 事实/财务/日程/待办/情绪/习惯/对话 分组，用 _display_text 展示每条的
+    可读内容（而非泛化 title）。过滤两类噪音：
+      - 记忆命中：通用回声（"记账"/"添加待办"无具体信息，仅命中标签）
+      - 对话命中：长列表 dump（📅/📋 日程/待办整块回复）
+    返回可直接展示的字符串。
+    """
+    kw = str(keyword or "").strip()
+    if not hits:
+        return f"没有找到与「{kw}」相关的记录～"
+
+    # ---- 过滤低信息量命中 ----
+    kept = []
+    for h in hits:
+        text = _display_text(h)
+        if h.get("source") == "dialogue":
+            content = (h.get("content") or "").strip()
+            if len(content) > 80 or "📅" in content or "📋" in content or "要换个日期查查看" in content:
+                continue  # 长列表/整块日程回复，非用户关心的实质内容
+            if text:
+                kept.append(h)
+        else:
+            if text and not _GENERIC_ECHO_RE.match(text):
+                kept.append(h)
+
+    if not kept:
+        return f"「{kw}」相关的详细记录较少，暂时无法汇总具体内容～"
+
+    grouped = {}
+    for h in kept:
+        grouped.setdefault(_memory_domain(h), []).append(h)
+    order = ("事实", "财务", "日程", "待办", "情绪", "习惯", "对话", "其他")
+    lines = [f"找到 {len(kept)} 条与「{kw}」相关的记录：", ""]
+    for dom in order:
+        recs = grouped.get(dom)
+        if not recs:
+            continue
+        lines.append(f"[{dom}]")
+        for r in recs[:5]:
+            text = _display_text(r)
+            date = r.get("date") or ""
+            date_s = f" ({date})" if date and not re.search(r"20\d{2}-\d{2}-\d{2}", text) else ""
+            lines.append(f"  {text}{date_s}")
+        if len(recs) > 5:
+            lines.append(f"  … 等 {len(recs)} 条")
+    return "\n".join(lines)
+
+
+def _sum_amounts(records):
+    """从财务记忆记录的 detail/content 中解析并累加金额（"花费10元"→10）。"""
+    total = 0.0
+    for r in records:
+        m = re.search(r"(\d+(?:\.\d+)?)\s*元", _display_text(r) or "")
+        if m:
+            total += float(m.group(1))
+    return total
+
+
+def format_time_recall(records, time_label):
+    """将时间回查结果格式化为分组摘要（v3.13.10, Fix B）。
+
+    按 财务/日程/待办/事实/情绪/其他 分组：
+      - 财务：记账 N 笔，共 X 元（从 detail 解析金额）
+      - 日程/待办：计数
+      - 事实：计数 + 列出内容
+    无记录时返回「{time_label}没有查到记录哦」。
+    """
+    if not records:
+        return f"{time_label or '那段时间'}没有查到记录哦"
+
+    grouped = {"财务": [], "日程": [], "待办": [], "事实": [], "情绪": [], "其他": []}
+    for r in records:
+        dom = _memory_domain(r)
+        grouped.setdefault(dom, []).append(r)
+
+    lines = [f"{time_label or '那段时间'}你做了这些事："]
+    fin = grouped["财务"]
+    if fin:
+        total = _sum_amounts(fin)
+        total_s = str(int(total)) if total == int(total) else str(total)
+        lines.append("")
+        lines.append(f"记账 {len(fin)} 笔，共 {total_s} 元" if total > 0 else f"记账 {len(fin)} 笔")
+    sched = grouped["日程"]
+    if sched:
+        lines.append("")
+        lines.append(f"添加日程 {len(sched)} 个")
+    todo = grouped["待办"]
+    if todo:
+        lines.append("")
+        lines.append(f"添加待办 {len(todo)} 个")
+    facts = grouped["事实"]
+    if facts:
+        lines.append("")
+        lines.append(f"事实：{len(facts)} 条")
+        for f in facts[:5]:
+            t = _display_text(f)
+            if t:
+                lines.append(f"  {t}")
+    emo = grouped["情绪"]
+    if emo:
+        lines.append("")
+        lines.append(f"情绪：{len(emo)} 条")
+    other = grouped["其他"]
+    if other:
+        lines.append("")
+        lines.append(f"其他记录 {len(other)} 条")
+    return "\n".join(lines)
+
+
+def _subtype_label(subtype):
+    """记忆 subtype → 中文展示标签。"""
+    return {"fact": "事实", "event": "事件", "emotion": "情绪", "habit": "习惯"}.get(subtype or "", "其他")
+
+
+def _append_event_lines(recs, lines):
+    """事件组内：财务记录合并为「记账N笔共X元」，其余（日程/待办）逐条展示。"""
+    fin = [r for r in recs if _memory_domain(r) == "财务"]
+    others = [r for r in recs if _memory_domain(r) != "财务"]
+    if fin:
+        total = _sum_amounts(fin)
+        total_s = str(int(total)) if total == int(total) else str(total)
+        lines.append("")
+        lines.append(f"记账 {len(fin)} 笔，共 {total_s} 元" if total > 0 else f"记账 {len(fin)} 笔")
+    shown = 0
+    for r in others[:5]:
+        t = _display_text(r)
+        if t:
+            lines.append("")
+            lines.append(t)
+            shown += 1
+    if len(others) > 5:
+        lines.append("")
+        lines.append(f"  … 等 {len(others)} 条")
+
+
+def format_memory_query(records, header="记忆记录", time_label=None):
+    """将记忆查询结果格式化为按类型分组、可读的列表（v3.13.12, Fix C）。
+
+    按 subtype 分组（事实/事件/情绪/习惯），每条用 _display_text 展示；
+    事件组内财务记录合并为「记账N笔共X元」，其余逐条列出。
+    无记录返回「{time_label}没有{header}哦」。
+
+    参数:
+        records: search_by_time 返回的记忆记录
+        header: 标题名词（默认"记忆记录"）
+        time_label: 时间标签（如"今天"），用于标题与无记录提示
+    """
+    if not records:
+        if time_label:
+            return f"{time_label}没有{header}哦"
+        return f"没有{header}哦"
+    title = f"{time_label}的{header}：" if time_label else f"{header}："
+    lines = [title, ""]
+    groups = {}
+    for r in records:
+        sub = _subtype_label(r.get("subtype") or r.get("type") or "")
+        groups.setdefault(sub, []).append(r)
+    order = ("事实", "事件", "情绪", "习惯", "其他")
+    first_group = True
+    for sub in order:
+        recs = groups.get(sub)
+        if not recs:
+            continue
+        if not first_group:
+            lines.append("")  # 分组之间空行
+        first_group = False
+        lines.append(f"[{sub}] ({len(recs)}条)")
+        if sub == "事件":
+            _append_event_lines(recs, lines)
+        else:
+            for r in recs[:6]:
+                t = _display_text(r)
+                if t:
+                    lines.append("")
+                    lines.append(t)
+            if len(recs) > 6:
+                lines.append("")
+                lines.append(f"  … 等 {len(recs)} 条")
+    return "\n".join(lines)
+
+
+def format_related_query(memory_id, query_text, limit=10):
+    """将关联记忆查询格式化为按强度分组、可读的输出（v3.13.13, Fix D）。
+
+    通过 memory_id 或按 query_text 搜索找到候选记忆，取各自关联，去重后：
+      - 用 _display_text 展示内容（替代泛化 title）
+      - 过滤通用回声 / 空展示
+      - 按强度分组（强/中/弱），附领域标签与关联原因
+
+    参数:
+        memory_id: 指定候选记忆 ID（可为 None，此时按 query_text 搜索候选）
+        query_text: 主题词（用于候选搜索与「X」标签）
+        limit: 每个候选取关联数上限
+
+    返回:
+        可直接展示的字符串。
+    """
+    kw = str(query_text or "").strip()
+    candidate_ids = []
+    if memory_id:
+        candidate_ids = [memory_id]
+    else:
+        try:
+            cands = search_by_keyword(kw, limit=5)
+            candidate_ids = [c["id"] for c in cands if c.get("source") == "memory"]
+        except Exception:
+            candidate_ids = []
+    if not candidate_ids:
+        # 主题为空 → 兜底取最近记忆做候选
+        try:
+            candidate_ids = [m["id"] for m in search_by_time(None, limit=8)]
+        except Exception:
+            candidate_ids = []
+
+    rels = []
+    seen = set()
+    for mid in candidate_ids:
+        try:
+            for r in get_related_memories(mid, limit=limit or 10, live=True):
+                rid = r.get("id")
+                if rid in seen:
+                    continue
+                seen.add(rid)
+                rels.append(r)
+        except Exception:
+            continue
+
+    # 过滤通用回声 / 空展示
+    kept = []
+    for r in rels:
+        text = _display_text(r)
+        if text and not _GENERIC_ECHO_RE.match(text):
+            kept.append(r)
+    if not kept:
+        return f"「{kw or '该记忆'}」暂时没有关联的记忆记录"
+
+    # v3.10.8: 展示的关联记忆计入检索（提升置信度）
+    for r in kept:
+        if r.get("id"):
+            try:
+                record_retrieval(r["id"])
+            except Exception:
+                pass
+
+    grouped = {"强": [], "中": [], "弱": []}
+    for r in kept:
+        grouped.setdefault(r.get("strength_label", "弱"), []).append(r)
+
+    lines = [f"「{kw or '该记忆'}」相关的记忆有：", ""]
+    first_group = True
+    for st in ("强", "中", "弱"):
+        recs = grouped.get(st)
+        if not recs:
+            continue
+        if not first_group:
+            lines.append("")
+        first_group = False
+        lines.append(f"[{st}关联] ({len(recs)}条)")
+        for r in recs[:5]:
+            text = _display_text(r)
+            dom = _memory_domain(r)
+            reasons = "、".join(r.get("reasons", []) or [])
+            item = f"{text} ({dom})"
+            if reasons:
+                item += f" - 原因：{reasons}"
+            lines.append("")
+            lines.append(item)
+        if len(recs) > 5:
+            lines.append("")
+            lines.append(f"  … 等 {len(recs)} 条")
+    return "\n".join(lines)
 
 
 # ===================== Phase 4 置信度衰减与记忆整合（v3.10.8）=====================

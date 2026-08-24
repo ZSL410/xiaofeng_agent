@@ -945,7 +945,7 @@ def delete_by_scope(scope, keyword=None):
     按指定范围批量删除财务记录（v3.7.4 新增，v3.8.0 重构为结构化返回）。
 
     参数:
-        scope: str — "all" | "last_week" | "today" | "latest" | "keyword"
+        scope: str — "all" | "yesterday" | "last_week" | "today" | "latest" | "keyword"
         keyword: str — 当 scope="keyword" 时,用作来源/类型匹配词
 
     返回:
@@ -954,6 +954,7 @@ def delete_by_scope(scope, keyword=None):
     data = load_data()
     now = datetime.now()
     today_str = now.strftime("%Y-%m-%d")
+    yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
 
     if not data:
         return {"status": "error", "message": "💰 没有财务记录可以删除"}
@@ -993,6 +994,19 @@ def delete_by_scope(scope, keyword=None):
             "type": "delete",
             "data": {"scope": "today", "count": removed},
             "summary": f"删除今天{removed}条财务记录",
+        }
+
+    elif scope == "yesterday":
+        kept = [r for r in data if (r.get("date", "") or "") != yesterday_str]
+        removed = len(data) - len(kept)
+        if removed == 0:
+            return {"status": "error", "message": "💰 昨天没有财务记录"}
+        save_data(kept)
+        return {
+            "status": "success",
+            "type": "delete",
+            "data": {"scope": "yesterday", "count": removed},
+            "summary": f"删除昨天{removed}条财务记录",
         }
 
     elif scope == "latest":
@@ -1111,6 +1125,55 @@ def _parse_query_nl(query_text):
 
     return {}
 
+# 来源提示规则：查询原文 → 来源过滤标签（v3.13.2 确定性兜底，不依赖 LLM）。
+# 标签须是 _execute_query source_labels 中的键，越具体的词优先（最长关键词匹配）。
+_SOURCE_HINT_RULES = [
+    ("饭", ["吃饭", "餐饮", "饭", "餐", "食堂", "餐厅", "饭店",
+            "午餐", "晚餐", "早餐", "午饭", "晚饭", "早饭"]),
+    ("奶茶", ["奶茶", "饮料", "饮品"]),
+    ("咖啡", ["咖啡"]),
+    ("水", ["喝水", "矿泉水"]),
+    ("水果", ["水果"]),
+    ("外卖", ["外卖"]),
+    ("零食", ["零食"]),
+    ("交通", ["交通", "打车", "公交", "地铁", "车费", "高铁", "火车", "停车"]),
+]
+
+
+def _extract_source_hint(text):
+    """从查询原文提取来源过滤标签（最长关键词匹配，越具体越优先）。无命中返回空串。"""
+    if not text:
+        return ""
+    best, best_len = "", 0
+    for label, kws in _SOURCE_HINT_RULES:
+        for kw in kws:
+            if kw in text and len(kw) > best_len:
+                best, best_len = label, len(kw)
+    return best
+
+
+def _detect_direction(text):
+    """
+    从查询文本判定收支方向（v3.13.5 提取为独立函数，供 _execute_query 与
+    上下文继承共用）。返回 "income"/"expense"/"all"；无关键词返回 None。
+    优先级：收入词 > 支出词 > 全量词。
+    """
+    if not text:
+        return None
+    _INCOME_KW = ["收入", "赚了", "赚到", "进账", "入账", "收到", "工资", "奖金",
+                  "补贴", "红包", "发了", "到账"]
+    _EXPENSE_KW = ["花了", "支出", "花费", "开销", "消费", "用了", "买了", "付了",
+                   "开支", "花销"]
+    _ALL_KW = ["所有", "全部", "财务数据", "账单", "账目", "总账", "一共", "总共", "总计"]
+    if any(kw in text for kw in _INCOME_KW):
+        return "income"
+    if any(kw in text for kw in _EXPENSE_KW):
+        return "expense"
+    if any(kw in text for kw in _ALL_KW):
+        return "all"
+    return None
+
+
 def _execute_query(params):
     """
     根据结构化参数查询财务数据，返回结构化结果。
@@ -1171,7 +1234,9 @@ def _execute_query(params):
             label_date = "昨天"
         elif date_range in ("this_week", "本周"):
             days_since_monday = now.weekday()
-            date_start = (now - timedelta(days=days_since_monday)).strftime("%Y-%m-%d")
+            this_monday = now - timedelta(days=days_since_monday)
+            date_start = this_monday.strftime("%Y-%m-%d")
+            date_end = (this_monday + timedelta(days=6)).strftime("%Y-%m-%d")
             label_date = "本周"
         elif date_range in ("last_week", "上周"):
             days_since_monday = now.weekday()
@@ -1182,6 +1247,10 @@ def _execute_query(params):
             label_date = "上周"
         elif date_range in ("this_month", "本月"):
             date_start = now.strftime("%Y-%m") + "-01"
+            if now.month == 12:
+                date_end = datetime(now.year + 1, 1, 1).strftime("%Y-%m-%d")
+            else:
+                date_end = datetime(now.year, now.month + 1, 1).strftime("%Y-%m-%d")
             label_date = "本月"
         elif date_range in ("last_month", "上个月"):
             first_this_month = datetime(now.year, now.month, 1)
@@ -1191,9 +1260,9 @@ def _execute_query(params):
             label_date = "上个月"
 
         if date_start:
-            if date_range == "today" or date_range == "yesterday":
+            if date_range in ("today", "yesterday"):
                 records = [r for r in records if (r.get("date", "") or "") == date_start]
-            elif date_range in ("last_week", "上个月"):
+            elif date_end:  # v3.13.2: 有明确结束日期 → 闭区间过滤（此前 last_month 英文码落入开区间导致跨月）
                 records = [r for r in records
                            if date_start <= (r.get("date", "") or "") <= date_end]
             else:
@@ -1204,6 +1273,11 @@ def _execute_query(params):
     source_filter = params.get("source", "")
     if isinstance(source_filter, str):
         source_filter = source_filter.strip()
+    # v3.13.2: 3b 路由的 query params 不提取 source（提示词仅要求 time/scope），
+    # 且 raw_text 常驻使 query_finance 走 Mode B 结构化路径、跳过 LLM 源提取，
+    # 导致"吃饭花了多少"返回全部记录。从查询原文确定性提取来源关键词兜底。
+    if not source_filter:
+        source_filter = _extract_source_hint(params.get("_query_text", ""))
     if source_filter:
         source_labels = {
             "饭": ["饭", "吃饭", "餐饮"], "奶茶": ["奶茶"], "咖啡": ["咖啡"],
@@ -1213,6 +1287,34 @@ def _execute_query(params):
         matched_labels = source_labels.get(source_filter, [source_filter])
         records = [r for r in records
                    if any(lb in (r.get("source", "") or "") for lb in matched_labels)]
+
+    # ---- v3.13.3: 支出/收入 类型区分 ----
+    # 3b 路由器把一切财务查询归为 query，不区分收支方向。依据查询原文判断
+    # 用户想要支出、收入还是全部，过滤后再聚合——避免"今天花了多少"把收入计进支出。
+    # v3.13.5: 查询原文无方向词时，回退到上下文继承的 direction（"把它们详细列出来"）。
+    _qtext = str(params.get("_query_text", "") or "")
+    type_mode = _detect_direction(_qtext) or params.get("direction") or "expense"
+
+    # 收入标注：支出模式下若有收入记录，提示"另有N笔收入M元"
+    _income_records = [r for r in records if r.get("type") == "income"]
+    _income_ann = ""
+    if type_mode == "expense" and _income_records:
+        _income_total = sum(r.get("amount", 0) for r in _income_records)
+        _income_amt_s = str(int(_income_total)) if _income_total == int(_income_total) else str(_income_total)
+        _income_ann = f"。另有{len(_income_records)}笔收入，合计{_income_amt_s}元"
+
+    if type_mode == "income":
+        records = [r for r in records if r.get("type") == "income"]
+    elif type_mode == "expense":
+        records = [r for r in records if r.get("type") == "expense"]
+    # type_mode == "all" → 收支都保留
+
+    # ---- v3.13.4: 来源分组 / 最大来源识别 ----
+    # "收入来源有哪些"→ 按来源列出；"最大收入来源"→ 取金额最大来源。
+    # 仅当查询含"来源"语义（来源/有哪些/分别）时启用，避免误伤普通查询。
+    _SRC_LIST_KW = ["来源", "有哪些", "哪几类", "哪些类", "分别", "都花在哪", "花在哪"]
+    _src_group = any(kw in _qtext for kw in _SRC_LIST_KW)
+    _src_max = ("来源" in _qtext) and any(kw in _qtext for kw in ("最大", "最多", "最高"))
 
     # ---- 金额范围过滤 ----
     if params.get("amount_min") is not None:
@@ -1265,19 +1367,24 @@ def _execute_query(params):
     # 也检查 query_text 中的关键词（兜底）
     query_text_for_detail = params.get("_query_text", "")
     if not detail and query_text_for_detail:
-        DETAIL_KW = ["详细", "逐条", "列出", "明细", "每笔", "列举"]
+        # v3.13.14: 补"展开"——"展开讲讲"触发明细模式
+        DETAIL_KW = ["详细", "逐条", "列出", "明细", "每笔", "列举", "展开"]
         if any(kw in query_text_for_detail for kw in DETAIL_KW):
             detail = True
 
     # ---- 生成摘要 ----
+    _type_desc = "支出" if type_mode == "expense" else ("收入" if type_mode == "income" else "财务")
     if count == 0:
         scope_desc = label_date or "全部"
         src_desc = f"「{source_filter}」" if source_filter else ""
+        msg = f"{scope_desc}没有{src_desc}{_type_desc}记录"
+        if _income_ann:
+            msg += _income_ann
         return {
             "status": "success",
             "type": "query",
             "data": [],
-            "summary": f"{scope_desc}没有{src_desc}财务记录",
+            "summary": msg,
         }
 
     # 构建自然语言摘要
@@ -1304,10 +1411,23 @@ def _execute_query(params):
                 f"{source_str} {amt_str_item}元"
             )
         detail_text = "\n".join(detail_lines)
-        total_amt = sum(r.get("amount", 0) for r in records)
-        total_str = str(int(total_amt)) if total_amt == int(total_amt) else str(total_amt)
         scope_prefix = scope_desc + " " if scope_desc else ""
-        summary = f"{scope_prefix}共{count}笔财务记录：\n\n{detail_text}\n\n合计：{total_str}元"
+        if type_mode == "all":
+            # v3.13.6: 明细模式下全量查询分别显示收支合计（不再混算一个总数）
+            _dexp = [r for r in records if r.get("type") == "expense"]
+            _dinc = [r for r in records if r.get("type") == "income"]
+            _ea = sum(r.get("amount", 0) for r in _dexp)
+            _ia = sum(r.get("amount", 0) for r in _dinc)
+            _es = str(int(_ea)) if _ea == int(_ea) else str(_ea)
+            _is = str(int(_ia)) if _ia == int(_ia) else str(_ia)
+            summary = (f"{scope_prefix}共{count}笔{_type_desc}记录：\n\n{detail_text}"
+                       f"\n\n支出合计：{_es}元（{len(_dexp)}笔）；收入合计：{_is}元（{len(_dinc)}笔）")
+        else:
+            total_amt = sum(r.get("amount", 0) for r in records)
+            total_str = str(int(total_amt)) if total_amt == int(total_amt) else str(total_amt)
+            summary = f"{scope_prefix}共{count}笔{_type_desc}记录：\n\n{detail_text}\n\n合计：{total_str}元"
+        if _income_ann:
+            summary += _income_ann
         return {
             "status": "success",
             "type": "query",
@@ -1315,25 +1435,68 @@ def _execute_query(params):
             "summary": summary.strip(),
         }
 
+    # ---- v3.13.4: 来源分组汇总（"收入来源有哪些" / "最大收入来源"）----
+    if (_src_group or _src_max) and records and not aggregate:
+        _agg_src = {}
+        for r in records:
+            s = r.get("source", "其他")
+            _agg_src[s] = _agg_src.get(s, 0) + r.get("amount", 0)
+        _sorted_src = sorted(_agg_src.items(), key=lambda x: -x[1])
+        def _fmt_src_amt(a):
+            return str(int(a)) if a == int(a) else str(a)
+        if _src_max:
+            _s, _a = _sorted_src[0]
+            summary = f"{scope_desc}最大{_type_desc}来源: {_s} {_fmt_src_amt(_a)}元"
+        else:
+            lines = [f"{scope_desc}{_type_desc}来源（{len(_sorted_src)}项）:"] + \
+                    [f"  {s} {_fmt_src_amt(a)}元" for s, a in _sorted_src]
+            summary = "\n".join(lines)
+        if _income_ann:
+            summary += _income_ann
+        return {
+            "status": "success",
+            "type": "query",
+            "data": records,
+            "summary": summary,
+        }
+
     if aggregate == "count":
-        summary = f"{scope_desc}{src_desc}共{count}笔记录"
+        summary = f"{scope_desc}{src_desc}共{count}笔{_type_desc}记录"
     elif aggregate == "avg":
         summary = f"{scope_desc}{src_desc}共{count}笔，平均{total_amount}元"
     elif aggregate == "max":
         top = records[0] if records else {}
-        summary = f"{scope_desc}最大开支: {top.get('source','?')} {top.get('amount',0)}元"
+        _agg_word = "收入" if type_mode == "income" else "开支"
+        summary = f"{scope_desc}最大{_agg_word}: {top.get('source','?')} {top.get('amount',0)}元"
     elif aggregate == "min":
         top = records[0] if records else {}
-        summary = f"{scope_desc}最小开支: {top.get('source','?')} {top.get('amount',0)}元"
+        _agg_word = "收入" if type_mode == "income" else "开支"
+        summary = f"{scope_desc}最小{_agg_word}: {top.get('source','?')} {top.get('amount',0)}元"
     else:
-        amt_str = str(int(total_amount)) if total_amount == int(total_amount) else str(total_amount)
-        summary = f"{scope_desc}{src_desc}共{count}笔，合计{amt_str}元"
+        if type_mode == "all":
+            # v3.13.4: "查看所有财务数据" 显示收支明细
+            _exp_r = [r for r in records if r.get("type") == "expense"]
+            _inc_r = [r for r in records if r.get("type") == "income"]
+            _exp_t = sum(r.get("amount", 0) for r in _exp_r)
+            _inc_t = sum(r.get("amount", 0) for r in _inc_r)
+            _es = str(int(_exp_t)) if _exp_t == int(_exp_t) else str(_exp_t)
+            _is = str(int(_inc_t)) if _inc_t == int(_inc_t) else str(_inc_t)
+            summary = (f"{scope_desc}{src_desc}共{count}笔记录"
+                       f"（支出{len(_exp_r)}笔，合计{_es}元；"
+                       f"收入{len(_inc_r)}笔，合计{_is}元）")
+        else:
+            amt_str = str(int(total_amount)) if total_amount == int(total_amount) else str(total_amount)
+            summary = f"{scope_desc}{src_desc}共{count}笔{_type_desc}，合计{amt_str}元"
 
-    # 如果只有1条且非聚合查询, 补充详情
-    if count == 1 and not aggregate:
+    # 如果只有1条且非聚合查询且是支出查询, 补充详情（收入/全量查询用默认汇总措辞）
+    if count == 1 and not aggregate and type_mode == "expense":
         r = records[0]
         summary = f"{r.get('date','')} {r.get('source','?')} {r.get('amount',0)}元" + \
                   (f"（{scope_desc}仅此一笔）" if scope_desc else "")
+
+    # v3.13.3: 支出模式下若该期间还有收入记录，追加提示（"查看所有"已含收入则不提示）
+    if _income_ann:
+        summary += _income_ann
 
     return {
         "status": "success",
@@ -1380,13 +1543,30 @@ def query_finance(query_text, params=None):
     if not query_params:
         query_params = {"date_range": "today"}
 
+    # ---- v3.13.5: 查询方向（income/expense/all）存入 params 供上下文继承 ----
+    # 查询原文含明确方向词时直接设定；否则由继承机制从上一轮补齐。
+    _dir_explicit = _detect_direction(query_text)
+    if _dir_explicit:
+        query_params["direction"] = _dir_explicit
+
     # ---- v3.9.17: 从原始文本提取精确日期（优先于 date_range）----
     # _parse_relative_date 使用确定性的正则计算，LLM（_parse_query_nl）可能
     # 产生幻觉日期（如把"上周周二"算成 2023-04-18）。因此始终运行正则解析，
     # 并覆盖 LLM 可能返回的错误 date 字段。
+    # v3.13.2: 区分"范围词"与"单日词"。本周/上周/本月/上个月 是时间范围，
+    # 必须映射为 date_range（this_week/last_week/this_month/last_month）。
+    # 否则会被当作精确单日过滤 → "本周花了多少"只查周一、"这个月花了多少"只查1号。
     parsed_date, date_label = _parse_relative_date(query_text)
     if parsed_date:
-        query_params["date"] = parsed_date
+        _RANGE_LABEL_TO_CODE = {
+            "本周": "this_week", "上周": "last_week",
+            "本月": "this_month", "上个月": "last_month",
+        }
+        if date_label in _RANGE_LABEL_TO_CODE:
+            query_params["date_range"] = _RANGE_LABEL_TO_CODE[date_label]
+            query_params.pop("date", None)  # 清除精确日期，避免其覆盖范围过滤
+        else:
+            query_params["date"] = parsed_date
         if os.environ.get("DEBUG", "") == "1":
             print(f"[查询日期] 正则解析: {query_text!r} → {parsed_date} ({date_label})")
 
@@ -1394,7 +1574,8 @@ def query_finance(query_text, params=None):
     # 当用户使用指代词（"它们"/"这些"）或仅要求格式化（"详细点"），
     # 且当前查询没有明确筛选条件时，继承上一轮查询的筛选条件。
     REF_WORDS = ["它们", "这些", "那些", "刚才的", "之前的"]
-    DETAIL_WORDS = ["详细", "逐条", "列出", "明细", "每笔", "列举"]
+    # v3.13.14: 补"展开"——"展开讲讲"应继承上下文并显示明细
+    DETAIL_WORDS = ["详细", "逐条", "列出", "明细", "每笔", "列举", "展开"]
     has_ref = any(w in query_text for w in REF_WORDS)
     is_detail_req = query_params.get("detail") or any(
         w in query_text for w in DETAIL_WORDS
@@ -1412,8 +1593,11 @@ def query_finance(query_text, params=None):
             val = _last_query_context.get(k)
             if val:
                 query_params[k] = val
+        # v3.13.5: 继承收支方向（"把它们详细列出来"沿用上一轮的 income/expense）
+        if "direction" not in query_params and _last_query_context.get("direction"):
+            query_params["direction"] = _last_query_context["direction"]
         if os.environ.get("DEBUG", "") == "1":
-            inherited = {k: query_params.get(k) for k in ("date", "time", "date_range", "source", "scope") if query_params.get(k)}
+            inherited = {k: query_params.get(k) for k in ("date", "time", "date_range", "source", "scope", "direction") if query_params.get(k)}
             print(f"[上下文继承] 指代词={has_ref} 格式请求={is_detail_req} → 继承: {json.dumps(inherited, ensure_ascii=False)}")
 
     # ---- v3.9.16: 传递原始查询文本供明细模式检测 ----
@@ -1428,12 +1612,101 @@ def query_finance(query_text, params=None):
         v = query_params.get(k)
         if v:
             ctx[k] = v
+    # v3.13.5: 保存收支方向（"把它们详细列出来"需沿用 income/expense）
+    if query_params.get("direction"):
+        ctx["direction"] = query_params["direction"]
     if ctx:
         _last_query_context = ctx
         if os.environ.get("DEBUG", "") == "1":
             print(f"[上下文缓存] 保存: {json.dumps(ctx, ensure_ascii=False)}")
 
     return result
+
+
+# ===================== 收入统计接口（v3.13.4） =====================
+
+def get_income_total(date_range=None):
+    """
+    获取指定时间范围的收入总额。
+
+    参数:
+        date_range: today / yesterday / this_week / last_week / this_month / last_month，默认 today
+
+    返回:
+        float — 该范围内收入合计
+    """
+    if not date_range:
+        date_range = "today"
+    try:
+        result = _execute_query({"date_range": date_range, "_query_text": "收入"})
+        return round(sum(r.get("amount", 0) for r in result.get("data", [])), 2)
+    except Exception:
+        return 0.0
+
+
+def get_income_sources(date_range=None):
+    """
+    列出指定时间范围的收入来源及金额。
+
+    参数:
+        date_range: 同 get_income_total
+
+    返回:
+        [{"source": "工资", "amount": 5000}, ...] 按金额降序
+    """
+    if not date_range:
+        date_range = "today"
+    try:
+        result = _execute_query({"date_range": date_range, "_query_text": "收入来源"})
+    except Exception:
+        return []
+    agg = {}
+    for r in result.get("data", []):
+        s = r.get("source", "其他")
+        agg[s] = agg.get(s, 0) + r.get("amount", 0)
+    return sorted([{"source": s, "amount": round(a, 2)} for s, a in agg.items()],
+                  key=lambda x: x["amount"], reverse=True)
+
+
+def get_income_trend(periods=3):
+    """
+    分析收入趋势：按最近 N 个自然月聚合收入，返回每月金额 + 整体方向。
+
+    参数:
+        periods: 回溯月份数（默认 3）
+
+    返回:
+        {"periods": [{"month": "2026-07", "amount": 100}, ...]（升序）,
+         "direction": "上升"|"下降"|"平稳"}
+    """
+    try:
+        data = load_data()
+    except Exception:
+        data = []
+    now = datetime.now()
+    months = []
+    for i in range(periods - 1, -1, -1):
+        y, m = now.year, now.month - i
+        while m <= 0:
+            y -= 1
+            m += 12
+        months.append(f"{y}-{m:02d}")
+
+    out = []
+    for prefix in months:
+        amt = sum(r.get("amount", 0) for r in data
+                  if r.get("type") == "income" and (r.get("date") or "").startswith(prefix))
+        out.append({"month": prefix, "amount": round(amt, 2)})
+
+    # 方向：最新月 vs 最早月
+    if len(out) >= 2 and out[-1]["amount"] > out[0]["amount"]:
+        direction = "上升"
+    elif len(out) >= 2 and out[-1]["amount"] < out[0]["amount"]:
+        direction = "下降"
+    else:
+        direction = "平稳"
+    return {"periods": out, "direction": direction}
+
 
 # ===================== 独立运行入口 =====================
 if __name__ == "__main__":

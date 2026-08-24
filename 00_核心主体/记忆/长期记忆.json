@@ -4,11 +4,47 @@
       "type": "time_based",
       "content": "会议",
       "time_range": "15:00-15:00",
+      "frequency": 8,
+      "confidence": 0.95,
+      "last_triggered": "2026-08-12",
+      "rejected": false
+    },
+    {
+      "type": "association",
+      "from": "会议",
+      "to": "重要的会议",
       "frequency": 4,
       "confidence": 0.9,
-      "last_triggered": "2026-08-12",
+      "last_triggered": "2026-08-19",
+      "rejected": false
+    },
+    {
+      "type": "time_based",
+      "content": "去买咖啡豆",
+      "time_range": "15:00-15:00",
+      "frequency": 2,
+      "confidence": 0.7,
+      "last_triggered": "2026-08-19",
+      "rejected": false
+    },
+    {
+      "type": "association",
+      "from": "去买咖啡豆",
+      "to": "会议",
+      "frequency": 2,
+      "confidence": 0.7,
+      "last_triggered": "2026-08-19",
+      "rejected": false
+    },
+    {
+      "type": "association",
+      "from": "重要的会议",
+      "to": "会议",
+      "frequency": 2,
+      "confidence": 0.7,
+      "last_triggered": "2026-08-19",
       "rejected": false
     }
   ],
-  "last_refined": "2026-08-16T00:43:22"
+  "last_refined": "2026-08-24T22:40:43"
 }

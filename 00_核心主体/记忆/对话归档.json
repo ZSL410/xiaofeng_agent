@@ -2,6 +2,4800 @@
   "version": "1.0",
   "records": [
     {
+      "id": "dialogue_20260824_2312_z9py7x",
+      "dialogue_id": "session_20260824_2312_qec0re",
+      "role": "assistant",
+      "original_text": "没听懂金额，请说清楚一点，比如'今天早上吃饭花了6元'",
+      "summary": "确认：没听懂金额，请说清楚一点，比如'今天早上",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-24T23:12:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T23:12:03.851451"
+    },
+    {
+      "id": "dialogue_20260824_2312_938dhv",
+      "dialogue_id": "session_20260824_2312_qec0re",
+      "role": "user",
+      "original_text": "你好，帮我记个账",
+      "summary": "工具操作：你好，帮我记个账",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T23:12:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T23:12:03.834040"
+    },
+    {
+      "id": "dialogue_20260824_2248_kbp9da",
+      "dialogue_id": "session_20260824_2242_vpzqa8",
+      "role": "assistant",
+      "original_text": "哈哈，理解你的幽默感！其实，我是一个温馨的私人助手，可以帮你管理财务、规划日程、记住重要的信息，还能陪你聊天哦。有什么需要我帮忙的吗？有什么问题或者想要分享的事情都可以告诉我！😊",
+      "summary": "我帮你管理财务，陪你聊天😊",
+      "tags": [
+        "财务",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-24T22:48:10",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T22:48:10.000503"
+    },
+    {
+      "id": "dialogue_20260824_2248_c18yv7",
+      "dialogue_id": "session_20260824_2242_vpzqa8",
+      "role": "user",
+      "original_text": "什么叫傲物我能帮你做些什么不应该是你能帮我做些什么吗",
+      "summary": "你的问题可以总结为：我能做到什么，而不是你能帮我做什么？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T22:48:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T22:48:07.707119"
+    },
+    {
+      "id": "dialogue_20260824_2245_1ln9td",
+      "dialogue_id": "session_20260824_2242_vpzqa8",
+      "role": "assistant",
+      "original_text": "你好呀！有什么事情可以帮我做的吗？💬",
+      "summary": "你可以问我任何问题。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T22:45:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T22:45:51.068105"
+    },
+    {
+      "id": "dialogue_20260824_2245_br2ts1",
+      "dialogue_id": "session_20260824_2242_vpzqa8",
+      "role": "user",
+      "original_text": "你好",
+      "summary": "用户问候，简单总结：你好，了解。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T22:45:48",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T22:45:48.846207"
+    },
+    {
+      "id": "dialogue_20260824_2242_aziy7l",
+      "dialogue_id": "session_20260824_2242_vpzqa8",
+      "role": "assistant",
+      "original_text": "你好呀！霖，今天过得怎么样？有什么想聊的吗？😊",
+      "summary": "今天过得怎么样？有什么想聊的吗？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T22:42:34",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T22:42:34.213918"
+    },
+    {
+      "id": "dialogue_20260824_2242_wwg7ka",
+      "dialogue_id": "session_20260824_2242_vpzqa8",
+      "role": "user",
+      "original_text": "你好",
+      "summary": "用户问候，简单总结：你好，了解。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T22:42:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T22:42:32.051593"
+    },
+    {
+      "id": "dialogue_20260823_2145_p5wwwr",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "本周共1笔支出，合计20元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：本周共1笔支出，合计20元 需要帮你整理",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:45:48",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:45:48.069479"
+    },
+    {
+      "id": "dialogue_20260823_2145_9gz1xb",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "本周花了多少",
+      "summary": "工具操作：本周花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:45:48",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:45:48.055152"
+    },
+    {
+      "id": "dialogue_20260823_2144_jgatl7",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "本月的记忆记录：\n\n[事实] (3条)\n\n我喜欢喝冰美式咖啡\n\n晚上买了根雪糕花两块钱，挺好吃的\n\n我叫霖\n\n[事件] (76条)\n\n记账 32 笔，共 5446.5 元\n\n添加日程「会议」(2026-08-23 15:00)\n\n添加待办「叫我」(到期:2026-08-19 22:23)\n\n添加待办「把它五分钟」(到期:2026-08-19 22:27)\n\n添加日程「会议」(2026-08-20 15:00)\n\n添加日程「重要的会议」(2026-08-20 )\n\n  … 等 44 条\n\n[情绪] (7条)\n\n开心（心情很好）\n\n焦虑（压力很大）\n\n开心（心情很好）\n\n开心（心情很好）\n\n开心（心情不错）\n\n焦虑（压力很大）\n\n  … 等 7 条",
+      "summary": "确认：本月的记忆记录：\n\n[事实] (3条)",
+      "tags": [
+        "咖啡",
+        "会议",
+        "情绪",
+        "购物",
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:44:36",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:44:36.053414"
+    },
+    {
+      "id": "dialogue_20260823_2144_igoaqx",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "查看本月的记忆",
+      "summary": "工具操作：查看本月的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-23T21:44:36",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:44:36.038940"
+    },
+    {
+      "id": "dialogue_20260823_2142_adp232",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "找到 2 条与「咖啡」相关的记录：\n\n[对话]\n  这个我早就记住了：我喜欢喝冰美式咖啡 (2026-08-22)\n  本周总结：共花费0元，共10项日程，完成7次会议，经常喝咖啡(1次) (2026-08-22)",
+      "summary": "确认：找到 2 条与「咖啡」相关的记录：\n\n[",
+      "tags": [
+        "咖啡",
+        "会议",
+        "财务",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-23T21:42:58",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:42:58.683716"
+    },
+    {
+      "id": "dialogue_20260823_2142_uk1mk0",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-23T21:42:58",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:42:58.669773"
+    },
+    {
+      "id": "dialogue_20260823_2142_hgkv13",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-22 共1笔支出记录：\n\n1. 💸 08-22 20:19 晚上 饭 20元\n\n合计：20元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-2",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:42:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:42:32.318159"
+    },
+    {
+      "id": "dialogue_20260823_2142_960h4g",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "展开讲讲",
+      "summary": "工具操作：展开讲讲",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-23T21:42:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:42:32.303318"
+    },
+    {
+      "id": "dialogue_20260823_2142_vd437a",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "就这一笔记录：2026-08-22 饭 20元（2026-08-22仅此一笔） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：就这一笔记录：2026-08-22 饭",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:42:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:42:02.090738"
+    },
+    {
+      "id": "dialogue_20260823_2142_5olkb9",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "查看昨天的财务记录",
+      "summary": "工具操作：查看昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:42:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:42:02.074706"
+    },
+    {
+      "id": "dialogue_20260823_2131_8mqa0z",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-22 共1笔支出记录：\n\n1. 💸 08-22 20:19 晚上 饭 20元\n\n合计：20元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-2",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:31:59",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:31:59.845270"
+    },
+    {
+      "id": "dialogue_20260823_2131_tusxza",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "详细一点",
+      "summary": "工具操作：详细一点",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-23T21:31:59",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:31:59.826507"
+    },
+    {
+      "id": "dialogue_20260823_2127_om94gh",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "就这一笔记录：2026-08-22 饭 20元（2026-08-22仅此一笔） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：就这一笔记录：2026-08-22 饭",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:27:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:27:47.624200"
+    },
+    {
+      "id": "dialogue_20260823_2127_r71rwe",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "查看昨天的财务记录",
+      "summary": "工具操作：查看昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:27:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:27:47.608525"
+    },
+    {
+      "id": "dialogue_20260823_2127_z4hdlb",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "assistant",
+      "original_text": "2026-08-23没有支出记录 要换个日期查查看吗？",
+      "summary": "确认：2026-08-23没有支出记录 要换个",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:27:18",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:27:18.638505"
+    },
+    {
+      "id": "dialogue_20260823_2127_8sg3sm",
+      "dialogue_id": "session_20260823_2127_hzofjh",
+      "role": "user",
+      "original_text": "查看今天的财务记录",
+      "summary": "工具操作：查看今天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T21:27:18",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T21:27:18.624169"
+    },
+    {
+      "id": "dialogue_20260823_2049_pamjst",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "assistant",
+      "original_text": "📖 你说：\n「查看昨天的财务记录」\n（2026-08-23 20:48）",
+      "summary": "确认：📖 你说：\n「查看昨天的财务记录」\n（2",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:49:25",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:49:25.274294"
+    },
+    {
+      "id": "dialogue_20260823_2049_ob5wk9",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "user",
+      "original_text": "展开讲讲",
+      "summary": "工具操作：展开讲讲",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-23T20:49:25",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:49:25.262220"
+    },
+    {
+      "id": "dialogue_20260823_2048_dtmjxs",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "assistant",
+      "original_text": "就这一笔记录：2026-08-22 饭 20元（2026-08-22仅此一笔） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：就这一笔记录：2026-08-22 饭",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:48:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:48:39.222319"
+    },
+    {
+      "id": "dialogue_20260823_2048_758xra",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "user",
+      "original_text": "查看昨天的财务记录",
+      "summary": "工具操作：查看昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:48:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:48:39.210851"
+    },
+    {
+      "id": "dialogue_20260823_2040_3izzs5",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "assistant",
+      "original_text": "就这一笔记录：2026-08-22 饭 20元（2026-08-22仅此一笔） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：就这一笔记录：2026-08-22 饭",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:40:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:40:55.542633"
+    },
+    {
+      "id": "dialogue_20260823_2040_ep8s8j",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "user",
+      "original_text": "查看昨天的财务记录",
+      "summary": "工具操作：查看昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:40:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:40:55.530315"
+    },
+    {
+      "id": "dialogue_20260823_2038_10d6s0",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "assistant",
+      "original_text": "⚠️ 请重新输入正确的时间(如「5分钟后」或「下午3点」)",
+      "summary": "确认：⚠️ 请重新输入正确的时间(如「5分钟后",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-23T20:38:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:38:43.843777"
+    },
+    {
+      "id": "dialogue_20260823_2038_ic4lbc",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "user",
+      "original_text": "传说某呃红雪电脑啊",
+      "summary": "工具操作：传说某呃红雪电脑啊",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-23T20:38:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:38:43.830475"
+    },
+    {
+      "id": "dialogue_20260823_2036_n5q2w3",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "assistant",
+      "original_text": "看起来像是输入有误哦。你想查看具体的哪一天的财务记录呢？或者需要我帮助你做点别的事情？",
+      "summary": "请明确要查询的具体日期或需求。",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:36:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:36:05.793116"
+    },
+    {
+      "id": "dialogue_20260823_2036_5jdi0x",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "user",
+      "original_text": "V",
+      "summary": "请提供更多信息以便总结。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-23T20:36:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:36:03.296278"
+    },
+    {
+      "id": "dialogue_20260823_2035_8hiinp",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "assistant",
+      "original_text": "2026-08-23没有支出记录 要换个日期查查看吗？",
+      "summary": "确认：2026-08-23没有支出记录 要换个",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:35:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:35:23.806404"
+    },
+    {
+      "id": "dialogue_20260823_2035_dcnqjx",
+      "dialogue_id": "session_20260823_2035_17vdgm",
+      "role": "user",
+      "original_text": "查看今天的财务记录",
+      "summary": "工具操作：查看今天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-23T20:35:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-23T20:35:23.794526"
+    },
+    {
+      "id": "dialogue_20260822_2028_f2qoih",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "你好呀！有什么事情需要我帮忙的吗？比如记账、查账，或者是闲聊呢？",
+      "summary": "你需要什么帮助？",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T20:28:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:28:53.550690"
+    },
+    {
+      "id": "dialogue_20260822_2028_75ubx0",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "你好",
+      "summary": "你好",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:28:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:28:51.299738"
+    },
+    {
+      "id": "dialogue_20260822_2027_0wqlp0",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "📖 你说：\n「查看今天的财务记录」\n（2026-08-22 20:26）",
+      "summary": "确认：📖 你说：\n「查看今天的财务记录」\n（2",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T20:27:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:27:17.470409"
+    },
+    {
+      "id": "dialogue_20260822_2027_qvbhdd",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "展开讲讲",
+      "summary": "工具操作：展开讲讲",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:27:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:27:17.459724"
+    },
+    {
+      "id": "dialogue_20260822_2026_1a0u4j",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "就这一笔记录：2026-08-22 饭 20元（2026-08-22仅此一笔） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：就这一笔记录：2026-08-22 饭",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T20:26:15",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:26:15.596853"
+    },
+    {
+      "id": "dialogue_20260822_2026_hg1su6",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "查看今天的财务记录",
+      "summary": "工具操作：查看今天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T20:26:15",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:26:15.585987"
+    },
+    {
+      "id": "dialogue_20260822_2023_qcqlb0",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "你刚才查询了信息、记录了财务。",
+      "summary": "确认：你刚才查询了信息、记录了财务。",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T20:23:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:23:32.243216"
+    },
+    {
+      "id": "dialogue_20260822_2023_gpn2x5",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "我刚才干了什么",
+      "summary": "工具操作：我刚才干了什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:23:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:23:32.233115"
+    },
+    {
+      "id": "dialogue_20260822_2021_su9fyh",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "📅 今天没有日程安排，也没有待办事项 🎉",
+      "summary": "确认：📅 今天没有日程安排，也没有待办事项 🎉",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-22T20:21:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:21:52.371986"
+    },
+    {
+      "id": "dialogue_20260822_2021_9qs150",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "显示今天的待办",
+      "summary": "日程：显示今天的待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-22T20:21:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:21:52.360414"
+    },
+    {
+      "id": "dialogue_20260822_2019_jeispc",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天饭花的20块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天饭花的20块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T20:19:46",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:19:46.207022"
+    },
+    {
+      "id": "dialogue_20260822_2019_zaqgdn",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "今天吃饭花了20元",
+      "summary": "记账：饭20元",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-22T20:19:46",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:19:46.194418"
+    },
+    {
+      "id": "dialogue_20260822_2016_9v7pr4",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "「开心」相关的记忆有：\n\n[强关联] (1条)\n\n焦虑（压力很大） (情绪) - 原因：同实体:情绪、同标签、时间临近\n\n[中关联] (6条)\n\n开心（心情很好） (情绪) - 原因：同实体:情绪、同标签\n\n开心（心情不错） (情绪) - 原因：同实体:情绪、同标签\n\n焦虑（压力很大） (情绪) - 原因：同实体:情绪、同标签\n\n很焦虑 (情绪) - 原因：同实体:情绪、同标签\n\n开心（心情很好） (情绪) - 原因：同实体:情绪、同标签\n\n  … 等 6 条\n\n[弱关联] (1条)\n\n记录今天饭花费25元（分类:餐饮，日期:2026-08-22） (财务) - 原因：时间临近",
+      "summary": "确认：「开心」相关的记忆有：\n\n[强关联] (",
+      "tags": [
+        "情绪",
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T20:16:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:16:45.429208"
+    },
+    {
+      "id": "dialogue_20260822_2016_zvml9n",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "开心和什么相关",
+      "summary": "工具操作：开心和什么相关",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:16:45",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:16:45.416948"
+    },
+    {
+      "id": "dialogue_20260822_2012_ajvlph",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "找到 8 条与「开心」相关的记录：\n\n[情绪]\n  心情很好 (2026-08-22)\n  心情很好 (2026-08-22)\n  心情很好 (2026-08-16)\n  心情不错 (2026-08-16)\n[对话]\n  那真是太好了！心情好的时候，感觉每一天都是阳光灿烂的。有什么特别的事情让你这么开心吗？或者想不想分享一下今天的美好时刻呢？ (2026-08-22)\n  那太好了！很高兴听到你心情不错。有什么特别的事情让你感到开心吗？或者想要分享一些美好的事情吗？有时候把好心情说出来也会让它们变得更加美好哦~ 😊 (2026-08-22)\n  那真是太棒啦！心情好是每天的美好开始。有啥开心的事儿愿意和我分享一下吗？或者您想听听今天的天气预报，还是计划了什么有趣的活动呢？ (2026-08-16)\n  听起来你的心情不错呢！有什么开心的事情想要分享吗？或者有没有什么需要我帮忙打理的事情？👋 (2026-08-13)",
+      "summary": "确认：找到 8 条与「开心」相关的记录：\n\n[",
+      "tags": [
+        "情绪",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T20:12:35",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:12:35.823984"
+    },
+    {
+      "id": "dialogue_20260822_2012_wg34ow",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "搜索开心",
+      "summary": "工具操作：搜索开心",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T20:12:35",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:12:35.810039"
+    },
+    {
+      "id": "dialogue_20260822_2003_c858r6",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "那真是太好了！心情好的时候，感觉每一天都是阳光灿烂的。有什么特别的事情让你这么开心吗？或者想不想分享一下今天的美好时刻呢？",
+      "summary": "很高兴听到你的心情好。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:03:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:03:12.272926"
+    },
+    {
+      "id": "dialogue_20260822_2003_l0e82v",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "我今天心情很好",
+      "summary": "今天心情愉快。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:03:09",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:03:09.966879"
+    },
+    {
+      "id": "dialogue_20260822_2001_x4n41u",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "📖 你说：\n「搜索咖啡」\n（2026-08-22 19:59）",
+      "summary": "确认：📖 你说：\n「搜索咖啡」\n（2026-0",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T20:01:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:01:55.811830"
+    },
+    {
+      "id": "dialogue_20260822_2001_68s7v5",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "详细跟我说一说",
+      "summary": "工具操作：详细跟我说一说",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T20:01:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T20:01:55.797781"
+    },
+    {
+      "id": "dialogue_20260822_1959_fc1xtv",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "找到 2 条与「咖啡」相关的记录：\n\n[对话]\n  这个我早就记住了：我喜欢喝冰美式咖啡 (2026-08-22)\n  本周总结：共花费0元，共10项日程，完成7次会议，经常喝咖啡(1次) (2026-08-22)",
+      "summary": "确认：找到 2 条与「咖啡」相关的记录：\n\n[",
+      "tags": [
+        "咖啡",
+        "会议",
+        "财务",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T19:59:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:59:39.807959"
+    },
+    {
+      "id": "dialogue_20260822_1959_bnssds",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T19:59:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:59:39.796411"
+    },
+    {
+      "id": "dialogue_20260822_1959_tlnqnw",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "这个我早就记住了：我喜欢喝冰美式咖啡",
+      "summary": "确认：这个我早就记住了：我喜欢喝冰美式咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T19:59:19",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:59:19.286539"
+    },
+    {
+      "id": "dialogue_20260822_1959_pwh4ji",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "记住我喜欢喝冰美式咖啡",
+      "summary": "记忆：我喜欢喝冰美式咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T19:59:19",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:59:19.271869"
+    },
+    {
+      "id": "dialogue_20260822_1958_gzfxxk",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "✅ 已删除待办: 去买咖啡豆",
+      "summary": "确认：✅ 已删除待办: 去买咖啡豆",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T19:58:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:58:47.849268"
+    },
+    {
+      "id": "dialogue_20260822_1958_0649b6",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "删除待办1",
+      "summary": "日程：删除待办1",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-22T19:58:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:58:47.833964"
+    },
+    {
+      "id": "dialogue_20260822_1954_ywf13y",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n📅 日程安排:\n  [1] 2026-08-23 15:00 会议\n  [2] 2026-08-20  重要的会议\n  [3] 2026-08-20 15:00 会议\n  [4] 2026-08-17  重要的会议\n  [5] 2026-08-17  重要的会议\n  [6] 2026-08-17 15:00 会议\n  [7] 2026-08-17 15:00 会议\n  [8] 2026-08-17 15:00 会议\n  [9] 2026-08-13  会议十点\n  [10] 2026-08-13  午十点会议\n  [11] 2026-08-13  重要的会议\n  [12] 2026-08-13 10:00 会议\n  [13] 2026-08-13 15:00 会议\n  [14] 2026-08-08 15:00 会议\n📋 待办事项:\n  ⬜ [1] 去买咖啡豆 ⏰2026-08-21 15:00\n  ⬜ [2] 把它五分钟 ⏰2026-08-19 22:51\n  ⬜ [3] 去买咖啡豆 ⏰2026-08-18 15:00\n  ⬜ [4] 测试 ⏰2026-08-16 23:59\n  ⬜ [5] 有个小测试 ⏰2026-08-13 12:30\n  ⬜ [6] 去买咖啡豆 ⏰2026-08-13 15:00\n  ⬜ [7] 会议 ⏰2026-08-11 15:00\n  ⬜ [8] 买牛奶 ⏰2026-08-08\n  ⬜ [9] 提醒 ⏰2026-07-28 19:27\n  ⬜ [10] 叫我 ⏰2026-07-28 19:34\n  ⬜ [11] 泡咖啡 ⏰2026-07-28 20:05 要换个日期查查看吗？",
+      "summary": "确认：来，给你列出来啦：\n\n📅 日程安排:",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T19:54:26",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:54:26.204092"
+    },
+    {
+      "id": "dialogue_20260822_1954_5bsxd7",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "显示所有待办",
+      "summary": "日程：显示所有待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-22T19:54:26",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:54:26.191156"
+    },
+    {
+      "id": "dialogue_20260822_1954_ylk67i",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "✅ 已添加日程:会议(2026-08-23 15:00)",
+      "summary": "确认：✅ 已添加日程:会议(2026-08-2",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T19:54:06",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:54:06.913423"
+    },
+    {
+      "id": "dialogue_20260822_1954_5dfy7p",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "添加会议明天下午3点",
+      "summary": "添加日程：会议明天下午3点",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T19:54:06",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:54:06.900616"
+    },
+    {
+      "id": "dialogue_20260822_1950_utny4e",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "已删掉啦，今天那1条记录清掉咯～ 还有别的要调整的吗？",
+      "summary": "确认：已删掉啦，今天那1条记录清掉咯～ 还有别",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T19:50:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:50:41.900449"
+    },
+    {
+      "id": "dialogue_20260822_1950_jmcdo1",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T19:50:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:50:41.888561"
+    },
+    {
+      "id": "dialogue_20260822_1949_lq56fs",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "确认删除今天的财务记录吗？此操作不可恢复。",
+      "summary": "确认：确认删除今天的财务记录吗？此操作不可恢复",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T19:49:36",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:49:36.501298"
+    },
+    {
+      "id": "dialogue_20260822_1949_xtw2ll",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T19:49:36",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:49:36.490846"
+    },
+    {
+      "id": "dialogue_20260822_1947_gvqwub",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "就这一笔记录：2026-08-22 饭 25元（2026-08-22仅此一笔） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：就这一笔记录：2026-08-22 饭",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T19:47:00",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:47:00.197092"
+    },
+    {
+      "id": "dialogue_20260822_1947_oreu97",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "查看今天的财务记录",
+      "summary": "工具操作：查看今天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T19:47:00",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:47:00.183760"
+    },
+    {
+      "id": "dialogue_20260822_1945_pb83jr",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天饭花的25块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天饭花的25块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T19:45:58",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:45:58.323335"
+    },
+    {
+      "id": "dialogue_20260822_1945_pi45kx",
+      "dialogue_id": "session_20260822_1945_y9nkog",
+      "role": "user",
+      "original_text": "今天吃饭花了25元",
+      "summary": "记账：饭25元",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-22T19:45:58",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T19:45:58.309771"
+    },
+    {
+      "id": "dialogue_20260822_1859_ukyz6m",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "1. 可以考虑自己做饭：最近外出/外卖就餐较多（约3次/周），每月可节省约64元",
+      "summary": "确认：1. 可以考虑自己做饭：最近外出/外卖就",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-22T18:59:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:59:51.545785"
+    },
+    {
+      "id": "dialogue_20260822_1859_fni19j",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "有什么建议给我",
+      "summary": "工具操作：有什么建议给我",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T18:59:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:59:51.530948"
+    },
+    {
+      "id": "dialogue_20260822_1859_cb0yu5",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "最近3周消费趋势：7-27周257元、8-3周95元、8-10周248.5元；最近3周支出保持平稳（257元→248.5元）；主要支出集中在生活（178.5元）",
+      "summary": "确认：最近3周消费趋势：7-27周257元、8",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T18:59:11",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:59:11.196132"
+    },
+    {
+      "id": "dialogue_20260822_1859_35wurm",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "最近消费趋势怎么样",
+      "summary": "工具操作：最近消费趋势怎么样",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T18:59:11",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:59:11.185521"
+    },
+    {
+      "id": "dialogue_20260822_1859_gzcqvc",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "1. 喝咖啡（44次，刚形成） 2. 吃饭（21次，刚形成） 3. 购物（17次，刚形成） 4. 开会（9次，刚形成） 5. 喝东西（6次，刚形成） 你最近的习惯有：喝咖啡、吃饭、购物。其中「喝咖啡」最频繁（44次），刚形成。",
+      "summary": "确认：1. 喝咖啡（44次，刚形成） 2. 吃",
+      "tags": [
+        "咖啡",
+        "吃饭",
+        "会议",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T18:59:04",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:59:04.156148"
+    },
+    {
+      "id": "dialogue_20260822_1859_c8usio",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "我最近有什么习惯",
+      "summary": "工具操作：我最近有什么习惯",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T18:59:04",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:59:04.145219"
+    },
+    {
+      "id": "dialogue_20260822_1858_ccwg5i",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "找到 6 条与「焦虑」相关的记录：\n\n[情绪]\n  压力很大 (2026-08-22)\n  压力很大 (2026-08-16)\n  很焦虑 (2026-08-16)\n[对话]\n  最近压力很大，有点焦虑 (2026-08-22)\n  今天很焦虑 (2026-08-16)\n  最近压力很大，有点焦虑 (2026-08-16)",
+      "summary": "确认：找到 6 条与「焦虑」相关的记录：\n\n[",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T18:58:14",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:58:14.005625"
+    },
+    {
+      "id": "dialogue_20260822_1858_5z9fvf",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "搜索焦虑",
+      "summary": "工具操作：搜索焦虑",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T18:58:13",
+      "mood": "焦虑",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:58:13.992076"
+    },
+    {
+      "id": "dialogue_20260822_1857_5j8jse",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "听起来你现在可能遇到了一些挑战，感到有些压力和焦虑。有时候把这些感受说出来已经很有帮助了。如果你愿意的话，可以分享一下具体的原因或者遇到的困难，也许我能提供一些支持或建议呢。同时，记得照顾好自己的情绪，适时放松一下，比如散步、听音乐或是做些喜欢的事情。有什么需要我帮忙的吗？",
+      "summary": "分享你的感受和困难，我会尽力帮助你。",
+      "tags": [
+        "运动",
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T18:57:44",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:57:44.362621"
+    },
+    {
+      "id": "dialogue_20260822_1857_qly09l",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "最近压力很大，有点焦虑",
+      "summary": "近期压力大，感到焦虑。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T18:57:41",
+      "mood": "焦虑",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:57:41.981452"
+    },
+    {
+      "id": "dialogue_20260822_1856_utmme7",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "找到 6 条与「开心」相关的记录：\n\n[情绪]\n  心情很好 (2026-08-22)\n  心情很好 (2026-08-16)\n  心情不错 (2026-08-16)\n[对话]\n  那太好了！很高兴听到你心情不错。有什么特别的事情让你感到开心吗？或者想要分享一些美好的事情吗？有时候把好心情说出来也会让它们变得更加美好哦~ 😊 (2026-08-22)\n  那真是太棒啦！心情好是每天的美好开始。有啥开心的事儿愿意和我分享一下吗？或者您想听听今天的天气预报，还是计划了什么有趣的活动呢？ (2026-08-16)\n  听起来你的心情不错呢！有什么开心的事情想要分享吗？或者有没有什么需要我帮忙打理的事情？👋 (2026-08-13)",
+      "summary": "确认：找到 6 条与「开心」相关的记录：\n\n[",
+      "tags": [
+        "情绪",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T18:56:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:56:39.668970"
+    },
+    {
+      "id": "dialogue_20260822_1856_7n7jk6",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "搜索开心",
+      "summary": "工具操作：搜索开心",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T18:56:39",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:56:39.654313"
+    },
+    {
+      "id": "dialogue_20260822_1851_ms0a3a",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "assistant",
+      "original_text": "那太好了！很高兴听到你心情不错。有什么特别的事情让你感到开心吗？或者想要分享一些美好的事情吗？有时候把好心情说出来也会让它们变得更加美好哦~ 😊",
+      "summary": "很高兴听到你有好事想分享。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T18:51:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:51:39.998622"
+    },
+    {
+      "id": "dialogue_20260822_1851_8azq0j",
+      "dialogue_id": "session_20260822_1851_8fcxaw",
+      "role": "user",
+      "original_text": "我今天心情很好",
+      "summary": "今天心情愉快。",
+      "tags": [
+        "情绪",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T18:51:37",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T18:51:37.643096"
+    },
+    {
+      "id": "dialogue_20260822_1623_tyhcl2",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "assistant",
+      "original_text": "本周总结：共花费0元，共10项日程，完成7次会议，经常喝咖啡(1次)",
+      "summary": "确认：本周总结：共花费0元，共10项日程，完成",
+      "tags": [
+        "咖啡",
+        "会议",
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T16:23:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:23:24.879863"
+    },
+    {
+      "id": "dialogue_20260822_1623_1hc9pf",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "user",
+      "original_text": "总结一下这周",
+      "summary": "工具操作：总结一下这周",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T16:23:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:23:24.869035"
+    },
+    {
+      "id": "dialogue_20260822_1623_3k8qpz",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "assistant",
+      "original_text": "这段时间还没有数据记录哦",
+      "summary": "确认：这段时间还没有数据记录哦",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T16:23:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:23:07.403969"
+    },
+    {
+      "id": "dialogue_20260822_1623_csc77z",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "user",
+      "original_text": "我一般什么时候花钱最多？",
+      "summary": "工具操作：我一般什么时候花钱最多？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T16:23:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:23:07.394569"
+    },
+    {
+      "id": "dialogue_20260822_1622_is8lb2",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "assistant",
+      "original_text": "最大开支：日常消费 30元 (2026-08-12)",
+      "summary": "确认：最大开支：日常消费 30元 (2026-",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T16:22:59",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:22:59.301778"
+    },
+    {
+      "id": "dialogue_20260822_1622_qypils",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "user",
+      "original_text": "这个月最大的开支是什么？",
+      "summary": "工具操作：这个月最大的开支是什么？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T16:22:59",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:22:59.288116"
+    },
+    {
+      "id": "dialogue_20260822_1622_zuevgn",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "assistant",
+      "original_text": "本月共花费408.5元，上月共花费339元，比上月多21%",
+      "summary": "确认：本月共花费408.5元，上月共花费339",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T16:22:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:22:47.929497"
+    },
+    {
+      "id": "dialogue_20260822_1622_esd91h",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "user",
+      "original_text": "这个月开销比上个月大吗？",
+      "summary": "工具操作：这个月开销比上个月大吗？",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T16:22:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:22:47.919291"
+    },
+    {
+      "id": "dialogue_20260822_1622_nbg30y",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "assistant",
+      "original_text": "本周共花费0元，上周共花费248.5元，比上周少100%",
+      "summary": "确认：本周共花费0元，上周共花费248.5元，",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T16:22:25",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:22:25.959299"
+    },
+    {
+      "id": "dialogue_20260822_1622_wcs6x5",
+      "dialogue_id": "session_20260822_1622_cwwluz",
+      "role": "user",
+      "original_text": "本周花了多少？比上周多吗？",
+      "summary": "工具操作：本周花了多少？比上周多吗？",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T16:22:25",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T16:22:25.949849"
+    },
+    {
+      "id": "dialogue_20260822_0210_e8ru7n",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "assistant",
+      "original_text": "本月的记忆记录：\n\n[事实] (3条)\n\n我喜欢喝冰美式咖啡\n\n晚上买了根雪糕花两块钱，挺好吃的\n\n我叫霖\n\n[事件] (73条)\n\n记账 30 笔，共 5401.5 元\n\n添加待办「叫我」(到期:2026-08-19 22:23)\n\n添加待办「把它五分钟」(到期:2026-08-19 22:27)\n\n添加日程「会议」(2026-08-20 15:00)\n\n添加日程「重要的会议」(2026-08-20 )\n\n添加待办「测试」(到期:2026-08-19 22:47)\n\n  … 等 43 条\n\n[情绪] (4条)\n\n开心（心情很好）\n\n开心（心情不错）\n\n焦虑（压力很大）\n\n很焦虑",
+      "summary": "确认：本月的记忆记录：\n\n[事实] (3条)",
+      "tags": [
+        "咖啡",
+        "会议",
+        "情绪",
+        "购物",
+        "财务"
+      ],
+      "timestamp": "2026-08-22T02:10:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:10:03.097180"
+    },
+    {
+      "id": "dialogue_20260822_0210_xula51",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "user",
+      "original_text": "查看本月的记忆",
+      "summary": "工具操作：查看本月的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T02:10:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:10:03.085509"
+    },
+    {
+      "id": "dialogue_20260822_0209_zmfzic",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "assistant",
+      "original_text": "找到 2 条与「咖啡」相关的记录：\n\n[事实]\n  我喜欢喝冰美式咖啡 (2026-08-19)\n[对话]\n  好的，我记住了：我喜欢喝冰美式咖啡 (2026-08-19)",
+      "summary": "确认：找到 2 条与「咖啡」相关的记录：\n\n[",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T02:09:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:09:47.458869"
+    },
+    {
+      "id": "dialogue_20260822_0209_gkwcvq",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T02:09:47",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:09:47.446038"
+    },
+    {
+      "id": "dialogue_20260822_0209_irnz4s",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "assistant",
+      "original_text": "「奶茶」相关的记忆有：\n\n[弱关联] (16条)\n\n添加待办「测试」(到期:2026-08-16 23:59) (待办) - 原因：同标签\n\n添加待办「去买咖啡豆」(到期:2026-08-18 15:00) (待办) - 原因：同标签\n\n添加待办「任务」(到期:2026-08-14) (待办) - 原因：同标签\n\n添加待办「任务」(到期:2026-08-14) (待办) - 原因：同标签\n\n添加待办「任务」(到期:2026-08-14) (待办) - 原因：同标签\n\n  … 等 16 条",
+      "summary": "确认：「奶茶」相关的记忆有：\n\n[弱关联] (",
+      "tags": [
+        "咖啡",
+        "饮品",
+        "购物",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T02:09:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:09:07.089825"
+    },
+    {
+      "id": "dialogue_20260822_0209_36q6fc",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "user",
+      "original_text": "奶茶和什么相关",
+      "summary": "工具操作：奶茶和什么相关",
+      "tags": [
+        "饮品",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T02:09:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:09:07.076840"
+    },
+    {
+      "id": "dialogue_20260822_0208_atv2yk",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "assistant",
+      "original_text": "「咖啡」相关的记忆有：\n\n[弱关联] (10条)\n\n添加待办「叫我」(到期:2026-08-19 22:23) (待办) - 原因：同标签、时间临近\n\n添加待办「把它五分钟」(到期:2026-08-19 22:27) (待办) - 原因：同标签、时间临近\n\n添加日程「会议」(2026-08-20 15:00) (日程) - 原因：时间临近\n\n添加日程「重要的会议」(2026-08-20 ) (日程) - 原因：时间临近\n\n添加待办「测试」(到期:2026-08-19 22:47) (待办) - 原因：同标签、时间临近\n\n  … 等 10 条",
+      "summary": "确认：「咖啡」相关的记忆有：\n\n[弱关联] (",
+      "tags": [
+        "咖啡",
+        "会议",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T02:08:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:08:53.528635"
+    },
+    {
+      "id": "dialogue_20260822_0208_7hac2l",
+      "dialogue_id": "session_20260822_0208_so5fbl",
+      "role": "user",
+      "original_text": "咖啡和什么相关",
+      "summary": "工具操作：咖啡和什么相关",
+      "tags": [
+        "咖啡",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T02:08:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:08:53.518254"
+    },
+    {
+      "id": "dialogue_20260822_0206_bge99u",
+      "dialogue_id": "session_20260822_0206_fbu7hy",
+      "role": "assistant",
+      "original_text": "「咖啡」相关的记忆有：\n\n[弱关联] (10条)\n\n添加待办「叫我」(到期:2026-08-19 22:23) (待办) - 原因：同标签、时间临近\n\n添加待办「把它五分钟」(到期:2026-08-19 22:27) (待办) - 原因：同标签、时间临近\n\n添加日程「会议」(2026-08-20 15:00) (日程) - 原因：时间临近\n\n添加日程「重要的会议」(2026-08-20 ) (日程) - 原因：时间临近\n\n添加待办「测试」(到期:2026-08-19 22:47) (待办) - 原因：同标签、时间临近\n\n  … 等 10 条",
+      "summary": "确认：「咖啡」相关的记忆有：\n\n[弱关联] (",
+      "tags": [
+        "咖啡",
+        "会议",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T02:06:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:06:57.755045"
+    },
+    {
+      "id": "dialogue_20260822_0206_04uai6",
+      "dialogue_id": "session_20260822_0206_fbu7hy",
+      "role": "user",
+      "original_text": "咖啡和什么相关",
+      "summary": "工具操作：咖啡和什么相关",
+      "tags": [
+        "咖啡",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T02:06:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T02:06:57.744917"
+    },
+    {
+      "id": "dialogue_20260822_0151_jm7tpd",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "assistant",
+      "original_text": "找到 2 条与「咖啡」相关的记录：\n\n[事实]\n  我喜欢喝冰美式咖啡 (2026-08-19)\n[对话]\n  好的，我记住了：我喜欢喝冰美式咖啡 (2026-08-19)",
+      "summary": "确认：找到 2 条与「咖啡」相关的记录：\n\n[",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:51:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:51:17.687304"
+    },
+    {
+      "id": "dialogue_20260822_0151_9driu6",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:51:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:51:17.676055"
+    },
+    {
+      "id": "dialogue_20260822_0151_ceqzlt",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "assistant",
+      "original_text": "昨天没有记忆记录哦",
+      "summary": "确认：昨天没有记忆记录哦",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:51:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:51:07.960947"
+    },
+    {
+      "id": "dialogue_20260822_0151_ovn5ar",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "user",
+      "original_text": "查看昨天的记忆",
+      "summary": "工具操作：查看昨天的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:51:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:51:07.948801"
+    },
+    {
+      "id": "dialogue_20260822_0150_1ahsp0",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "assistant",
+      "original_text": "本月的记忆记录：\n\n[事实] (3条)\n\n我喜欢喝冰美式咖啡\n\n晚上买了根雪糕花两块钱，挺好吃的\n\n我叫霖\n\n[事件] (73条)\n\n记账 30 笔，共 5401.5 元\n\n添加待办「叫我」(到期:2026-08-19 22:23)\n\n添加待办「把它五分钟」(到期:2026-08-19 22:27)\n\n添加日程「会议」(2026-08-20 15:00)\n\n添加日程「重要的会议」(2026-08-20 )\n\n添加待办「测试」(到期:2026-08-19 22:47)\n\n  … 等 43 条\n\n[情绪] (4条)\n\n开心（心情很好）\n\n开心（心情不错）\n\n焦虑（压力很大）\n\n很焦虑",
+      "summary": "确认：本月的记忆记录：\n\n[事实] (3条)",
+      "tags": [
+        "咖啡",
+        "会议",
+        "情绪",
+        "购物",
+        "财务"
+      ],
+      "timestamp": "2026-08-22T01:50:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:50:57.036764"
+    },
+    {
+      "id": "dialogue_20260822_0150_stvkhp",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "user",
+      "original_text": "查看本月的记忆",
+      "summary": "工具操作：查看本月的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:50:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:50:57.026991"
+    },
+    {
+      "id": "dialogue_20260822_0150_uq8qmu",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "assistant",
+      "original_text": "今天没有记忆记录哦",
+      "summary": "确认：今天没有记忆记录哦",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:50:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:50:45.991339"
+    },
+    {
+      "id": "dialogue_20260822_0150_sqrs87",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "user",
+      "original_text": "查看今天的记忆",
+      "summary": "工具操作：查看今天的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:50:45",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:50:45.982260"
+    },
+    {
+      "id": "dialogue_20260822_0147_grg3xb",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "assistant",
+      "original_text": "今天没有记忆记录哦",
+      "summary": "确认：今天没有记忆记录哦",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:47:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:47:43.419195"
+    },
+    {
+      "id": "dialogue_20260822_0147_8l5ie5",
+      "dialogue_id": "session_20260822_0147_xxu2o1",
+      "role": "user",
+      "original_text": "查看今天的记忆",
+      "summary": "工具操作：查看今天的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T01:47:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:47:43.408214"
+    },
+    {
+      "id": "dialogue_20260822_0124_mscf21",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "2026-08-22没有收入记录 要换个日期查查看吗？",
+      "summary": "确认：2026-08-22没有收入记录 要换个",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T01:24:16",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:24:16.285187"
+    },
+    {
+      "id": "dialogue_20260822_0124_j0ptgh",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "今天收入多少",
+      "summary": "工具操作：今天收入多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T01:24:16",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:24:16.272913"
+    },
+    {
+      "id": "dialogue_20260822_0123_i7bwz3",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "本月共24笔支出，合计408.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：本月共24笔支出，合计408.5元 需要",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T01:23:09",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:23:09.453882"
+    },
+    {
+      "id": "dialogue_20260822_0123_crft30",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "本月花了多少",
+      "summary": "工具操作：本月花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T01:23:09",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:23:09.441688"
+    },
+    {
+      "id": "dialogue_20260822_0122_q1rn8p",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "昨天没有查到记录哦",
+      "summary": "确认：昨天没有查到记录哦",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:22:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:22:43.236531"
+    },
+    {
+      "id": "dialogue_20260822_0122_pi65wz",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "昨天",
+      "summary": "工具操作：昨天",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:22:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:22:43.227052"
+    },
+    {
+      "id": "dialogue_20260822_0122_0uk3pc",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "本周你做了这些事：\n\n添加日程 2 个\n\n添加待办 5 个\n\n事实：1 条\n  我喜欢喝冰美式咖啡",
+      "summary": "确认：本周你做了这些事：\n\n添加日程 2 个",
+      "tags": [
+        "咖啡",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T01:22:31",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:22:31.882730"
+    },
+    {
+      "id": "dialogue_20260822_0122_eepphs",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "本周",
+      "summary": "工具操作：本周",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:22:31",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:22:31.872599"
+    },
+    {
+      "id": "dialogue_20260822_0122_u7yuk1",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "本月你做了这些事：\n\n记账 30 笔，共 5401.5 元\n\n添加日程 22 个\n\n添加待办 21 个\n\n事实：3 条\n  我喜欢喝冰美式咖啡\n  晚上买了根雪糕花两块钱，挺好吃的\n  我叫霖\n\n情绪：4 条",
+      "summary": "确认：本月你做了这些事：\n\n记账 30 笔，共",
+      "tags": [
+        "咖啡",
+        "购物",
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T01:22:08",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:22:08.109399"
+    },
+    {
+      "id": "dialogue_20260822_0122_lpcuz8",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "本月",
+      "summary": "工具操作：本月",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:22:08",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:22:08.095295"
+    },
+    {
+      "id": "dialogue_20260822_0121_d6ja9f",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "昨天没有查到记录哦",
+      "summary": "确认：昨天没有查到记录哦",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:21:56",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:21:56.006263"
+    },
+    {
+      "id": "dialogue_20260822_0121_1srriq",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "昨天发生了什么",
+      "summary": "工具操作：昨天发生了什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:21:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:21:55.995970"
+    },
+    {
+      "id": "dialogue_20260822_0121_x5e982",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "assistant",
+      "original_text": "上周三你做了这些事：\n\n记账 5 笔，共 64 元\n\n添加日程 14 个\n\n添加待办 11 个\n\n事实：1 条\n  晚上买了根雪糕花两块钱，挺好吃的",
+      "summary": "确认：上周三你做了这些事：\n\n记账 5 笔，共",
+      "tags": [
+        "购物",
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T01:21:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:21:43.951127"
+    },
+    {
+      "id": "dialogue_20260822_0121_d9k9ut",
+      "dialogue_id": "session_20260822_0121_bb82b9",
+      "role": "user",
+      "original_text": "上周三发生了什么",
+      "summary": "工具操作：上周三发生了什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T01:21:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T01:21:43.941298"
+    },
+    {
+      "id": "dialogue_20260822_0058_nohzhy",
+      "dialogue_id": "session_20260822_0057_u2c060",
+      "role": "assistant",
+      "original_text": "本月共24笔支出，合计408.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：本月共24笔支出，合计408.5元 需要",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-22T00:58:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:58:32.456557"
+    },
+    {
+      "id": "dialogue_20260822_0058_g9g69e",
+      "dialogue_id": "session_20260822_0057_u2c060",
+      "role": "user",
+      "original_text": "本月",
+      "summary": "工具操作：本月",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T00:58:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:58:32.447135"
+    },
+    {
+      "id": "dialogue_20260822_0058_506rub",
+      "dialogue_id": "session_20260822_0057_u2c060",
+      "role": "assistant",
+      "original_text": "昨天没有查到记录哦",
+      "summary": "确认：昨天没有查到记录哦",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T00:58:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:58:03.825043"
+    },
+    {
+      "id": "dialogue_20260822_0058_upzyua",
+      "dialogue_id": "session_20260822_0057_u2c060",
+      "role": "user",
+      "original_text": "昨天发生了什么",
+      "summary": "工具操作：昨天发生了什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T00:58:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:58:03.813683"
+    },
+    {
+      "id": "dialogue_20260822_0057_l3h4w4",
+      "dialogue_id": "session_20260822_0057_u2c060",
+      "role": "assistant",
+      "original_text": "上周三你做了这些事：\n\n记账 5 笔，共 64 元\n\n添加日程 14 个\n\n添加待办 11 个\n\n事实：1 条\n  晚上买了根雪糕花两块钱，挺好吃的",
+      "summary": "确认：上周三你做了这些事：\n\n记账 5 笔，共",
+      "tags": [
+        "购物",
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T00:57:26",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:57:26.535696"
+    },
+    {
+      "id": "dialogue_20260822_0057_4anvj1",
+      "dialogue_id": "session_20260822_0057_u2c060",
+      "role": "user",
+      "original_text": "上周三发生了什么",
+      "summary": "工具操作：上周三发生了什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T00:57:26",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:57:26.523148"
+    },
+    {
+      "id": "dialogue_20260822_0001_xbkqmv",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "assistant",
+      "original_text": "「会议」相关的详细记录较少，暂时无法汇总具体内容～",
+      "summary": "确认：「会议」相关的详细记录较少，暂时无法汇总",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-22T00:01:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:55.767926"
+    },
+    {
+      "id": "dialogue_20260822_0001_ngjh1f",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "user",
+      "original_text": "搜索会议",
+      "summary": "添加日程：搜索会议",
+      "tags": [
+        "会议",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T00:01:55",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:55.758005"
+    },
+    {
+      "id": "dialogue_20260822_0001_8xfhqn",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "assistant",
+      "original_text": "没有找到与「奶茶」相关的记录～",
+      "summary": "确认：没有找到与「奶茶」相关的记录～",
+      "tags": [
+        "饮品",
+        "聊天"
+      ],
+      "timestamp": "2026-08-22T00:01:44",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:44.347783"
+    },
+    {
+      "id": "dialogue_20260822_0001_4igzhm",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "user",
+      "original_text": "搜索奶茶",
+      "summary": "工具操作：搜索奶茶",
+      "tags": [
+        "饮品",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T00:01:44",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:44.338519"
+    },
+    {
+      "id": "dialogue_20260822_0001_azdosw",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "assistant",
+      "original_text": "找到 3 条与「雪糕」相关的记录：\n\n[事实]\n  晚上买了根雪糕花两块钱，挺好吃的 (2026-08-12)\n[对话]\n  霖，你今天过得真精彩！不仅享受了美味的雪糕，还保持了良好的记账习惯。继续保持哦～有什么需要我帮忙的吗？ (2026-08-12)\n  好的，我记住了：晚上买了根雪糕花两块钱，挺好吃的 (2026-08-12)",
+      "summary": "确认：找到 3 条与「雪糕」相关的记录：\n\n[",
+      "tags": [
+        "购物",
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T00:01:29",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:29.526745"
+    },
+    {
+      "id": "dialogue_20260822_0001_2t2za7",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "user",
+      "original_text": "搜索雪糕",
+      "summary": "工具操作：搜索雪糕",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T00:01:29",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:29.517734"
+    },
+    {
+      "id": "dialogue_20260822_0001_tf72rf",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "assistant",
+      "original_text": "找到 2 条与「咖啡」相关的记录：\n\n[事实]\n  我喜欢喝冰美式咖啡 (2026-08-19)\n[对话]\n  好的，我记住了：我喜欢喝冰美式咖啡 (2026-08-19)",
+      "summary": "确认：找到 2 条与「咖啡」相关的记录：\n\n[",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T00:01:08",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:08.798342"
+    },
+    {
+      "id": "dialogue_20260822_0001_j5bavi",
+      "dialogue_id": "session_20260822_0001_3nsjx4",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-22T00:01:08",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-22T00:01:08.787310"
+    },
+    {
+      "id": "dialogue_20260821_2322_mo1aq2",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "assistant",
+      "original_text": "「记账」关联记忆（按强度排序）:\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[弱] 下午记账 - 原因：时间临近\n[弱] 下午记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[中] 下午记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 深夜记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 下午记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近\n\n「记账」关联记忆（按强度排序）:\n[强] 凌晨记账 - 原因：同实体:饮品、同标签、时间临近\n[中] 凌晨记账 - 原因：同实体:饮品、同标签\n[中] 下午记账 - 原因：同实体:饮品、同标签\n[弱] 凌晨记账 - 原因：时间临近\n[弱] 凌晨记账 - 原因：时间临近",
+      "summary": "确认：「记账」关联记忆（按强度排序）:\n[中]",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T23:22:48",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T23:22:48.831279"
+    },
+    {
+      "id": "dialogue_20260821_2322_t3ih9f",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "user",
+      "original_text": "查看今天的记忆咖啡和什么相关",
+      "summary": "工具操作：查看今天的记忆咖啡和什么相关",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T23:22:48",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T23:22:48.822340"
+    },
+    {
+      "id": "dialogue_20260821_1218_tus652",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "assistant",
+      "original_text": "🧠 上周三的记录:\n  [2026-08-12] (event) 记账\n  [2026-08-12] (event) 添加日程\n  [2026-08-12] (event) 添加日程\n  [2026-08-12] (event) 添加待办\n  [2026-08-12] (event) 添加日程\n  [2026-08-12] (event) 添加日程\n  [2026-08-12] (event) 添加待办\n  [2026-08-12] (event) 添加日程\n  [2026-08-12] (event) 添加日程\n  [2026-08-12] (event) 添加待办",
+      "summary": "确认：🧠 上周三的记录:\n  [2026-08",
+      "tags": [
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-21T12:18:14",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:18:14.339330"
+    },
+    {
+      "id": "dialogue_20260821_1218_qicogh",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "user",
+      "original_text": "上周三发生了什么",
+      "summary": "工具操作：上周三发生了什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-21T12:18:14",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:18:14.326453"
+    },
+    {
+      "id": "dialogue_20260821_1218_wet3dz",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "assistant",
+      "original_text": "🔍 找到 10 条相关内容:\n  [2026-08-19] (记忆) 添加日程\n  [2026-08-19] (记忆) 添加日程\n  [2026-08-19] (对话) 确认：来，给你列出来啦：\n\n📅 本周的日程:\n  [2026-08-19] (对话) 确认：来，给你列出来啦：\n\n📅 日程安排:\n  [2026-08-19] (对话) 确认：✅ 已添加日程:重要的会议(2026-0\n  [2026-08-19] (对话) 添加日程：明天有个重要的会议\n  [2026-08-19] (对话) 确认：✅ 已添加日程:会议(2026-08-2\n  [2026-08-19] (对话) 添加日程：会议明天下午3点",
+      "summary": "确认：🔍 找到 10 条相关内容:\n  [20",
+      "tags": [
+        "会议",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T12:18:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:18:07.355844"
+    },
+    {
+      "id": "dialogue_20260821_1218_etyy27",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "user",
+      "original_text": "搜索会议",
+      "summary": "添加日程：搜索会议",
+      "tags": [
+        "会议",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T12:18:07",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:18:07.344150"
+    },
+    {
+      "id": "dialogue_20260821_1217_vp3831",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "assistant",
+      "original_text": "🔍 找到 6 条相关内容:\n  [2026-08-16] (记忆) 情绪\n  [2026-08-16] (记忆) 情绪\n  [2026-08-16] (对话) 有啥打算？如看电影、聚会或新计划。\n  [2026-08-16] (对话) 你想聊天气/分享开心事/安排活动吧？\n  [2026-08-13] (对话) 很高兴听到你的好消息！\n  [2026-08-12] (对话) 分享小建议：尝试放松或倾诉心事。",
+      "summary": "确认：🔍 找到 6 条相关内容:\n  [202",
+      "tags": [
+        "娱乐",
+        "情绪",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T12:17:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:17:52.855471"
+    },
+    {
+      "id": "dialogue_20260821_1217_hi2p09",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "user",
+      "original_text": "搜索开心",
+      "summary": "工具操作：搜索开心",
+      "tags": [
+        "情绪",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T12:17:52",
+      "mood": "开心",
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:17:52.845407"
+    },
+    {
+      "id": "dialogue_20260821_1217_yi8mnv",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "assistant",
+      "original_text": "🔍 找到 10 条相关内容:\n  [2026-08-19] (记忆) 添加待办\n  [2026-08-19] (记忆) 我喜欢喝冰美式咖啡\n  [2026-08-19] (对话) 确认：🧠 记忆记录:\n  [2026-08-1\n  [2026-08-19] (对话) 确认：🧠 记忆记录:\n  [2026-08-1\n  [2026-08-19] (对话) 确认：好的，我记住了：我喜欢喝冰美式咖啡\n  [2026-08-19] (对话) 记忆：我喜欢喝冰美式咖啡\n  [2026-08-19] (对话) 确认：✅ 已添加待办:去买咖啡豆 (到期:20\n  [2026-08-19] (对话) 添加日程：后天下午三点提醒我去买咖啡豆",
+      "summary": "确认：🔍 找到 10 条相关内容:\n  [20",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T12:17:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:17:30.930454"
+    },
+    {
+      "id": "dialogue_20260821_1217_f9uvxn",
+      "dialogue_id": "session_20260821_1217_arbik6",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-21T12:17:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-21T12:17:30.920192"
+    },
+    {
+      "id": "dialogue_20260819_2324_vveeyd",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "📖 你说：\n「回忆一下昨天的事」\n（2026-08-19 23:23）",
+      "summary": "确认：📖 你说：\n「回忆一下昨天的事」\n（20",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:24:01",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:24:01.057809"
+    },
+    {
+      "id": "dialogue_20260819_2324_bob5yw",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "详细跟我说一说",
+      "summary": "工具操作：详细跟我说一说",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T23:24:01",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:24:01.049071"
+    },
+    {
+      "id": "dialogue_20260819_2323_4m6vhp",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "目前还没有相关的记忆记录～",
+      "summary": "确认：目前还没有相关的记忆记录～",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:23:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:23:05.100215"
+    },
+    {
+      "id": "dialogue_20260819_2323_pjflnz",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "回忆一下昨天的事",
+      "summary": "工具操作：回忆一下昨天的事",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:23:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:23:05.087831"
+    },
+    {
+      "id": "dialogue_20260819_2322_kj2wts",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "🧠 记忆记录:\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加日程\n  [2026-08-19] (event) 添加日程\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (fact) 我喜欢喝冰美式咖啡\n  [2026-08-16] (event) 添加日程\n  [2026-08-16] (event) 记账",
+      "summary": "确认：🧠 记忆记录:\n  [2026-08-1",
+      "tags": [
+        "咖啡",
+        "财务",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:22:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:22:53.023470"
+    },
+    {
+      "id": "dialogue_20260819_2322_lsq3us",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "查看最近的记忆",
+      "summary": "工具操作：查看最近的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:22:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:22:53.013073"
+    },
+    {
+      "id": "dialogue_20260819_2320_01gbqa",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "🧠 记忆记录:\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加日程\n  [2026-08-19] (event) 添加日程\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (event) 添加待办\n  [2026-08-19] (fact) 我喜欢喝冰美式咖啡",
+      "summary": "确认：🧠 记忆记录:\n  [2026-08-1",
+      "tags": [
+        "咖啡",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:20:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:20:02.420016"
+    },
+    {
+      "id": "dialogue_20260819_2320_3isw7w",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "查看今天的记忆",
+      "summary": "工具操作：查看今天的记忆",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:20:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:20:02.408767"
+    },
+    {
+      "id": "dialogue_20260819_2318_pwak6w",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "🔍 找到 10 条相关内容:\n  [2026-08-19] (记忆) 添加待办\n  [2026-08-19] (记忆) 我喜欢喝冰美式咖啡\n  [2026-08-19] (对话) 确认：好的，我记住了：我喜欢喝冰美式咖啡\n  [2026-08-19] (对话) 记忆：我喜欢喝冰美式咖啡\n  [2026-08-19] (对话) 确认：✅ 已添加待办:去买咖啡豆 (到期:20\n  [2026-08-19] (对话) 添加日程：后天下午三点提醒我去买咖啡豆\n  [2026-08-19] (对话) 确认：来，给你列出来啦：\n\n📅 本周的日程:\n  [2026-08-19] (对话) 确认：来，给你列出来啦：\n\n📅 日程安排:",
+      "summary": "确认：🔍 找到 10 条相关内容:\n  [20",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:18:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:18:30.036901"
+    },
+    {
+      "id": "dialogue_20260819_2318_trax37",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "搜索咖啡",
+      "summary": "工具操作：搜索咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:18:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:18:30.027261"
+    },
+    {
+      "id": "dialogue_20260819_2318_j61ka9",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "好的，我记住了：我喜欢喝冰美式咖啡",
+      "summary": "确认：好的，我记住了：我喜欢喝冰美式咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:18:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:18:13.684873"
+    },
+    {
+      "id": "dialogue_20260819_2318_q6tk5o",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "记住我喜欢喝冰美式咖啡",
+      "summary": "记忆：我喜欢喝冰美式咖啡",
+      "tags": [
+        "咖啡",
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:18:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:18:13.674312"
+    },
+    {
+      "id": "dialogue_20260819_2318_2arw6x",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "你叫霖呀，我记得你。",
+      "summary": "确认：你叫霖呀，我记得你。",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:18:06",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:18:06.054678"
+    },
+    {
+      "id": "dialogue_20260819_2318_z837sz",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "我叫什么",
+      "summary": "工具操作：我叫什么",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T23:18:06",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:18:06.046341"
+    },
+    {
+      "id": "dialogue_20260819_2316_n68j2x",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "你叫霖呀，我记得你。",
+      "summary": "确认：你叫霖呀，我记得你。",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:16:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:16:43.164742"
+    },
+    {
+      "id": "dialogue_20260819_2316_jgq6gx",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "我是谁",
+      "summary": "工具操作：我是谁",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T23:16:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:16:43.156371"
+    },
+    {
+      "id": "dialogue_20260819_2311_3fr3ta",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "assistant",
+      "original_text": "这个我早就记住了：我叫霖",
+      "summary": "确认：这个我早就记住了：我叫霖",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:11:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:11:41.904996"
+    },
+    {
+      "id": "dialogue_20260819_2311_mx61cm",
+      "dialogue_id": "session_20260819_2311_7zs240",
+      "role": "user",
+      "original_text": "记住我叫霖",
+      "summary": "记忆：我叫霖",
+      "tags": [
+        "记忆"
+      ],
+      "timestamp": "2026-08-19T23:11:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T23:11:41.893646"
+    },
+    {
+      "id": "dialogue_20260819_2247_gpbbot",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已添加待办:去买咖啡豆 (到期:2026-08-21 15:00)",
+      "summary": "确认：✅ 已添加待办:去买咖啡豆 (到期:20",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:47:37",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:47:37.669265"
+    },
+    {
+      "id": "dialogue_20260819_2247_xe3ztl",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "后天下午三点提醒我去买咖啡豆",
+      "summary": "添加日程：后天下午三点提醒我去买咖啡豆",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:47:37",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:47:37.659819"
+    },
+    {
+      "id": "dialogue_20260819_2246_9kp6qm",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已修改提醒: 「测试」(2026-08-19 22:47) → ✅ 已添加待办:把它五分钟 (到期:2026-08-19 22:51)",
+      "summary": "确认：✅ 已修改提醒: 「测试」(2026-0",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:57.319381"
+    },
+    {
+      "id": "dialogue_20260819_2246_bgsisc",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "把它改成五分钟",
+      "summary": "工具操作：把它改成五分钟",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T22:46:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:57.306210"
+    },
+    {
+      "id": "dialogue_20260819_2246_5cqvv0",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已添加待办:测试 (到期:2026-08-19 22:47)",
+      "summary": "确认：✅ 已添加待办:测试 (到期:2026-",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:51.280073"
+    },
+    {
+      "id": "dialogue_20260819_2246_k0mbf5",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "一分钟后提醒我测试",
+      "summary": "添加日程：一分钟后提醒我测试",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:51.270105"
+    },
+    {
+      "id": "dialogue_20260819_2246_w7f7h6",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "确认删除今天的日程/待办吗？此操作不可恢复。",
+      "summary": "确认：确认删除今天的日程/待办吗？此操作不可恢",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:23.335900"
+    },
+    {
+      "id": "dialogue_20260819_2246_901mhi",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "删除今天的日程数据",
+      "summary": "日程：删除今天的日程数据",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:23.323572"
+    },
+    {
+      "id": "dialogue_20260819_2246_a6f6ap",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已删除待办: 把它五分钟",
+      "summary": "确认：✅ 已删除待办: 把它五分钟",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:17.401505"
+    },
+    {
+      "id": "dialogue_20260819_2246_trdt4k",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "删除待办1",
+      "summary": "日程：删除待办1",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:46:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:46:17.393540"
+    },
+    {
+      "id": "dialogue_20260819_2244_92vh0b",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n📅 本周的日程:\n  [1] 2026-08-20  重要的会议\n  [2] 2026-08-20 15:00 会议\n  [3] 2026-08-17  重要的会议\n  [4] 2026-08-17  重要的会议\n  [5] 2026-08-17 15:00 会议\n  [6] 2026-08-17 15:00 会议\n  [7] 2026-08-17 15:00 会议\n📋 本周的待办:\n  ⬜ [1] 把它五分钟 ⏰2026-08-19 22:27\n  ⬜ [2] 去买咖啡豆 ⏰2026-08-18 15:00 要换个日期查查看吗？",
+      "summary": "确认：来，给你列出来啦：\n\n📅 本周的日程:",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:44:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:44:39.020989"
+    },
+    {
+      "id": "dialogue_20260819_2244_cbljkl",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "查看本周的日程",
+      "summary": "日程：查看本周的日程",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:44:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:44:39.011378"
+    },
+    {
+      "id": "dialogue_20260819_2243_naz0e5",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "📋 2026-08-19 的待办事项:\n  ⬜ [1] 把它五分钟 ⏰2026-08-19 22:27",
+      "summary": "确认：📋 2026-08-19 的待办事项:",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:43:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:43:03.226915"
+    },
+    {
+      "id": "dialogue_20260819_2243_oz9cup",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "显示今天的待办",
+      "summary": "日程：显示今天的待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:43:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:43:03.217630"
+    },
+    {
+      "id": "dialogue_20260819_2242_yi5mk9",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n📅 日程安排:\n  [1] 2026-08-20  重要的会议\n  [2] 2026-08-20 15:00 会议\n  [3] 2026-08-17  重要的会议\n  [4] 2026-08-17  重要的会议\n  [5] 2026-08-17 15:00 会议\n  [6] 2026-08-17 15:00 会议\n  [7] 2026-08-17 15:00 会议\n  [8] 2026-08-13  会议十点\n  [9] 2026-08-13  午十点会议\n  [10] 2026-08-13  重要的会议\n  [11] 2026-08-13 10:00 会议\n  [12] 2026-08-13 15:00 会议\n  [13] 2026-08-08 15:00 会议\n📋 待办事项:\n  ⬜ [1] 把它五分钟 ⏰2026-08-19 22:27\n  ⬜ [2] 去买咖啡豆 ⏰2026-08-18 15:00\n  ⬜ [3] 测试 ⏰2026-08-16 23:59\n  ⬜ [4] 有个小测试 ⏰2026-08-13 12:30\n  ⬜ [5] 去买咖啡豆 ⏰2026-08-13 15:00\n  ⬜ [6] 会议 ⏰2026-08-11 15:00\n  ⬜ [7] 买牛奶 ⏰2026-08-08\n  ⬜ [8] 提醒 ⏰2026-07-28 19:27\n  ⬜ [9] 叫我 ⏰2026-07-28 19:34\n  ⬜ [10] 泡咖啡 ⏰2026-07-28 20:05 要换个日期查查看吗？",
+      "summary": "确认：来，给你列出来啦：\n\n📅 日程安排:",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:42:42",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:42:42.538558"
+    },
+    {
+      "id": "dialogue_20260819_2242_npw9id",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "显示所有待办",
+      "summary": "日程：显示所有待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:42:42",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:42:42.527837"
+    },
+    {
+      "id": "dialogue_20260819_2242_g7u8r5",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已添加日程:重要的会议(2026-08-20 )",
+      "summary": "确认：✅ 已添加日程:重要的会议(2026-0",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:42:26",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:42:26.924269"
+    },
+    {
+      "id": "dialogue_20260819_2242_paqm7o",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "明天有个重要的会议",
+      "summary": "添加日程：明天有个重要的会议",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:42:26",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:42:26.916135"
+    },
+    {
+      "id": "dialogue_20260819_2239_25kaf3",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已添加日程:会议(2026-08-20 15:00)",
+      "summary": "确认：✅ 已添加日程:会议(2026-08-2",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:39:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:39:53.268259"
+    },
+    {
+      "id": "dialogue_20260819_2239_66ddje",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "添加会议明天下午3点",
+      "summary": "添加日程：会议明天下午3点",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:39:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:39:53.257570"
+    },
+    {
+      "id": "dialogue_20260819_2222_e1ea77",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已修改提醒: 「叫我」(2026-08-19 22:23) → ✅ 已添加待办:把它五分钟 (到期:2026-08-19 22:27)",
+      "summary": "确认：✅ 已修改提醒: 「叫我」(2026-0",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:22:44",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:22:44.480204"
+    },
+    {
+      "id": "dialogue_20260819_2222_nima4b",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "把它改成五分钟",
+      "summary": "工具操作：把它改成五分钟",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T22:22:44",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:22:44.470664"
+    },
+    {
+      "id": "dialogue_20260819_2222_xpnrti",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "✅ 已添加待办:叫我 (到期:2026-08-19 22:23)",
+      "summary": "确认：✅ 已添加待办:叫我 (到期:2026-",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:22:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:22:27.389341"
+    },
+    {
+      "id": "dialogue_20260819_2222_taxhos",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "一分钟后叫我",
+      "summary": "工具操作：一分钟后叫我",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:22:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:22:27.380931"
+    },
+    {
+      "id": "dialogue_20260819_2222_gf2pqh",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "📋 今天没有需要删除的数据",
+      "summary": "确认：📋 今天没有需要删除的数据",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T22:22:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:22:13.881659"
+    },
+    {
+      "id": "dialogue_20260819_2222_edq0ch",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "删除今天的日程数据",
+      "summary": "日程：删除今天的日程数据",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:22:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:22:13.872725"
+    },
+    {
+      "id": "dialogue_20260819_2220_ywwupn",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "确认删除今天的日程/待办吗？此操作不可恢复。",
+      "summary": "确认：确认删除今天的日程/待办吗？此操作不可恢",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:20:10",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:20:10.666096"
+    },
+    {
+      "id": "dialogue_20260819_2220_1zdvt8",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "删除今天的日程数据",
+      "summary": "日程：删除今天的日程数据",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:20:10",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:20:10.657694"
+    },
+    {
+      "id": "dialogue_20260819_2218_coukbu",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "好的，这是所有待办事项：\n\n📋 待办事项:\n  ⬜ [1] 去买咖啡豆 ⏰2026-08-18 15:00\n  ⬜ [2] 测试 ⏰2026-08-16 23:59\n  ⬜ [3] 有个小测试 ⏰2026-08-13 12:30\n  ⬜ [4] 去买咖啡豆 ⏰2026-08-13 15:00\n  ⬜ [5] 会议 ⏰2026-08-11 15:00\n  ⬜ [6] 买牛奶 ⏰2026-08-08\n  ⬜ [7] 提醒 ⏰2026-07-28 19:27\n  ⬜ [8] 叫我 ⏰2026-07-28 19:34\n  ⬜ [9] 泡咖啡 ⏰2026-07-28 20:05\n\n有你需要删除或修改的待办事项吗？或者还有其他需要帮忙的地方呢？",
+      "summary": "这是你的所有待办事项清单。需要帮助吗？",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:18:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:18:05.872252"
+    },
+    {
+      "id": "dialogue_20260819_2218_6et26y",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "代办的",
+      "summary": "用户提到代办事项。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-19T22:18:03",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:18:03.303424"
+    },
+    {
+      "id": "dialogue_20260819_2216_bso213",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n📅 日程安排:\n  [1] 2026-08-17  重要的会议\n  [2] 2026-08-17  重要的会议\n  [3] 2026-08-17 15:00 会议\n  [4] 2026-08-17 15:00 会议\n  [5] 2026-08-17 15:00 会议\n  [6] 2026-08-13  会议十点\n  [7] 2026-08-13  午十点会议\n  [8] 2026-08-13  重要的会议\n  [9] 2026-08-13 10:00 会议\n  [10] 2026-08-13 15:00 会议\n  [11] 2026-08-08 15:00 会议\n📋 待办事项:\n  ⬜ [1] 去买咖啡豆 ⏰2026-08-18 15:00\n  ⬜ [2] 测试 ⏰2026-08-16 23:59\n  ⬜ [3] 有个小测试 ⏰2026-08-13 12:30\n  ⬜ [4] 去买咖啡豆 ⏰2026-08-13 15:00\n  ⬜ [5] 会议 ⏰2026-08-11 15:00\n  ⬜ [6] 买牛奶 ⏰2026-08-08\n  ⬜ [7] 提醒 ⏰2026-07-28 19:27\n  ⬜ [8] 叫我 ⏰2026-07-28 19:34\n  ⬜ [9] 泡咖啡 ⏰2026-07-28 20:05 要换个日期查查看吗？",
+      "summary": "确认：来，给你列出来啦：\n\n📅 日程安排:",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:16:37",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:16:37.305128"
+    },
+    {
+      "id": "dialogue_20260819_2216_xvt7mf",
+      "dialogue_id": "session_20260819_2216_blq6m4",
+      "role": "user",
+      "original_text": "显示所有待办",
+      "summary": "日程：显示所有待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-19T22:16:37",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-19T22:16:37.294602"
+    },
+    {
+      "id": "dialogue_20260817_0000_sgp19g",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "assistant",
+      "original_text": "✅ 已添加待办:去买咖啡豆 (到期:2026-08-18 15:00)",
+      "summary": "确认：✅ 已添加待办:去买咖啡豆 (到期:20",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-17T00:00:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-17T00:00:41.085776"
+    },
+    {
+      "id": "dialogue_20260817_0000_z054jt",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "user",
+      "original_text": "后天下午三点提醒我去买咖啡豆",
+      "summary": "添加日程：后天下午三点提醒我去买咖啡豆",
+      "tags": [
+        "咖啡",
+        "购物",
+        "日程"
+      ],
+      "timestamp": "2026-08-17T00:00:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-17T00:00:41.077662"
+    },
+    {
+      "id": "dialogue_20260816_2358_pzlb0h",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "assistant",
+      "original_text": "✅ 已添加待办:测试 (到期:2026-08-16 23:59)",
+      "summary": "确认：✅ 已添加待办:测试 (到期:2026-",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:58:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:58:49.947920"
+    },
+    {
+      "id": "dialogue_20260816_2358_jz9zri",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "user",
+      "original_text": "一分钟后提醒我测试",
+      "summary": "添加日程：一分钟后提醒我测试",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:58:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:58:49.938316"
+    },
+    {
+      "id": "dialogue_20260816_2357_lr0pzb",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "assistant",
+      "original_text": "🔍 没有找到匹配「删除今天的日程数据」的提醒。试试「显示待办」查看所有提醒。",
+      "summary": "确认：🔍 没有找到匹配「删除今天的日程数据」的",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:57:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:57:49.137925"
+    },
+    {
+      "id": "dialogue_20260816_2357_c7evpc",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "user",
+      "original_text": "删除今天的日程数据",
+      "summary": "日程：删除今天的日程数据",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:57:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:57:49.125923"
+    },
+    {
+      "id": "dialogue_20260816_2356_kmxalv",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "assistant",
+      "original_text": "✅ 已删除待办: 记得叫我",
+      "summary": "确认：✅ 已删除待办: 记得叫我",
+      "tags": [
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T23:56:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:56:49.048530"
+    },
+    {
+      "id": "dialogue_20260816_2356_nlbb2y",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "user",
+      "original_text": "删除待办1",
+      "summary": "日程：删除待办1",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:56:49",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:56:49.037799"
+    },
+    {
+      "id": "dialogue_20260816_2356_uqnck5",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n📅 本周的日程:\n  [1] 2026-08-13  会议十点\n  [2] 2026-08-13  午十点会议\n  [3] 2026-08-13  重要的会议\n  [4] 2026-08-13 10:00 会议\n  [5] 2026-08-13 15:00 会议\n📋 本周的待办:\n  ⬜ [1] 记得叫我 ⏰2026-08-13 12:30\n  ⬜ [2] 有个小测试 ⏰2026-08-13 12:30\n  ⬜ [3] 去买咖啡豆 ⏰2026-08-13 15:00\n  ⬜ [4] 会议 ⏰2026-08-11 15:00 要换个日期查查看吗？",
+      "summary": "确认：来，给你列出来啦：\n\n📅 本周的日程:",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "日程",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T23:56:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:56:23.999985"
+    },
+    {
+      "id": "dialogue_20260816_2356_9xcwbo",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "user",
+      "original_text": "查看本周的日程",
+      "summary": "日程：查看本周的日程",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:56:23",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:56:23.990045"
+    },
+    {
+      "id": "dialogue_20260816_2356_odo8hx",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "assistant",
+      "original_text": "📅 今天没有日程安排，也没有待办事项 🎉",
+      "summary": "确认：📅 今天没有日程安排，也没有待办事项 🎉",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:56:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:56:02.764325"
+    },
+    {
+      "id": "dialogue_20260816_2356_tue5e4",
+      "dialogue_id": "session_20260816_2356_rhdxlk",
+      "role": "user",
+      "original_text": "显示今天的待办",
+      "summary": "日程：显示今天的待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:56:02",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:56:02.753451"
+    },
+    {
+      "id": "dialogue_20260816_2354_v7l5og",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "assistant",
+      "original_text": "📋 日程模块使用说明:\n\n  📅 日程管理:\n    \"添加会议明天下午3点\"\n    \"添加每天9点起床\"\n    \"删除日程1\"\n    \"显示今天的日程\"\n\n  📋 待办管理:\n    \"添加任务买牛奶\"\n    \"完成任务1\"\n    \"删除任务1\"\n    \"显示待办\"\n    \"删除泡咖啡那个提醒\"      ← 按内容模糊删除\n    \"把两个小时的定时删掉\"     ← 按时间描述删除\n\n  ⏰ 提醒:\n    \"提醒我5分钟后喝水\"\n    \"提醒我下午5点打电话\"\n    \"5分钟后叫我\"\n    \"明天8点叫醒我\"\n    \"一分钟后喊我\"",
+      "summary": "确认：📋 日程模块使用说明:\n\n  📅 日程管",
+      "tags": [
+        "咖啡",
+        "会议",
+        "购物",
+        "喝水",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:54:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:54:28.539147"
+    },
+    {
+      "id": "dialogue_20260816_2354_qjogg5",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "user",
+      "original_text": "代办",
+      "summary": "工具操作：代办",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:54:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:54:28.526966"
+    },
+    {
+      "id": "dialogue_20260816_2353_sksj6g",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "assistant",
+      "original_text": "请问是什么类型的日程？",
+      "summary": "确认：请问是什么类型的日程？",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:53:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:53:51.919301"
+    },
+    {
+      "id": "dialogue_20260816_2353_u4ywyc",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "user",
+      "original_text": "显示所有待办",
+      "summary": "日程：显示所有待办",
+      "tags": [
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:53:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:53:51.910231"
+    },
+    {
+      "id": "dialogue_20260816_2353_2c90v6",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "assistant",
+      "original_text": "✅ 已添加日程:重要的会议(2026-08-17 )",
+      "summary": "确认：✅ 已添加日程:重要的会议(2026-0",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:53:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:53:41.211559"
+    },
+    {
+      "id": "dialogue_20260816_2353_5ly3vw",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "user",
+      "original_text": "明天有个重要的会议",
+      "summary": "添加日程：明天有个重要的会议",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:53:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:53:41.203470"
+    },
+    {
+      "id": "dialogue_20260816_2353_djhush",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "assistant",
+      "original_text": "✅ 已添加日程:会议(2026-08-17 15:00)",
+      "summary": "确认：✅ 已添加日程:会议(2026-08-1",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:53:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:53:27.964998"
+    },
+    {
+      "id": "dialogue_20260816_2353_m1sltq",
+      "dialogue_id": "session_20260816_2353_26ohoe",
+      "role": "user",
+      "original_text": "添加会议明天下午3点",
+      "summary": "添加日程：会议明天下午3点",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:53:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:53:27.955437"
+    },
+    {
+      "id": "dialogue_20260816_2351_5m8puy",
+      "dialogue_id": "session_20260816_2351_pa1xx1",
+      "role": "assistant",
+      "original_text": "✅ 已添加日程:会议(2026-08-17 15:00)",
+      "summary": "确认：✅ 已添加日程:会议(2026-08-1",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:51:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:51:51.338543"
+    },
+    {
+      "id": "dialogue_20260816_2351_ml1b2j",
+      "dialogue_id": "session_20260816_2351_pa1xx1",
+      "role": "user",
+      "original_text": "添加会议明天下午3点",
+      "summary": "添加日程：会议明天下午3点",
+      "tags": [
+        "会议",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:51:51",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:51:51.329591"
+    },
+    {
+      "id": "dialogue_20260816_2348_9ux9q8",
+      "dialogue_id": "session_20260816_2348_leng94",
+      "role": "assistant",
+      "original_text": "确认删除昨天的财务记录吗？此操作不可恢复。",
+      "summary": "确认：确认删除昨天的财务记录吗？此操作不可恢复",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:48:31",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:48:31.904533"
+    },
+    {
+      "id": "dialogue_20260816_2348_4uh412",
+      "dialogue_id": "session_20260816_2348_leng94",
+      "role": "user",
+      "original_text": "删除昨天的财务记录",
+      "summary": "工具操作：删除昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:48:31",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:48:31.896772"
+    },
+    {
+      "id": "dialogue_20260816_2348_2xx306",
+      "dialogue_id": "session_20260816_2348_leng94",
+      "role": "assistant",
+      "original_text": "今天还没有记录哦，要不要记一笔？ 要换个日期查查看吗？",
+      "summary": "确认：今天还没有记录哦，要不要记一笔？ 要换个",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:48:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:48:24.036379"
+    },
+    {
+      "id": "dialogue_20260816_2348_9d5r6i",
+      "dialogue_id": "session_20260816_2348_leng94",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:48:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:48:24.027923"
+    },
+    {
+      "id": "dialogue_20260816_2348_edjh8q",
+      "dialogue_id": "session_20260816_2348_leng94",
+      "role": "assistant",
+      "original_text": "确认删除今天的财务记录吗？此操作不可恢复。",
+      "summary": "确认：确认删除今天的财务记录吗？此操作不可恢复",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:48:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:48:13.869244"
+    },
+    {
+      "id": "dialogue_20260816_2348_5y3sy2",
+      "dialogue_id": "session_20260816_2348_leng94",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:48:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:48:13.860876"
+    },
+    {
+      "id": "dialogue_20260816_2347_al3iq7",
+      "dialogue_id": "session_20260816_2346_t235so",
+      "role": "assistant",
+      "original_text": "确认删除昨天的财务记录吗？此操作不可恢复。",
+      "summary": "确认：确认删除昨天的财务记录吗？此操作不可恢复",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:47:22",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:47:22.056346"
+    },
+    {
+      "id": "dialogue_20260816_2347_slh3ye",
+      "dialogue_id": "session_20260816_2346_t235so",
+      "role": "user",
+      "original_text": "删除昨天的财务记录",
+      "summary": "工具操作：删除昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:47:22",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:47:22.046990"
+    },
+    {
+      "id": "dialogue_20260816_2346_1japba",
+      "dialogue_id": "session_20260816_2346_t235so",
+      "role": "assistant",
+      "original_text": "今天还没有记录哦，要不要记一笔？ 要换个日期查查看吗？",
+      "summary": "确认：今天还没有记录哦，要不要记一笔？ 要换个",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:46:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:46:32.232800"
+    },
+    {
+      "id": "dialogue_20260816_2346_irh9c1",
+      "dialogue_id": "session_20260816_2346_t235so",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:46:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:46:32.225105"
+    },
+    {
+      "id": "dialogue_20260816_2346_zfqfus",
+      "dialogue_id": "session_20260816_2346_t235so",
+      "role": "assistant",
+      "original_text": "确认删除今天的财务记录吗？此操作不可恢复。",
+      "summary": "确认：确认删除今天的财务记录吗？此操作不可恢复",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:46:21",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:46:21.984430"
+    },
+    {
+      "id": "dialogue_20260816_2346_91rqvu",
+      "dialogue_id": "session_20260816_2346_t235so",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:46:21",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:46:21.974836"
+    },
+    {
+      "id": "dialogue_20260816_2333_petx0j",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "assistant",
+      "original_text": "好的，理解了。那我们就直接聊天吧！今天过得怎么样？有没有什么特别的事情想要分享的？",
+      "summary": "今天过得如何？有啥新鲜事吗？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:33:19",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:33:19.586561"
+    },
+    {
+      "id": "dialogue_20260816_2333_pcu0d4",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "user",
+      "original_text": "没有检测到语音，请重试",
+      "summary": "请确保环境安静并重新开始录音。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:33:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:33:17.043653"
+    },
+    {
+      "id": "dialogue_20260816_2331_ot8gzj",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "assistant",
+      "original_text": "看来是我们之间的连接遇到了一些小麻烦。没关系的，有什么具体的财务记录或者提醒需要调整吗？或者是其他方面的需求呢？",
+      "summary": "请检查连接或告知需求。",
+      "tags": [
+        "财务",
+        "日程"
+      ],
+      "timestamp": "2026-08-16T23:31:18",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:31:18.602270"
+    },
+    {
+      "id": "dialogue_20260816_2331_44qvmv",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "user",
+      "original_text": "录音失败",
+      "summary": "录音失败，请重试。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:31:14",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:31:14.063244"
+    },
+    {
+      "id": "dialogue_20260816_2323_1wt0wx",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "assistant",
+      "original_text": "没听懂金额，请说清楚一点，比如'今天早上吃饭花了6元'",
+      "summary": "确认：没听懂金额，请说清楚一点，比如'今天早上",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:23:56",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:23:56.339505"
+    },
+    {
+      "id": "dialogue_20260816_2323_27ca87",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "user",
+      "original_text": "删除昨天的财务记录",
+      "summary": "工具操作：删除昨天的财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:23:56",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:23:56.329582"
+    },
+    {
+      "id": "dialogue_20260816_2323_1dwfsv",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "assistant",
+      "original_text": "已删掉啦，今天那10条记录清掉咯～ 还有别的要调整的吗？",
+      "summary": "确认：已删掉啦，今天那10条记录清掉咯～ 还有",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:23:34",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:23:34.100990"
+    },
+    {
+      "id": "dialogue_20260816_2323_v8i9es",
+      "dialogue_id": "session_20260816_2323_7747jd",
+      "role": "user",
+      "original_text": "删除今天的财务数据",
+      "summary": "工具操作：删除今天的财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:23:34",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:23:34.091017"
+    },
+    {
+      "id": "dialogue_20260816_2320_g40vwv",
+      "dialogue_id": "session_20260816_2319_op9e56",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天收入的5块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天收入的5块钱～ 还有别",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T23:20:21",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:20:21.759259"
+    },
+    {
+      "id": "dialogue_20260816_2320_i4mwz6",
+      "dialogue_id": "session_20260816_2319_op9e56",
+      "role": "user",
+      "original_text": "今天晚上赚了五块",
+      "summary": "工具操作：今天晚上赚了五块",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:20:21",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:20:21.750359"
+    },
+    {
+      "id": "dialogue_20260816_2319_px9isu",
+      "dialogue_id": "session_20260816_2319_op9e56",
+      "role": "assistant",
+      "original_text": "共74笔记录（支出69笔，合计813.5元；收入5笔，合计5021元） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：共74笔记录（支出69笔，合计813.5",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:19:59",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:19:59.851138"
+    },
+    {
+      "id": "dialogue_20260816_2319_6azlpe",
+      "dialogue_id": "session_20260816_2319_op9e56",
+      "role": "user",
+      "original_text": "显示所有财务记录",
+      "summary": "工具操作：显示所有财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:19:59",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:19:59.842266"
+    },
+    {
+      "id": "dialogue_20260816_2311_s1adwl",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-16 共4笔收入记录：\n\n1. 💰 08-16 17:51 下午 收入来源 5000元\n2. 💰 08-16 22:43 深夜 收入来源 5元\n3. 💰 08-16 22:43 深夜 收入来源 5元\n4. 💰 08-16 23:11 深夜 收入来源 5元\n\n合计：5015元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-1",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:11:46",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:11:46.747562"
+    },
+    {
+      "id": "dialogue_20260816_2311_jdo8nl",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "user",
+      "original_text": "把它们详细列出来",
+      "summary": "工具操作：把它们详细列出来",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T23:11:46",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:11:46.738433"
+    },
+    {
+      "id": "dialogue_20260816_2311_pcf2td",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "assistant",
+      "original_text": "2026-08-16共4笔收入，合计5015元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：2026-08-16共4笔收入，合计50",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:11:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:11:24.069514"
+    },
+    {
+      "id": "dialogue_20260816_2311_aihmsb",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "user",
+      "original_text": "显示今天的收入",
+      "summary": "工具操作：显示今天的收入",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:11:24",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:11:24.058975"
+    },
+    {
+      "id": "dialogue_20260816_2311_q9evei",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天收入花的5块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天收入花的5块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T23:11:08",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:11:08.725026"
+    },
+    {
+      "id": "dialogue_20260816_2311_t6oe5c",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "user",
+      "original_text": "今天晚上赚了五块",
+      "summary": "工具操作：今天晚上赚了五块",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:11:08",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:11:08.714637"
+    },
+    {
+      "id": "dialogue_20260816_2309_i1in9k",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n共4笔收入记录：\n\n1. 💰 08-16 17:51 下午 收入来源 5000元\n2. 💰 08-16 22:43 深夜 收入来源 5元\n3. 💰 08-16 22:43 深夜 收入来源 5元\n4. 💰 07-02 12:00 中午 收入来源 6元\n\n合计：5016元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n共4笔收入记录：",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:09:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:09:28.817847"
+    },
+    {
+      "id": "dialogue_20260816_2309_n5ryiy",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "user",
+      "original_text": "蒋欣展示出那几笔收入",
+      "summary": "工具操作：蒋欣展示出那几笔收入",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:09:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:09:28.811391"
+    },
+    {
+      "id": "dialogue_20260816_2308_aiyc3z",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n共73笔财务记录：\n\n1. 💸 08-16 09:33 上午 饭 20元\n2. 💸 08-16 14:36 下午 饭 25元\n3. 💸 08-16 17:11 下午 饭 10元\n4. 💸 08-16 17:27 下午 咖啡 9元\n5. 💸 08-16 17:43 下午 日常消费 2元\n6. 💰 08-16 17:51 下午 收入来源 5000元\n7. 💰 08-16 22:43 深夜 收入来源 5元\n8. 💰 08-16 22:43 深夜 收入来源 5元\n9. 💸 08-15 00:01 凌晨 咖啡 10元\n10. 💸 08-15 00:44 凌晨 咖啡 10元\n11. 💸 08-15 01:12 凌晨 咖啡 9元\n12. 💸 08-15 17:12 下午 日常消费 20元\n13. 💸 08-15 18:56 晚上 日常消费 15.5元\n14. 💸 08-14 00:41 凌晨 日常消费 20元\n15. 💸 08-14 01:08 凌晨 日常消费 20元\n16. 💸 08-14 01:11 凌晨 日常消费 21元\n17. 💸 08-13 23:29 深夜 饭 6元\n18. 💸 08-13 23:40 深夜 日常消费 25元\n19. 💸 08-13 23:57 深夜 日常消费 20元\n20. 💸 08-12 00:47 凌晨 日常消费 30元\n21. 💸 08-12 07:14 早上 日常消费 5元\n22. 💸 08-12 21:02 晚上 日常消费 2元\n23. 💸 08-11 11:00 上午 饭 10元\n24. 💸 08-11 23:59 深夜 饭 25元\n25. 💸 08-08 00:06 凌晨 饭 20元\n26. 💸 08-08 21:16 晚上 饭 20元\n27. 💸 08-07 23:53 深夜 饭 25元\n28. 💸 08-06 22:58 深夜 其他 30元\n29. 💸 08-02 00:08 凌晨 饭 25元\n30. 💸 08-02 12:32 中午 日常消费 5元\n31. 💸 08-01 00:09 凌晨 饭 30元\n32. 💸 08-01 09:09 上午 饭 5元\n33. 💸 07-31 12:00 中午 日常消费 35元\n34. 💸 07-29 12:00 中午 日常消费 10元\n35. 💸 07-29 12:00 中午 日常消费 5元\n36. 💸 07-29 12:00 中午 日常消费 5元\n37. 💸 07-28 12:00 中午 日常消费 50元\n38. 💸 07-28 12:00 中午 饭 20元\n39. 💸 07-28 12:00 中午 日常消费 10元\n40. 💸 07-28 12:00 中午 饭 20元\n41. 💸 07-28 12:00 中午 日常消费 6元\n42. 💸 07-27 12:00 中午 饭 1元\n43. 💸 07-27 12:00 中午 饭 5元\n44. 💸 07-27 12:00 中午 日常消费 10元\n45. 💸 07-27 12:00 中午 日常消费 6元\n46. 💸 07-27 12:00 中午 日常消费 9元\n47. 💸 07-23 12:00 中午 日常消费 6元\n48. 💸 07-23 12:00 中午 日常消费 7元\n49. 💸 07-23 12:00 中午 日常消费 5元\n50. 💸 07-23 12:00 中午 日常消费 6元\n51. 💸 07-23 12:00 中午 日常消费 5元\n52. 💸 07-22 12:00 中午 日常消费 7元\n53. 💸 07-22 12:00 中午 日常消费 6元\n54. 💸 07-20 12:00 中午 日常消费 1元\n55. 💸 07-20 12:00 中午 日常消费 2元\n56. 💸 07-20 12:00 中午 日常消费 10元\n57. 💸 07-20 12:00 中午 日常消费 5元\n58. 💸 07-20 12:00 中午 日常消费 5元\n59. 💸 07-20 12:00 中午 饭 5元\n60. 💸 07-20 12:00 中午 日常消费 3元\n61. 💸 07-20 12:00 中午 其他 3元\n62. 💸 07-20 12:00 中午 日常消费 5元\n63. 💸 07-18 12:00 中午 饭 10元\n64. 💸 07-16 12:00 中午 日常消费 8元\n65. 💸 07-15 12:00 中午 日常消费 7元\n66. 💸 07-09 12:00 中午 日常消费 6元\n67. 💰 07-02 12:00 中午 收入来源 6元\n68. 💸 07-01 12:00 中午 日常消费 6元\n69. 💸 07-01 12:00 中午 日常消费 5元\n70. 💸 07-01 12:00 中午 日常消费 5元\n71. 💸 07-01 12:00 中午 日常消费 5元\n72. 💸 07-01 12:00 中午 日常消费 8元\n73. 💸 07-01 12:00 中午 日常消费 6元\n\n合计：5829.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n共73笔财务记录：",
+      "tags": [
+        "咖啡",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:08:42",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:08:42.677249"
+    },
+    {
+      "id": "dialogue_20260816_2308_3tmsg2",
+      "dialogue_id": "session_20260816_2308_gwd3ud",
+      "role": "user",
+      "original_text": "显示所有财务记录",
+      "summary": "工具操作：显示所有财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T23:08:42",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T23:08:42.668216"
+    },
+    {
+      "id": "dialogue_20260816_2247_wcjp58",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-16 共3笔收入记录：\n\n1. 💰 08-16 17:51 下午 收入来源 5000元\n2. 💰 08-16 22:43 深夜 收入来源 5元\n3. 💰 08-16 22:43 深夜 收入来源 5元\n\n合计：5010元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-1",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:47:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:47:05.483383"
+    },
+    {
+      "id": "dialogue_20260816_2247_l8mxpc",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "把那收入的几笔记录列出来",
+      "summary": "工具操作：把那收入的几笔记录列出来",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:47:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:47:05.476555"
+    },
+    {
+      "id": "dialogue_20260816_2246_1uh04n",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-16 共5笔支出记录：\n\n1. 💸 08-16 09:33 上午 饭 20元\n2. 💸 08-16 14:36 下午 饭 25元\n3. 💸 08-16 17:11 下午 饭 10元\n4. 💸 08-16 17:27 下午 咖啡 9元\n5. 💸 08-16 17:43 下午 日常消费 2元\n\n合计：66元。另有3笔收入，合计5010元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-1",
+      "tags": [
+        "咖啡",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:46:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:46:27.084863"
+    },
+    {
+      "id": "dialogue_20260816_2246_2bgtwp",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "把它们详细列出来",
+      "summary": "工具操作：把它们详细列出来",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T22:46:27",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:46:27.078296"
+    },
+    {
+      "id": "dialogue_20260816_2246_i3247h",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "2026-08-16共3笔收入，合计5010元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：2026-08-16共3笔收入，合计50",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:46:09",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:46:09.438833"
+    },
+    {
+      "id": "dialogue_20260816_2246_qa30w5",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "显示今天的收入",
+      "summary": "工具操作：显示今天的收入",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:46:09",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:46:09.431668"
+    },
+    {
+      "id": "dialogue_20260816_2243_d1d8ac",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天收入花的5块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天收入花的5块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T22:43:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:43:43.624423"
+    },
+    {
+      "id": "dialogue_20260816_2243_kiqcto",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "今天晚上赚了五块",
+      "summary": "工具操作：今天晚上赚了五块",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:43:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:43:43.617752"
+    },
+    {
+      "id": "dialogue_20260816_2243_4orwxm",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天收入花的5块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天收入花的5块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T22:43:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:43:13.734749"
+    },
+    {
+      "id": "dialogue_20260816_2243_buh00w",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "今天晚上收入五元",
+      "summary": "工具操作：今天晚上收入五元",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:43:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:43:13.728361"
+    },
+    {
+      "id": "dialogue_20260816_2242_6742mm",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n本月 共1笔收入记录：\n\n1. 💰 08-16 17:51 下午 收入来源 5000元\n\n合计：5000元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n本月 共1笔收入记",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:42:25",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:42:25.551455"
+    },
+    {
+      "id": "dialogue_20260816_2242_zk4ivm",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "详细展示一下那两笔收入",
+      "summary": "工具操作：详细展示一下那两笔收入",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:42:25",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:42:25.543255"
+    },
+    {
+      "id": "dialogue_20260816_2241_t0ggql",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "共71笔记录（支出69笔，合计813.5元；收入2笔，合计5006元） 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：共71笔记录（支出69笔，合计813.5",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:41:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:41:41.701679"
+    },
+    {
+      "id": "dialogue_20260816_2241_9fgp6t",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "查看所有财务数据",
+      "summary": "工具操作：查看所有财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:41:41",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:41:41.692486"
+    },
+    {
+      "id": "dialogue_20260816_2241_mc1g20",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "本月共1笔收入，合计5000元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：本月共1笔收入，合计5000元 需要帮你",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:41:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:41:12.898804"
+    },
+    {
+      "id": "dialogue_20260816_2241_qd72eu",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "这个月收入多少",
+      "summary": "工具操作：这个月收入多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:41:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:41:12.890952"
+    },
+    {
+      "id": "dialogue_20260816_2240_xpvlry",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "assistant",
+      "original_text": "2026-08-16共5笔支出，合计66元。另有1笔收入，合计5000元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：2026-08-16共5笔支出，合计66",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:40:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:40:53.631397"
+    },
+    {
+      "id": "dialogue_20260816_2240_572rf6",
+      "dialogue_id": "session_20260816_2240_kl5rdr",
+      "role": "user",
+      "original_text": "今天花了多少",
+      "summary": "工具操作：今天花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:40:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:40:53.622863"
+    },
+    {
+      "id": "dialogue_20260816_2219_83sy70",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！2026-08-15有5笔记录，一共64.5块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！2026-08-15有5笔记录，",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:19:00",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:19:00.605957"
+    },
+    {
+      "id": "dialogue_20260816_2219_7e4q5p",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "昨天花了多少",
+      "summary": "工具操作：昨天花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:19:00",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:19:00.598359"
+    },
+    {
+      "id": "dialogue_20260816_2217_oqvzrs",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-16 共6笔财务记录：\n\n1. 💸 08-16 09:33 上午 饭 20元\n2. 💸 08-16 14:36 下午 饭 25元\n3. 💸 08-16 17:11 下午 饭 10元\n4. 💸 08-16 17:27 下午 咖啡 9元\n5. 💸 08-16 17:43 下午 日常消费 2元\n6. 💰 08-16 17:51 下午 收入来源 5000元\n\n合计：5066元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-1",
+      "tags": [
+        "咖啡",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:17:35",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:17:35.837130"
+    },
+    {
+      "id": "dialogue_20260816_2217_v3m9a5",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "把今天的财务数据详细的列出来",
+      "summary": "工具操作：把今天的财务数据详细的列出来",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:17:35",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:17:35.831005"
+    },
+    {
+      "id": "dialogue_20260816_2217_j4oqi9",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "确认：共6笔记录，合计5066元。需要我帮忙做些什么呢？比如整理详细记录或者查看特定类别消费？",
+      "summary": "确认明细，需进一步操作吗？",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:17:15",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:17:15.430985"
+    },
+    {
+      "id": "dialogue_20260816_2214_fr0dpy",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！2026-08-16有6笔记录，一共5066块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！2026-08-16有6笔记录，",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:14:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:14:12.928398"
+    },
+    {
+      "id": "dialogue_20260816_2214_9cpsxp",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "今天花了多少",
+      "summary": "工具操作：今天花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:14:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:14:12.918802"
+    },
+    {
+      "id": "dialogue_20260816_2213_tpbkt2",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "共71笔，合计5819.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：共71笔，合计5819.5元 需要帮你整",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:13:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:13:33.831991"
+    },
+    {
+      "id": "dialogue_20260816_2213_gcb7qe",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "查看所有财务数据",
+      "summary": "工具操作：查看所有财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:13:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:13:33.825043"
+    },
+    {
+      "id": "dialogue_20260816_2212_0zqppr",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！本月有30笔记录，一共5474.5块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！本月有30笔记录，一共5474.",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:12:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:12:52.364481"
+    },
+    {
+      "id": "dialogue_20260816_2212_y3jr6u",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "这个月花了多少",
+      "summary": "工具操作：这个月花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:12:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:12:52.356157"
+    },
+    {
+      "id": "dialogue_20260816_2212_f2wg2r",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！上个月有41笔记录，一共345块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！上个月有41笔记录，一共345块",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:12:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:12:28.818251"
+    },
+    {
+      "id": "dialogue_20260816_2212_j4v499",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "上个月花了多少",
+      "summary": "工具操作：上个月花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:12:28",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:12:28.808610"
+    },
+    {
+      "id": "dialogue_20260816_2211_9gsr57",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！饭有18笔记录，一共282块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！饭有18笔记录，一共282块 需",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:11:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:11:57.607598"
+    },
+    {
+      "id": "dialogue_20260816_2211_8k29e8",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "吃饭花了多少",
+      "summary": "工具操作：吃饭花了多少",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:11:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:11:57.600020"
+    },
+    {
+      "id": "dialogue_20260816_2211_bq973u",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！本月有30笔记录，一共5474.5块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！本月有30笔记录，一共5474.",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:11:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:11:30.416179"
+    },
+    {
+      "id": "dialogue_20260816_2211_kdhxzg",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "这个月花了多少",
+      "summary": "工具操作：这个月花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:11:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:11:30.407967"
+    },
+    {
+      "id": "dialogue_20260816_2210_0mtvs5",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "assistant",
+      "original_text": "找到了！本周有22笔记录，一共5314.5块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！本周有22笔记录，一共5314.",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:10:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:10:33.968491"
+    },
+    {
+      "id": "dialogue_20260816_2210_f217ow",
+      "dialogue_id": "session_20260816_2210_yneka1",
+      "role": "user",
+      "original_text": "本周花了多少",
+      "summary": "工具操作：本周花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T22:10:33",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T22:10:33.960404"
+    },
+    {
+      "id": "dialogue_20260816_2051_dtid2n",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n2026-08-16 共6笔财务记录：\n\n1. 💸 08-16 09:33 上午 饭 20元\n2. 💸 08-16 14:36 下午 饭 25元\n3. 💸 08-16 17:11 下午 饭 10元\n4. 💸 08-16 17:27 下午 咖啡 9元\n5. 💸 08-16 17:43 下午 日常消费 2元\n6. 💰 08-16 17:51 下午 收入来源 5000元\n\n合计：5066元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n2026-08-1",
+      "tags": [
+        "咖啡",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:51:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:51:30.845537"
+    },
+    {
+      "id": "dialogue_20260816_2051_u20xcy",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "详细列举今天的记录",
+      "summary": "工具操作：详细列举今天的记录",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T20:51:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:51:30.837254"
+    },
+    {
+      "id": "dialogue_20260816_2011_nhunfm",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "共71笔，合计5819.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：共71笔，合计5819.5元 需要帮你整",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:11:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:11:39.257014"
+    },
+    {
+      "id": "dialogue_20260816_2011_w4tc3l",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "吃饭花了多少",
+      "summary": "工具操作：吃饭花了多少",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:11:39",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:11:39.249603"
+    },
+    {
+      "id": "dialogue_20260816_2011_5vhkkv",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "找到了！2026-08-01有2笔记录，一共35块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！2026-08-01有2笔记录，",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:11:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:11:17.748656"
+    },
+    {
+      "id": "dialogue_20260816_2011_tetmjt",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "这个月花了多少",
+      "summary": "工具操作：这个月花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:11:17",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:11:17.741139"
+    },
+    {
+      "id": "dialogue_20260816_2010_wsbsv1",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "2026-08-10没有查到记录哦，是不是记错日期啦？ 要换个日期查查看吗？",
+      "summary": "确认：2026-08-10没有查到记录哦，是不",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T20:10:38",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:10:38.947830"
+    },
+    {
+      "id": "dialogue_20260816_2010_6ffbwo",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "本周花了多少",
+      "summary": "工具操作：本周花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:10:38",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:10:38.939004"
+    },
+    {
+      "id": "dialogue_20260816_2010_osn59x",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "找到了！2026-08-15有5笔记录，一共64.5块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！2026-08-15有5笔记录，",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:10:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:10:12.924833"
+    },
+    {
+      "id": "dialogue_20260816_2010_lgm7i4",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "昨天花了多少",
+      "summary": "工具操作：昨天花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:10:12",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:10:12.915326"
+    },
+    {
+      "id": "dialogue_20260816_2009_tjtc3v",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "找到了！2026-08-16有6笔记录，一共5066块 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：找到了！2026-08-16有6笔记录，",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:09:14",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:09:14.614425"
+    },
+    {
+      "id": "dialogue_20260816_2009_kw7d1l",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "今天花了多少",
+      "summary": "工具操作：今天花了多少",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T20:09:14",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T20:09:14.607058"
+    },
+    {
+      "id": "dialogue_20260816_1954_ewdijk",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "来，给你列出来啦：\n\n共71笔财务记录：\n\n1. 💸 08-16 09:33 上午 饭 20元\n2. 💸 08-16 14:36 下午 饭 25元\n3. 💸 08-16 17:11 下午 饭 10元\n4. 💸 08-16 17:27 下午 咖啡 9元\n5. 💸 08-16 17:43 下午 日常消费 2元\n6. 💰 08-16 17:51 下午 收入来源 5000元\n7. 💸 08-15 00:01 凌晨 咖啡 10元\n8. 💸 08-15 00:44 凌晨 咖啡 10元\n9. 💸 08-15 01:12 凌晨 咖啡 9元\n10. 💸 08-15 17:12 下午 日常消费 20元\n11. 💸 08-15 18:56 晚上 日常消费 15.5元\n12. 💸 08-14 00:41 凌晨 日常消费 20元\n13. 💸 08-14 01:08 凌晨 日常消费 20元\n14. 💸 08-14 01:11 凌晨 日常消费 21元\n15. 💸 08-13 23:29 深夜 饭 6元\n16. 💸 08-13 23:40 深夜 日常消费 25元\n17. 💸 08-13 23:57 深夜 日常消费 20元\n18. 💸 08-12 00:47 凌晨 日常消费 30元\n19. 💸 08-12 07:14 早上 日常消费 5元\n20. 💸 08-12 21:02 晚上 日常消费 2元\n21. 💸 08-11 11:00 上午 饭 10元\n22. 💸 08-11 23:59 深夜 饭 25元\n23. 💸 08-08 00:06 凌晨 饭 20元\n24. 💸 08-08 21:16 晚上 饭 20元\n25. 💸 08-07 23:53 深夜 饭 25元\n26. 💸 08-06 22:58 深夜 其他 30元\n27. 💸 08-02 00:08 凌晨 饭 25元\n28. 💸 08-02 12:32 中午 日常消费 5元\n29. 💸 08-01 00:09 凌晨 饭 30元\n30. 💸 08-01 09:09 上午 饭 5元\n31. 💸 07-31 12:00 中午 日常消费 35元\n32. 💸 07-29 12:00 中午 日常消费 10元\n33. 💸 07-29 12:00 中午 日常消费 5元\n34. 💸 07-29 12:00 中午 日常消费 5元\n35. 💸 07-28 12:00 中午 日常消费 50元\n36. 💸 07-28 12:00 中午 饭 20元\n37. 💸 07-28 12:00 中午 日常消费 10元\n38. 💸 07-28 12:00 中午 饭 20元\n39. 💸 07-28 12:00 中午 日常消费 6元\n40. 💸 07-27 12:00 中午 饭 1元\n41. 💸 07-27 12:00 中午 饭 5元\n42. 💸 07-27 12:00 中午 日常消费 10元\n43. 💸 07-27 12:00 中午 日常消费 6元\n44. 💸 07-27 12:00 中午 日常消费 9元\n45. 💸 07-23 12:00 中午 日常消费 6元\n46. 💸 07-23 12:00 中午 日常消费 7元\n47. 💸 07-23 12:00 中午 日常消费 5元\n48. 💸 07-23 12:00 中午 日常消费 6元\n49. 💸 07-23 12:00 中午 日常消费 5元\n50. 💸 07-22 12:00 中午 日常消费 7元\n51. 💸 07-22 12:00 中午 日常消费 6元\n52. 💸 07-20 12:00 中午 日常消费 1元\n53. 💸 07-20 12:00 中午 日常消费 2元\n54. 💸 07-20 12:00 中午 日常消费 10元\n55. 💸 07-20 12:00 中午 日常消费 5元\n56. 💸 07-20 12:00 中午 日常消费 5元\n57. 💸 07-20 12:00 中午 饭 5元\n58. 💸 07-20 12:00 中午 日常消费 3元\n59. 💸 07-20 12:00 中午 其他 3元\n60. 💸 07-20 12:00 中午 日常消费 5元\n61. 💸 07-18 12:00 中午 饭 10元\n62. 💸 07-16 12:00 中午 日常消费 8元\n63. 💸 07-15 12:00 中午 日常消费 7元\n64. 💸 07-09 12:00 中午 日常消费 6元\n65. 💰 07-02 12:00 中午 收入来源 6元\n66. 💸 07-01 12:00 中午 日常消费 6元\n67. 💸 07-01 12:00 中午 日常消费 5元\n68. 💸 07-01 12:00 中午 日常消费 5元\n69. 💸 07-01 12:00 中午 日常消费 5元\n70. 💸 07-01 12:00 中午 日常消费 8元\n71. 💸 07-01 12:00 中午 日常消费 6元\n\n合计：5819.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：来，给你列出来啦：\n\n共71笔财务记录：",
+      "tags": [
+        "咖啡",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T19:54:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T19:54:53.762551"
+    },
+    {
+      "id": "dialogue_20260816_1954_xfyqhf",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "详细列出所有财务记录",
+      "summary": "工具操作：详细列出所有财务记录",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T19:54:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T19:54:53.754278"
+    },
+    {
+      "id": "dialogue_20260816_1935_okaflh",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "assistant",
+      "original_text": "共71笔，合计5819.5元 需要帮你整理一下吗？还是想查别的日期？",
+      "summary": "确认：共71笔，合计5819.5元 需要帮你整",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T19:35:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T19:35:43.190668"
+    },
+    {
+      "id": "dialogue_20260816_1935_i6z43y",
+      "dialogue_id": "session_20260816_1935_z73848",
+      "role": "user",
+      "original_text": "查看所有财务数据",
+      "summary": "工具操作：查看所有财务数据",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T19:35:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T19:35:43.181555"
+    },
+    {
+      "id": "dialogue_20260816_1856_5k5r60",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你昨天日常花的15.5块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你昨天日常花的15.5块钱～",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T18:56:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T18:56:30.855018"
+    },
+    {
+      "id": "dialogue_20260816_1856_ronb85",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "昨天打车花了15.5元",
+      "summary": "记账：日常消费15.5元",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T18:56:30",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T18:56:30.846413"
+    },
+    {
+      "id": "dialogue_20260816_1751_n5zrno",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你这笔收入5000块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你这笔收入5000块钱～ 还",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T17:51:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:51:53.367012"
+    },
+    {
+      "id": "dialogue_20260816_1751_q0dbzn",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "收入工资5000元",
+      "summary": "记账：日常消费5000元",
+      "tags": [
+        "财务"
+      ],
+      "timestamp": "2026-08-16T17:51:53",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:51:53.358143"
+    },
+    {
+      "id": "dialogue_20260816_1743_j9ep96",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你这笔日常2块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你这笔日常2块钱～ 还有别的",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T17:43:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:43:05.973410"
+    },
+    {
+      "id": "dialogue_20260816_1743_v8j1av",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "买了根雪糕花两块钱挺好吃的",
+      "summary": "工具操作：买了根雪糕花两块钱挺好吃的",
+      "tags": [
+        "购物",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T17:43:05",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:43:05.965166"
+    },
+    {
+      "id": "dialogue_20260816_1727_a2j2pk",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天咖啡花的9块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天咖啡花的9块钱～ 还有",
+      "tags": [
+        "咖啡",
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T17:27:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:27:32.569046"
+    },
+    {
+      "id": "dialogue_20260816_1727_1qml8u",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "今天中午买咖啡花了9元",
+      "summary": "记账：咖啡9元",
+      "tags": [
+        "咖啡",
+        "购物",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T17:27:32",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:27:32.560886"
+    },
+    {
+      "id": "dialogue_20260816_1712_ssvq10",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你昨天日常花的20块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你昨天日常花的20块钱～ 还",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T17:12:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:12:13.625017"
+    },
+    {
+      "id": "dialogue_20260816_1712_yeqvg6",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "昨天晚上花销20",
+      "summary": "工具操作：昨天晚上花销20",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-16T17:12:13",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:12:13.616717"
+    },
+    {
+      "id": "dialogue_20260816_1711_gf602g",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你这笔饭10块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你这笔饭10块钱～ 还有别的",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T17:11:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:11:43.446665"
+    },
+    {
+      "id": "dialogue_20260816_1711_hckgmr",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "中午吃饭花了十元",
+      "summary": "工具操作：中午吃饭花了十元",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T17:11:43",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T17:11:43.438950"
+    },
+    {
+      "id": "dialogue_20260816_1436_dp0glz",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天饭花的25块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天饭花的25块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-16T14:36:42",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:36:42.718433"
+    },
+    {
+      "id": "dialogue_20260816_1436_4sxwnc",
+      "dialogue_id": "session_20260816_1436_r5ivso",
+      "role": "user",
+      "original_text": "今天吃饭花了25元",
+      "summary": "记账：饭25元",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-16T14:36:42",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-16T14:36:42.709636"
+    },
+    {
       "id": "dialogue_20260816_1417_70uat2",
       "dialogue_id": "session_20260816_1411_azk2or",
       "role": "assistant",
@@ -4962,5 +9756,5 @@
       "created_at": "2026-08-12T00:03:45.854646"
     }
   ],
-  "updated_at": "2026-08-16T14:17:36.652430"
+  "updated_at": "2026-08-24T23:12:03.856243"
 }

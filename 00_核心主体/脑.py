@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.13.1"
+VERSION = "3.13.16"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +22,9 @@ from 记忆.记忆引擎 import (load_short_term, save_short_term, load_long_ter
                               search_dialogue, expand_dialogue,
                               search_by_tags, search_by_time, search_by_keyword,
                               _extract_tags, record_retrieval, run_analysis,
-                              set_mood_llm_fn, get_related_memories)
+                              set_mood_llm_fn, get_related_memories,
+                              format_keyword_search, format_time_recall,
+                              format_memory_query, format_related_query)
 from 记忆.数据提炼 import refine
 from 记忆.衰减调度 import scheduler_check, manual_cleanup, get_decay_status
 
@@ -240,7 +242,7 @@ _ROUTE_PROMPT_3B = """你是晓风意图路由器。分析用户输入，判断�
 - 🚨 格式化查询规则（v3.9.19）：含 "详细"/"列举"/"列出"/"明细"/"逐条"/"每笔"/"具体" 但无其他工具意图（删除/记账/提醒）→ 必须判定为 query，绝不能判定为 chat。即使无明确 target，也应尝试从上下文继承或设为 finance
 - 提取time和scope（"所有"→all，"今天"→today，"最近"→latest，"本周"→this_week，"本月/这个月"→this_month，"昨天"→yesterday，"上周"→last_week）
 - amount必须为null（查询场景不提取金额）
-- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/任务/事件/叫我→schedule，记忆/记住/回忆/回顾→memory
+- target按对象词推断：财务/记账/花了/消费→finance，日程/提醒/待办/代办/任务/事件/叫我→schedule，记忆/记住/回忆/回顾→memory
 - 🆕 记忆查询规则（v3.9.30，v3.9.31 强化）：含"记忆/回忆/回顾/记住的"且是查看类意图 → target **必须为 memory**（绝不是 finance，也绝不是 schedule！）。即使输入含"日程/待办"等词，只要以"查看/显示+记忆"为主体就是记忆查询。"查看今天的记忆"→query+memory+time:today，"查看最近的记忆"→query+memory+scope:latest，"回忆一下昨天的事"→query+memory+time:yesterday
 - ⚠️ 上下文延续规则：如果当前输入省略了主题词（如只说"看这个月的"、"那本周呢"），有上下文时沿用上一轮的target和意图
 - ⚠️ 格式化查询延续规则（v3.9.19）：如果当前输入只有格式化关键词（"详细"/"列举"/"明细"/"逐条"等）而无时间/类别/目标词，有上下文时必须沿用上一轮的 target（通常为 finance）
@@ -827,7 +829,7 @@ def _extract_memory_time_expr(text):
     """
     m = re.search(r"(今天|今日|昨天|昨日|前天|"
                   r"(?:上)?(?:周|星期)[一二三四五六日天]|"   # 上周三/周三（最具体，优先于"上周"）
-                  r"本周|这周|上个礼拜|上周|本月|这个月|"
+                  r"本周|这周|上个礼拜|上周|本月|这个月|上个月|"  # v3.13.11: 补"上个月"
                   r"\d{4}-\d{2}-\d{2})", text or "")
     return m.group(1) if m else None
 
@@ -1003,7 +1005,7 @@ def _generate_tool_reply(result, prefix="好的"):
         elif rtype == "query":
             main = _fmt_query(summary)
         elif rtype in ("expense", "income"):
-            main = _fmt_record(summary, data)
+            main = _fmt_record(summary, data, rtype)
         else:
             main = summary if summary else "操作完成啦～"
 
@@ -1118,8 +1120,12 @@ def _fmt_query(summary):
     return summary
 
 
-def _fmt_record(summary, data):
+def _fmt_record(summary, data, record_type=None):
     """格式化记账回复为温暖风格。"""
+    # v3.13.6: record_type 由调用方传入（result["type"]，位于 result 顶层而非 data 内），
+    # 否则 data 无 type 键时收入记录会被误判为支出（"收入花的5块钱"）。
+    if record_type is None:
+        record_type = data.get("type", "expense") if isinstance(data, dict) else "expense"
     # data 中有结构化字段：amount, source, date, category
     amount = data.get("amount", 0) if isinstance(data, dict) else 0
     source = data.get("source", "") if isinstance(data, dict) else ""
@@ -1157,8 +1163,10 @@ def _fmt_record(summary, data):
             time_word = date_str
 
     # 构建温暖回复
+    # v3.13.5/3.13.6: 收支措辞区分 —— 收入用"收入X元"，支出保留"花的X元"
+    _spend_word = "的" if record_type == "income" else "花的"
     if source_friendly and time_word:
-        reply = f"好嘞，已记下你{time_word}{source_friendly}花的{amt_str}块钱～"
+        reply = f"好嘞，已记下你{time_word}{source_friendly}{_spend_word}{amt_str}块钱～"
     elif source_friendly:
         reply = f"好嘞，已记下你这笔{source_friendly}{amt_str}块钱～"
     elif time_word:
@@ -1235,6 +1243,10 @@ def chat_with_xiaofeng(user_input, history):
 💬 自然对话：陪你闲聊、回答问题、给你建议
 
 介绍完能力后可以加一句温暖的话，如"有什么需要我帮忙的吗？"
+
+当用户向你打招呼（如"你好"、"嗨"）时，回复要自然、温暖，并明确表达"我可以帮你做什么"，
+而不是"你可以帮我做什么"。例如：
+用户: 你好 → 晓风: 你好呀！有什么我可以帮你的吗？
 """
     if memory_context:
         system_prompt += f"\n\n{memory_context}"
@@ -1379,6 +1391,45 @@ def _is_deletion_negated(user_input):
     return False
 
 
+# ===================== 问候语与澄清请求（v3.13.16）=====================
+# 模块级定义，便于自检/测试复用。主循环在主循环预路由阶段调用。
+_GREETING_RE = re.compile(
+    r"^(?:你好|您好|你好呀|你好啊|嗨|哈喽|hello|hi|hey|在吗|"
+    r"早上好|中午好|下午好|晚上好|晚安|早呀|你好吗)\s*[!！。？?~～]*$",
+    re.IGNORECASE)
+
+# 澄清请求短语（用户没听清/没理解上一轮回复时使用）。
+# 整句匹配（允许首尾标点）：短语几乎总是独立成句，避免子串误伤
+# 真正的提问，如"你说什么颜色的好"（= 你觉得哪个颜色好，非澄清）。
+_CLARIFY_RE = re.compile(
+    r"^[!！。？?~～，,；;。.\s]*(?:"
+    r"你说什么|你刚才说什么|你刚说什么|你说啥|你刚刚说什么|你说什么来着|你刚才说啥|你再说什么|"
+    r"再说一遍|再说一次|再讲一遍|重新说一遍|重说一遍|再说清楚一点|再说清楚点|"
+    r"你再说一遍|你再说一次|"
+    r"我没听清|没听清|没听清楚|没听明白|没听清你说|听不清|听不清楚"
+    r")[!！。？?~～，,；;。.\s]*$")
+
+
+def _is_pure_greeting(text):
+    """纯问候语判定（整句匹配，带内容的问候如"你好，帮我记个账"不命中）。"""
+    return bool(_GREETING_RE.match(text.strip()))
+
+
+def _build_clarify_reply(short_term):
+    """
+    澄清请求回复生成：从短期记忆取最后一条助手回复重复。
+    无历史回复时给出友好提示。
+    """
+    last_assistant = ""
+    for turn in reversed(short_term):
+        if turn.get("role") == "assistant":
+            last_assistant = turn.get("content", "")
+            break
+    if last_assistant:
+        return f"我刚才说的是：\n「{last_assistant}」\n需要我再说一遍吗？"
+    return "我还没说过什么内容呢，你现在想了解什么呢？"
+
+
 def main():
     print("=" * 50)
     print(f"🧠 晓风主体 · 模块化版 v{VERSION} 已启动")
@@ -1425,6 +1476,9 @@ def main():
     # ---- 澄清状态机（v3.7.4）----
     _pending_clarification = None  # 暂存模糊删除澄清请求，等待用户指定范围
 
+    # ---- 删除确认状态机（v3.13.7）----
+    _pending_delete_confirm = None  # 暂存高风险删除，等待用户确认（不可恢复）
+
     # ---- 路由上下文（v3.9.6）----
     _last_router_result = None  # 存储上一轮路由结果 {"intent", "target"}，用于上下文延续
 
@@ -1436,8 +1490,14 @@ def main():
 
         # 语音输入模式
         if user_input == "v":
-            user_input = listen_once()
-            if user_input in ["语音识别失败", "模拟语音输入"]:
+            # v3.13.7: 录音前显示提示，并做异常兜底（麦克风失败/后端不可用）
+            print("🎤 正在听...（说完自动停止，最多 25 秒）")
+            try:
+                user_input = listen_once()
+            except Exception as e:
+                print(f"⚠️ 语音输入出错: {e}，请重试或手动输入文字")
+                continue
+            if user_input in ["语音识别失败", "模拟语音输入", "录音失败"]:
                 print(f"⚠️ {user_input}，请重试或手动输入文字")
                 continue
 
@@ -1472,6 +1532,30 @@ def main():
         user_input = ' '.join(user_input.split())
         # 移除中文字符之间的空格（如 "一 分钟 后 叫 我" → "一分钟后叫我"）
         user_input = re.sub(r'(?<=[一-鿿])\s+(?=[一-鿿])', '', user_input)
+
+        # ============================================================
+        # v3.13.16: 问候语确定性回复 —— 明确表达"我能帮你做什么"
+        # 7b 模型对纯问候语曾生成"有什么事情可以帮我做的吗"（听起来像
+        # 让用户帮晓风做事）。纯问候语直接给固定温暖回复，不依赖 LLM；
+        # 带内容的问候（"你好，帮我记个账"）不受影响（需整句匹配）。
+        # ============================================================
+        if _is_pure_greeting(user_input):
+            print(f"[预路由] 检测到问候语: {user_input!r}")
+            reply = "你好呀！有什么我可以帮你的吗？"
+            print(f"晓风: {reply}")
+            speak(reply)
+            continue
+
+        # ============================================================
+        # v3.13.16: 澄清请求预路由 —— "你说什么"/"再说一遍" → 重复上一轮回复
+        # 用户没听清/没理解上一轮回复时，不再落入 clarify 兜底
+        #（"不太确定你的意思"），而是从短期记忆取最后一条助手回复重复。
+        # ============================================================
+        if _CLARIFY_RE.search(user_input):
+            reply = _build_clarify_reply(short_term)
+            print(f"晓风: {reply}")
+            speak(reply)
+            continue
 
         # ============================================================
         # 数据提炼命令（v3.3.0 新增）
@@ -1525,6 +1609,7 @@ def main():
             # 清除任何挂起的删除澄清/确认状态
             _pending_clarification = None
             _pending_confirmation = None
+            _pending_delete_confirm = None
             continue
 
         # ============================================================
@@ -1647,6 +1732,44 @@ def main():
 
             # 用户说了别的内容 → 取消暂存，当作新请求继续
             print(f"👌 已取消之前的确认请求，处理新输入...")
+
+        # ============================================================
+        # v3.13.7: 删除确认状态机 —— 高风险删除（all/today/上周/昨天/最新）先确认
+        # ============================================================
+        if _pending_delete_confirm is not None:
+            pending = _pending_delete_confirm
+            _pending_delete_confirm = None
+            resp = user_input.strip()
+            if resp in ("是", "对", "嗯", "是的", "对的", "yes", "y", "Y", "好", "行", "可以", "确认"):
+                _d_scope = pending.get("scope", "today")
+                _d_target = pending.get("target_type", "finance")
+                print(f"✅ 已确认，正在执行删除（scope={_d_scope}）...")
+                if _d_target == "finance":
+                    if _d_scope == "keyword":
+                        result = call_tool("财务", "keyword", pending.get("text", ""),
+                                           _func="delete_by_scope")
+                    else:
+                        result = call_tool("财务", _d_scope, _func="delete_by_scope")
+                elif _d_target == "memory":
+                    result = ("⚠️ 记忆数据删除暂不支持直接操作。"
+                              "你可以对我说「清理记忆」或「整理记忆」来管理记忆数据。")
+                else:  # schedule
+                    if _d_scope == "keyword":
+                        result = call_tool("日程", "keyword", pending.get("text", ""),
+                                           _func="delete_by_scope")
+                    else:
+                        result = call_tool("日程", _d_scope, _func="delete_by_scope")
+                reply = _generate_tool_reply(result, prefix="明白了")
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, pending.get("text", ""), reply)
+            elif resp in ("不是", "不", "不对", "no", "n", "N", "错了", "取消", "算了", "不删", "不删了", "不用了"):
+                print("👌 好的，已取消删除。")
+                speak("好的，已取消删除。")
+            else:
+                print("👌 好的，已取消删除（未确认）。")
+                speak("好的，已取消删除。")
+            continue
 
         # ============================================================
         # 规律拒绝处理（v3.5.0 新增）
@@ -1815,35 +1938,8 @@ def main():
             try:
                 topic = re.sub(r"(关联记忆|相关记忆|和什么相关|和什么有关|跟什么相关|跟什么有关|的关联|关联的|"
                                r"记忆|查看|看看|查询|查一下|有什么|一下|和|与|跟|的)", "", user_input).strip()
-                if topic:
-                    cands = [h for h in search_by_keyword(topic, limit=5) if h.get("source") == "memory"]
-                    mem_ids = [h["id"] for h in cands]
-                else:
-                    cands = []
-                    mem_ids = [m["id"] for m in search_by_time(None, limit=8)]
-                if not mem_ids:
-                    reply = "目前还没有可查看关联的记忆～"
-                else:
-                    lines = []
-                    for mid in mem_ids:
-                        rels = get_related_memories(mid, limit=5)
-                        if not rels:
-                            continue
-                        _boost_memory_retrieval(rels)  # v3.10.8: 关联检索同样提升置信度
-                        src = next((h for h in cands if h["id"] == mid), None)
-                        label = (src.get("title") or src.get("content", ""))[:16] if src else mid[-6:]
-                        rparts = []
-                        for r in rels:
-                            # v3.12.1: 用 content/detail 而非 title（"记账"等泛化标题无信息量）
-                            st = r.get("strength_label", "弱")
-                            text = (r.get("content") or r.get("detail") or r.get("title") or "")
-                            reasons = "、".join(r.get("reasons", []) or [])
-                            seg = f"[{st}] {text[:24]}"
-                            if reasons:
-                                seg += f" - 原因：{reasons}"
-                            rparts.append(seg)
-                        lines.append(f"「{label}」关联记忆（按强度排序）:\n" + "\n".join(rparts))
-                    reply = "\n\n".join(lines) if lines else "这些记忆暂时还没有建立关联～"
+                # v3.13.13: 统一走 format_related_query（回答生成层），替代原始关联 dump
+                reply = format_related_query(None, topic or "", limit=10)
             except Exception as e:
                 print(f"⚠️ 关联记忆查询失败:{e}")
                 reply = "关联记忆查询暂时不可用"
@@ -1865,16 +1961,8 @@ def main():
                 hits = search_by_keyword(kw, limit=10)
                 if hits:
                     _boost_memory_retrieval(hits)  # v3.10.8: 检索提升置信度
-                if not hits:
-                    reply = f"没有找到关于「{kw}」的记忆～"
-                else:
-                    lines = [f"🔍 找到 {len(hits)} 条相关内容:"]
-                    for h in hits[:8]:
-                        date = h.get("date") or ""
-                        src = "记忆" if h.get("source") == "memory" else "对话"
-                        title = h.get("title") or h.get("content", "")
-                        lines.append(f"  [{date}] ({src}) {title}")
-                    reply = "\n".join(lines)
+                # v3.13.9: 分组摘要（回答生成层），替代原始记录 dump
+                reply = format_keyword_search(kw, hits)
             except Exception as e:
                 print(f"⚠️ 记忆搜索失败:{e}")
                 reply = "记忆搜索暂时不可用"
@@ -1891,19 +1979,12 @@ def main():
             print(f"[预路由] 检测到记忆查询意图: {user_input!r}")
             time_expr = _extract_memory_time_expr(user_input)
             try:
-                mems = search_by_time(time_expr, limit=10)
+                # v3.13.12: limit 200 保证分组计数准确；检索提升限前10条
+                mems = search_by_time(time_expr, limit=200)
                 if mems:
-                    _boost_memory_retrieval(mems)  # v3.10.8: 检索提升置信度
-                if not mems:
-                    reply = "目前还没有相关的记忆记录～"
-                else:
-                    lines = ["🧠 记忆记录:"]
-                    for m in mems:
-                        title = m.get("title") or m.get("content", "")
-                        date = m.get("date", "")
-                        sub = m.get("subtype", "")
-                        lines.append(f"  [{date}] ({sub}) {title}")
-                    reply = "\n".join(lines[:12])
+                    _boost_memory_retrieval(mems[:10])
+                # v3.13.12: 分组展示（事实/事件/情绪/习惯），替代原始 dump
+                reply = format_memory_query(mems, "记忆记录", time_expr or None)
             except Exception as e:
                 print(f"⚠️ 记忆查询失败:{e}")
                 reply = "记忆查询暂时不可用"
@@ -1914,29 +1995,30 @@ def main():
 
         # (I) 时间+发生了什么 → query+memory（v3.10.7，按日期/星期回查）
         #   "上周三发生了什么" / "周一干了什么" / "昨天都做了啥" → search_by_time
+        # v3.13.11: 支持裸时间词（"本月"/"本周"/"今天"/"昨天"/"上个月"）——不再默认财务查询。
         _TIME_RECALL_RE = re.compile(
-            r"(?:今天|今日|昨天|昨日|前天|本周|这周|上周|本月|这个月|"
+            # 裸时间词（整句仅一个时间词）
+            r"^(?:今天|今日|昨天|昨日|前天|大前天|本周|这周|上周|上上周|本月|这个月|上个月|"
+            r"(?:上)?(?:周|星期)[一二三四五六日天])$"
+            # 或 时间词 + 回查动词
+            r"|(?:今天|今日|昨天|昨日|前天|大前天|本周|这周|上周|上上周|本月|这个月|上个月|"
             r"(?:上)?(?:周|星期)[一二三四五六日天])"
             r"[^。？!?\n]*?(?:发生了什么|发生了什么事|干了什么|做了什么|做了啥|"
             r"有什么大事|有哪些(?:事)?|记录了什么|记录了些什么|都做了些什么)"
         )
-        if _TIME_RECALL_RE.search(user_input) and not re.search(r"(日程|待办|提醒|记账|花了)", user_input):
+        # v3.13.11: 排除财务/日程意图——含 花了/消费/收入/支出 等财务词 → 仍走财务查询
+        if _TIME_RECALL_RE.search(user_input) and not re.search(
+                r"(日程|待办|提醒|记账|花了|消费|收入|支出)", user_input):
             print(f"[预路由] 检测到时间回查意图: {user_input!r}")
             time_expr = _extract_memory_time_expr(user_input)
             try:
-                mems = search_by_time(time_expr, limit=10)
+                # v3.13.10: 用足够大的 limit 保证分组计数准确（limit=10 会截断导致少记）
+                mems = search_by_time(time_expr, limit=200)
                 if mems:
-                    _boost_memory_retrieval(mems)  # v3.10.8: 检索提升置信度
-                if not mems:
-                    reply = f"{time_expr or '那段时间'}好像没什么记忆记录～"
-                else:
-                    lines = [f"🧠 {time_expr or '那个时段'}的记录:"]
-                    for m in mems:
-                        title = m.get("title") or m.get("content", "")
-                        date = m.get("date", "")
-                        sub = m.get("subtype", "")
-                        lines.append(f"  [{date}] ({sub}) {title}")
-                    reply = "\n".join(lines[:12])
+                    # 检索提升只作用于前 10 条，避免 200 条大范围置信度膨胀
+                    _boost_memory_retrieval(mems[:10])
+                # v3.13.10: 时间回查分组摘要（回答生成层），替代原始记录 dump
+                reply = format_time_recall(mems, time_expr)
             except Exception as e:
                 print(f"⚠️ 记忆查询失败:{e}")
                 reply = "记忆查询暂时不可用"
@@ -1990,8 +2072,11 @@ def main():
                 _debug_log(f"[DEBUG-预路由] (F)消费金额 触发但被排除词拦截: {user_input!r} 含 {f_excl.group(0)!r} → 不劫持（日程/记忆/查询/提醒/疑问）")
 
         # (G) "有+日程词" 自然表达 → 日程模块（"明天有个重要的会议"/"后天有个任务"/"下周一有个面试"）
-        _G_ITEM_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(会议|事件|日程|安排|约会|聚会|面试|上课|活动|任务|待办|事项|todo)", re.IGNORECASE)
-        _G_EXCL_RE = re.compile(r"(什么|哪些|有没有|几个|吗|呢|多少钱|删|提醒|记得|叫我|叫醒|喊我|通知|闹钟)")
+        # v3.13.8: 补查询排除词——"显示所有待办"中的"有"（"所有"）曾误匹配此模式，
+        # 导致查询被当成"添加"并反问"请问是什么类型的日程？"
+        _G_ITEM_RE = re.compile(r"有\s*(?:一个|个)?\s*.{0,10}?\s*(会议|事件|日程|安排|约会|聚会|面试|上课|活动|任务|待办|代办|事项|todo)", re.IGNORECASE)
+        _G_EXCL_RE = re.compile(r"(什么|哪些|有没有|几个|吗|呢|多少钱|删|提醒|记得|叫我|叫醒|喊我|通知|闹钟|"
+                                r"显示|查看|列出|展示|查询|查一下|所有|全部)")
         g_item = _G_ITEM_RE.search(user_input)
         g_excl = _G_EXCL_RE.search(user_input)
         if g_item and not g_excl:
@@ -2007,6 +2092,44 @@ def main():
                 _debug_log(f"[DEBUG-预路由] (G)有+日程词 未命中: {user_input!r}（无'有+会议/任务'等日程词模式）→ 继续")
             else:
                 _debug_log(f"[DEBUG-预路由] (G)有+日程词 触发但被排除词拦截: {user_input!r} 含 {g_excl.group(0)!r} → 不劫持（查询/提醒/财务）")
+
+        # (Q) 详情/展开继承预路由（v3.13.14）："详细一点"/"展开讲讲" 等裸详情请求
+        # 若上一轮 3b 路由是 query+finance，继承财务上下文重跑明细（finance 模块自带上下文继承）；
+        # 否则落到 (H) 展开对话或正常路由。排除含新查询词/操作词的输入（避免劫持新意图）。
+        _DETAIL_RE = re.compile(r"(详细一点|详细点|再详细点|具体点|展开讲讲|展开说|展开一下|"
+                                r"展开看看|展开看|详细列出来|详细列出|列出详情|看详细|说说详情)")
+        if _DETAIL_RE.search(user_input) and not re.search(
+                r"(记住|记下|删除|删掉|添加|新增|日程|待办|会议|提醒|"
+                r"花了|消费|收入|记账|财务|记录|搜索|查看|显示|查询|"
+                r"今天|昨天|上周|本周|本月|上个月)", user_input):
+            # v3.13.15: 优先用财务模块 _last_query_context 判定（任何路径的财务查询都会更新它，
+            # 比 _last_router_result 可靠——3b 可能把 target 判为 null 但查询仍已执行）
+            _fin_ctx = None
+            try:
+                import importlib
+                _fin_ctx = getattr(importlib.import_module("财务模块.finance_module"),
+                                   "_last_query_context", None)
+            except Exception:
+                _fin_ctx = None
+            if _fin_ctx:
+                print(f"[预路由] 详情请求 → 继承财务查询上下文: {user_input!r}")
+                result = call_tool("财务", user_input, {"raw_text": user_input},
+                                   _func="query_finance")
+                reply = _generate_tool_reply(result)
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+            # 无财务上下文 → 检查 3b 上次路由是否为日程查询（尽力重跑）
+            _last_target = _last_router_result.get("target") if isinstance(_last_router_result, dict) else None
+            if _last_target == "schedule":
+                print(f"[预路由] 详情请求 → 继承日程查询: {user_input!r}")
+                result = call_tool("日程", user_input, None, _func="query_schedule")
+                reply = _generate_tool_reply(result)
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
 
         # (H) 详细展开对话 → expand_dialogue（渐进披露按需展开，v3.10.2 / 触发增强 v3.10.3）
         # v3.10.3: 结构化触发模式（详细说一下...干了什么 / 展开说一下 / 把那件事详细说说 / 具体说说...那件事 / 详细说说他...）
@@ -2108,6 +2231,131 @@ def main():
             _handle_chat(user_input, short_term)
             continue
 
+        # (M) 收入查询 → 财务查询（v3.13.4）：收入词 + 查询语义 → query_finance（income 方向）
+        # 3b 对"这个月收入""总收入"（无"多少"）可能误判 chat/clarify。
+        # 收入 + 金额（"收入工资5000元"）→ 记账，不劫持；"记住收入"→ 记忆，不劫持。
+        _I_INC_RE = re.compile(r"(收入|赚了|赚到|进账|入账|到账|工资|奖金|红包)")
+        _I_QRY_RE = re.compile(r"(多少|来源|有哪些|哪些|哪几类|总共|合计|一共|全部|所有|总额|总|"
+                               r"这个月|本月|上个月|昨天|前天|今天|最近|今年|去年|上周|本周|"
+                               r"明细|趋势|走势|占比|最大|最多|最高|收支)")
+        _I_EXCL_RE = re.compile(r"(记住|记下|请记住|帮我记住|添加|新增|记一下|记一笔|记个|写进)")
+        if (_I_INC_RE.search(user_input) and _I_QRY_RE.search(user_input)
+                and not _I_EXCL_RE.search(user_input)
+                and not _contains_amount(user_input)):
+            print(f"[预路由] 检测到收入查询: {user_input!r}")
+            if re.search(r"(趋势|走势)", user_input):
+                try:
+                    from 财务模块.finance_module import get_income_trend
+                    trend = get_income_trend(periods=3)
+                    if not trend.get("periods"):
+                        reply = "目前还没有收入记录～"
+                    else:
+                        lines = [f"📈 近{len(trend['periods'])}个月收入趋势（{trend['direction']}）:"] + \
+                                [f"  {p['month']}: {int(p['amount'])}元" for p in trend['periods']]
+                        reply = "\n".join(lines)
+                except Exception as e:
+                    print(f"⚠️ 收入趋势查询失败:{e}")
+                    reply = "收入趋势查询暂时不可用"
+            else:
+                result = call_tool("财务", user_input, {"raw_text": user_input},
+                                   _func="query_finance")
+                reply = _generate_tool_reply(result)
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
+        # (N) 财务删除预路由（v3.13.7）：删除词 + 财务目标 → 确定性删除流程
+        # 修复 "删除昨天的财务记录" 被 3b 误判为记账（record→"没听懂金额"）。
+        # 高风险范围（all/today/上周/昨天/最新）先走确认状态机（不可恢复）。
+        _DEL_RE = re.compile(r"(删除|删掉|删了|移除|清空|清除|清掉|去掉)")
+        if _DEL_RE.search(user_input) and not _is_deletion_negated(user_input):
+            _d_scope, _d_target = _parse_delete_scope(user_input)
+            # "昨天"→yesterday（_parse_delete_scope 未覆盖，会落入 keyword）
+            if _d_scope == "keyword" and re.search(r"昨天|昨日", user_input):
+                _d_scope = "yesterday"
+            # 序号删除（待办N）低风险直接执行（与 3b 路径一致）
+            _d_idx = re.search(r"(?:删除|删掉|移除)\s*(?:待办|任务|todo)\s*(\d+)", user_input)
+            if _d_idx:
+                print(f"🔧 正在按序号删除待办（第{_d_idx.group(1)}项，确定性预路由）...")
+                result = call_tool("日程", int(_d_idx.group(1)), _func="delete_by_index")
+                reply = _generate_tool_reply(result, prefix="明白了")
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+            # 高风险财务删除 → 先确认
+            if _d_target == "finance" and _d_scope in ("all", "today", "last_week", "yesterday", "latest"):
+                _pending_delete_confirm = {"scope": _d_scope, "target_type": "finance",
+                                           "text": user_input}
+                _dl = {"all": "全部", "today": "今天", "last_week": "最近一周",
+                       "yesterday": "昨天", "latest": "最新一条"}
+                reply = f"确认删除{_dl.get(_d_scope, _d_scope)}的财务记录吗？此操作不可恢复。"
+                print(f"[预路由] 检测到删除意图（需确认）: {user_input!r}")
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+            # v3.13.8: 高风险日程/待办删除 → 先确认（"删除今天的日程数据"不再落入关键词搜索）
+            if _d_target == "schedule" and _d_scope in ("all", "today", "last_week", "latest"):
+                _pending_delete_confirm = {"scope": _d_scope, "target_type": "schedule",
+                                           "text": user_input}
+                _dl = {"all": "全部", "today": "今天", "last_week": "最近一周", "latest": "最新一条"}
+                reply = f"确认删除{_dl.get(_d_scope, _d_scope)}的日程/待办吗？此操作不可恢复。"
+                print(f"[预路由] 检测到日程删除意图（需确认）: {user_input!r}")
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, user_input, reply)
+                continue
+            # 其他删除（关键词/日程/记忆/目标不明）→ 落到 3b/7b 正常流程
+
+        # (O) 提醒修正预路由（v3.13.8）："把它改成五分钟/改成3点/调成半小时" → modify_last_reminder
+        # 3b 对"把它改成X"（无"不是X是Y"模板）常误判 chat/clarify。
+        # 先规范化中文数字（"五分钟"→"5分钟"、"半小时"→"30分钟"），再提取目标时间。
+        _CORRECT_RE = re.compile(r"(把它改成|把它改为|把它调成|改成|改为|改一下|修改|换成|变更为|调成)")
+        try:
+            from 日程模块.schedule_module import _normalize_chinese_numbers
+            _cn_text = _normalize_chinese_numbers(user_input)
+        except Exception:
+            _cn_text = user_input
+        _c_offset = re.search(r"改成\s*(\d{1,2})\s*分钟", _cn_text) \
+                    or re.search(r"改成\s*(\d{1,2})\s*分\b", _cn_text)
+        # "半小时"规范化规则需带"后"才转换，这里直接匹配中文原词
+        _c_half = re.search(r"改成\s*半小时", user_input) \
+                  or re.search(r"改成\s*30分钟", _cn_text)
+        _c_abs = re.search(r"改成\s*(\d{1,2})\s*[点时]", _cn_text)
+        if (_CORRECT_RE.search(user_input) and (_c_offset or _c_half or _c_abs)
+                and not re.search(r"(删除|删掉|移除|清空|清除|记住|记下)", user_input)):
+            print(f"[预路由] 检测到提醒修正: {user_input!r}")
+            params_c = {"raw_text": user_input, "time_offset": None,
+                        "absolute_time": None, "content": None}
+            if _c_offset:
+                params_c["time_offset"] = int(_c_offset.group(1))
+            elif _c_half:
+                params_c["time_offset"] = 30
+            elif _c_abs:
+                params_c["absolute_time"] = f"{int(_c_abs.group(1)):02d}:00"
+            result = call_tool("日程", params_c, _func="modify_last_reminder")
+            print(result)
+            speak(result)
+            _record_tool_operation(short_term, user_input, result)
+            continue
+
+        # (P) 日程/待办查询预路由（v3.13.8）：裸"代办/待办/显示所有待办" → query_schedule
+        # "代办"是"待办"常见缩写；"显示所有待办"经 (G) 排除后落到这里确定性查询。
+        _SCHED_QRY_RE = re.compile(
+            r"^(?:今天|明天|昨天|本周|这周|上周)?\s*(?:显示|查看|列出|展示|查询|看看)?\s*"
+            r"(?:所有|全部)?\s*(?:代办|待办|日程|事件|任务|事项)(?:列表|清单)?\s*$"
+        )
+        if _SCHED_QRY_RE.match(user_input.strip()):
+            print(f"[预路由] 检测到日程查询: {user_input!r}")
+            result = call_tool("日程", user_input, None, _func="query_schedule")
+            reply = _generate_tool_reply(result)
+            print(reply)
+            speak(reply)
+            _record_tool_operation(short_term, user_input, reply)
+            continue
+
         # v3.9.6: 提取上一轮用户输入 + 上一轮路由结果作为结构化上下文
         last_user_context = None
         for turn in reversed(short_term):
@@ -2202,19 +2450,13 @@ def main():
                             time_f = "last_week"
                         if not time_f:
                             time_f = _extract_memory_time_expr(user_input)
-                        mems = search_by_time(time_f, limit=10)
+                        mems = search_by_time(time_f, limit=200)
                         if mems:
-                            _boost_memory_retrieval(mems)  # v3.10.8: 检索提升置信度
-                        if not mems:
-                            reply = "目前还没有相关的记忆记录～"
-                        else:
-                            lines = ["🧠 记忆记录:"]
-                            for m in mems:
-                                title = m.get("title") or m.get("content", "")
-                                date = m.get("date", "")
-                                sub = m.get("subtype", "")
-                                lines.append(f"  [{date}] ({sub}) {title}")
-                            reply = "\n".join(lines[:12])
+                            # 检索提升只作用于前 10 条，避免 200 条大范围置信度膨胀
+                            _boost_memory_retrieval(mems[:10])
+                        # v3.13.12: 记忆查询统一走分组展示（事实/事件/情绪/习惯）
+                        _label = _extract_memory_time_expr(user_input) or ""
+                        reply = format_memory_query(mems, "记忆记录", _label or None)
                     except Exception as e:
                         print(f"⚠️ 记忆查询失败:{e}")
                         reply = "记忆查询暂时不可用"
@@ -2288,18 +2530,25 @@ def main():
                     # 可直接映射到 delete_by_scope 的范围值
                     DIRECT_SCOPES = ("all", "today", "latest", "last_week")
 
+                    # v3.13.7: 批量/范围删除一律先确认（不可恢复）
                     if scope_from_params in DIRECT_SCOPES:
-                        print(f"🔧 正在按范围删除财务记录（scope={scope_from_params}，3b路由）...")
-                        result = call_tool("财务", scope_from_params, _func="delete_by_scope")
-                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(f"🔧 正在按范围删除财务记录（scope={scope_from_params}，3b路由）→ 需确认...")
+                        _pending_delete_confirm = {"scope": scope_from_params, "target_type": "finance",
+                                                   "text": user_input}
+                        _dl = {"all": "全部", "today": "今天", "last_week": "最近一周",
+                               "latest": "最新一条"}
+                        reply = f"确认删除{_dl.get(scope_from_params, scope_from_params)}的财务记录吗？此操作不可恢复。"
                         print(reply)
                         speak(reply)
                         _record_tool_operation(short_term, user_input, reply)
                     elif time in DIRECT_SCOPES:
                         # time 字段可直接用作 scope（如 today / last_week）
-                        print(f"🔧 正在按时间删除财务记录（time={time}，3b路由）...")
-                        result = call_tool("财务", time, _func="delete_by_scope")
-                        reply = _generate_tool_reply(result, prefix="明白了")
+                        print(f"🔧 正在按时间删除财务记录（time={time}，3b路由）→ 需确认...")
+                        _pending_delete_confirm = {"scope": time, "target_type": "finance",
+                                                   "text": user_input}
+                        _dl = {"all": "全部", "today": "今天", "last_week": "最近一周",
+                               "latest": "最新一条"}
+                        reply = f"确认删除{_dl.get(time, time)}的财务记录吗？此操作不可恢复。"
                         print(reply)
                         speak(reply)
                         _record_tool_operation(short_term, user_input, reply)
@@ -2380,16 +2629,8 @@ def main():
                     hits = search_by_keyword(keyword, limit=10)
                     if hits:
                         _boost_memory_retrieval(hits)  # v3.10.8: 检索提升置信度
-                    if not hits:
-                        reply = f"没有找到关于「{keyword}」的记忆～"
-                    else:
-                        lines = [f"🔍 找到 {len(hits)} 条相关内容:"]
-                        for h in hits[:10]:
-                            date = h.get("date") or ""
-                            src = "记忆" if h.get("source") == "memory" else "对话"
-                            title = h.get("title") or h.get("content", "")
-                            lines.append(f"  [{date}] ({src}) {title}")
-                        reply = "\n".join(lines)
+                    # v3.13.9: 分组摘要（回答生成层），替代原始记录 dump
+                    reply = format_keyword_search(keyword, hits)
                 except Exception as e:
                     print(f"⚠️ 记忆搜索失败:{e}")
                     reply = "记忆搜索暂时不可用"

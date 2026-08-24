@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "patterns": [
+  "archived": [
     {
       "type": "time_based",
       "content": "喝水",
@@ -62,7 +62,6 @@
       "archived": true
     }
   ],
-  "_migrated_from": "长期记忆.json",
-  "updated_at": "2026-08-24T22:40:43.551076",
-  "last_decay": "2026-08-24"
+  "archived_count": 4,
+  "last_updated": "2026-08-24T22:40:43.549577"
 }
