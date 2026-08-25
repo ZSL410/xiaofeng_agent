@@ -15,3 +15,9 @@ numpy
 
 # Word 文档报告生成
 python-docx
+
+# 财务报告图表 (v3.13.20 Phase 3)
+matplotlib>=3.7.0
+
+# Excel 导出 (v3.13.20 Phase 3)
+openpyxl>=3.1.0

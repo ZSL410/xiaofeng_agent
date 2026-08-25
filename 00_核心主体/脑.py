@@ -5,7 +5,7 @@ import json
 import subprocess
 import urllib.request
 
-VERSION = "3.13.16"
+VERSION = "3.13.20"
 
 # 确保能找到器官和记忆模块
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1409,6 +1409,10 @@ _CLARIFY_RE = re.compile(
     r"我没听清|没听清|没听清楚|没听明白|没听清你说|听不清|听不清楚"
     r")[!！。？?~～，,；;。.\s]*$")
 
+# v3.13.17: "你说什么" + 具体内容 → 自然提问（如"你说什么颜色的好"），非澄清。
+# 与 _CLARIFY_RE 互补：短语后紧跟非标点内容即视为提问，交给对话层自然回答。
+_WH_QUESTION_RE = re.compile(r"你说什么[^！。？?~～，,；;：:。.\s]")
+
 
 def _is_pure_greeting(text):
     """纯问候语判定（整句匹配，带内容的问候如"你好，帮我记个账"不命中）。"""
@@ -1479,6 +1483,9 @@ def main():
     # ---- 删除确认状态机（v3.13.7）----
     _pending_delete_confirm = None  # 暂存高风险删除，等待用户确认（不可恢复）
 
+    # ---- 记账待补充状态机（v3.13.17）----
+    _pending_finance_record = False  # 用户表达记账意图但无金额，等待补充金额/来源
+
     # ---- 路由上下文（v3.9.6）----
     _last_router_result = None  # 存储上一轮路由结果 {"intent", "target"}，用于上下文延续
 
@@ -1541,6 +1548,7 @@ def main():
         # ============================================================
         if _is_pure_greeting(user_input):
             print(f"[预路由] 检测到问候语: {user_input!r}")
+            _pending_finance_record = False  # v3.13.17: 用户改问候，清除待记账状态
             reply = "你好呀！有什么我可以帮你的吗？"
             print(f"晓风: {reply}")
             speak(reply)
@@ -1552,9 +1560,25 @@ def main():
         #（"不太确定你的意思"），而是从短期记忆取最后一条助手回复重复。
         # ============================================================
         if _CLARIFY_RE.search(user_input):
+            print(f"[预路由] 检测到澄清请求: {user_input!r}")
+            _pending_finance_record = False  # v3.13.17: 用户改问澄清，清除待记账状态
             reply = _build_clarify_reply(short_term)
             print(f"晓风: {reply}")
             speak(reply)
+            continue
+
+        # ============================================================
+        # v3.13.17: "你说什么+内容" 自然提问预路由 —— "你说什么颜色的好"
+        # 这是真正的提问（征求看法/偏好），不是澄清请求。
+        # 与 v3.13.16 的 _CLARIFY_RE（整句匹配）互补：
+        #   "你说什么"（后无内容）→ _CLARIFY_RE 命中 → 重复上一轮回复
+        #   "你说什么颜色..."（后有内容）→ 此处命中 → 交给 7b 对话自然回答
+        # 防止 3b 路由器把此类提问误判为 clarify（"不太确定你的意思"）。
+        # ============================================================
+        if _WH_QUESTION_RE.search(user_input):
+            print(f"[预路由] '你说什么+内容' 自然提问 → chat: {user_input!r}")
+            _pending_finance_record = False  # v3.13.17: 清除待记账状态
+            _handle_chat(user_input, short_term)
             continue
 
         # ============================================================
@@ -1610,6 +1634,7 @@ def main():
             _pending_clarification = None
             _pending_confirmation = None
             _pending_delete_confirm = None
+            _pending_finance_record = False  # v3.13.17
             continue
 
         # ============================================================
@@ -1770,6 +1795,32 @@ def main():
                 print("👌 好的，已取消删除（未确认）。")
                 speak("好的，已取消删除。")
             continue
+
+        # ============================================================
+        # 记账待补充状态机（v3.13.17）
+        # 用户上一轮表达记账意图但无金额（"帮我记个账"），等待补充金额/来源。
+        # 补充金额 → 记账；取消词 → 取消；其他（查询/新请求）→ 清除状态交给正常路由。
+        # ============================================================
+        if _pending_finance_record:
+            resp = user_input.strip()
+            if resp in ("算了", "不记了", "不用了", "取消", "不用", "不记", "不了", "没有"):
+                _pending_finance_record = False
+                reply = "好的，那就不记了。需要的时候随时叫我。"
+                print(reply)
+                speak(reply)
+                continue
+            # 补充了明确金额 → 执行记账（可能含"今天吃饭花了25元"等完整描述）
+            if _contains_amount(resp):
+                _pending_finance_record = False
+                print("🔧 正在处理财务指令（待记账补充）...")
+                result = call_tool("财务", resp)
+                reply = _generate_tool_reply(result)
+                print(reply)
+                speak(reply)
+                _record_tool_operation(short_term, resp, reply)
+                continue
+            # 非记账补充（查询/新请求/其他）→ 清除状态，交给正常路由（不 continue）
+            _pending_finance_record = False
 
         # ============================================================
         # 规律拒绝处理（v3.5.0 新增）
@@ -2408,6 +2459,14 @@ def main():
                     speak(reply)
                     _record_tool_operation(short_term, user_input, reply)
                 else:
+                    # v3.13.17: 记账意图但无金额 → 进入待记账状态（等用户补充金额）
+                    if not _contains_amount(user_input):
+                        print(f"[记账] 记账意图但无金额 → 进入待记账状态: {user_input!r}")
+                        _pending_finance_record = True
+                        reply = "好的，你说我听着呢。"
+                        print(f"晓风: {reply}")
+                        speak(reply)
+                        continue
                     print("🔧 正在处理财务指令（3b路由）...")
                     result = call_tool("财务", user_input)
                     reply = _generate_tool_reply(result)
@@ -2977,6 +3036,14 @@ def main():
                 result = call_tool("财务", user_input, query_params,
                                    _func="query_finance")
             else:
+                # v3.13.17: 记账意图但无金额 → 进入待记账状态（等用户补充金额）
+                if not _contains_amount(user_input):
+                    print(f"[记账] 记账意图但无金额 → 进入待记账状态: {user_input!r}")
+                    _pending_finance_record = True
+                    reply = "好的，你说我听着呢。"
+                    print(f"晓风: {reply}")
+                    speak(reply)
+                    continue
                 print("🔧 正在处理财务指令...")
                 result = call_tool("财务", user_input)
             reply = _generate_tool_reply(result)

@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import urllib.request
 from datetime import datetime, timedelta
 
@@ -1706,6 +1707,744 @@ def get_income_trend(periods=3):
     else:
         direction = "平稳"
     return {"periods": out, "direction": direction}
+
+
+# ===================== 财务报告生成（v3.13.19 Phase 2.5：默认范围=今日/近3天 + 全量对比） =====================
+
+def _format_amount(amount):
+    """金额格式化：整数去掉小数（30 → '30'），小数保留两位（150.5 → '150.5'）。"""
+    try:
+        amount = round(float(amount), 2)
+    except (TypeError, ValueError):
+        amount = 0
+    return str(int(amount)) if amount == int(amount) else str(amount)
+
+
+def _compute_report_summary(records):
+    """计算财务报告汇总：总收入 / 总支出 / 结余（v3.13.18 Phase 1）。"""
+    income_total = sum(r.get("amount", 0) for r in records if r.get("type") == "income")
+    expense_total = sum(r.get("amount", 0) for r in records if r.get("type") == "expense")
+    return {
+        "income_total": round(income_total, 2),
+        "expense_total": round(expense_total, 2),
+        "balance": round(income_total - expense_total, 2),
+    }
+
+
+def _percent_change(current, previous):
+    """相比 previous 的变化百分比（%）；previous=0 时返回 None（无法计算）。"""
+    if not previous:
+        return None
+    return round((current - previous) / previous * 100)
+
+
+def _compute_category_breakdown(records):
+    """
+    计算分类统计（v3.13.18 Phase 2）：按 category 分组支出金额并计算占比。
+
+    参数:
+        records: list — 财务记录（仅统计 type=="expense"）
+
+    返回:
+        dict — {category: {"amount": 金额, "percentage": 占比%}}，
+        按金额降序插入（dict 保持插入顺序）。
+    """
+    agg = {}
+    total = 0.0
+    for r in records:
+        if r.get("type") == "expense":
+            cat = r.get("category") or "其他"
+            amt = r.get("amount", 0) or 0
+            agg[cat] = agg.get(cat, 0) + amt
+            total += amt
+    if total <= 0:
+        return {}
+    out = {}
+    for cat, amt in sorted(agg.items(), key=lambda x: -x[1]):
+        out[cat] = {
+            "amount": round(amt, 2),
+            "percentage": round(amt / total * 100),
+        }
+    return out
+
+
+def _week_bounds(now=None):
+    """返回本周 (start, end)：周一~周日（与记忆引擎 _date_range_for 口径一致）。"""
+    if now is None:
+        now = datetime.now()
+    monday = now - timedelta(days=now.weekday())
+    return monday.strftime("%Y-%m-%d"), (monday + timedelta(days=6)).strftime("%Y-%m-%d")
+
+
+def _last_week_bounds(now=None):
+    """返回上周 (start, end)。"""
+    if now is None:
+        now = datetime.now()
+    monday = now - timedelta(days=now.weekday())
+    return ((monday - timedelta(days=7)).strftime("%Y-%m-%d"),
+            (monday - timedelta(days=1)).strftime("%Y-%m-%d"))
+
+
+def _month_bounds(now=None):
+    """返回本月 (start, end)：自然整月。"""
+    if now is None:
+        now = datetime.now()
+    start = now.strftime("%Y-%m") + "-01"
+    if now.month == 12:
+        end_dt = datetime(now.year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_dt = datetime(now.year, now.month + 1, 1) - timedelta(days=1)
+    return start, end_dt.strftime("%Y-%m-%d")
+
+
+def _last_month_bounds(now=None):
+    """返回上月 (start, end)：上月自然整月。"""
+    if now is None:
+        now = datetime.now()
+    lm_end_dt = datetime(now.year, now.month, 1) - timedelta(days=1)
+    return lm_end_dt.replace(day=1).strftime("%Y-%m-%d"), lm_end_dt.strftime("%Y-%m-%d")
+
+
+def _records_in_range(records, start, end):
+    """筛选日期在 [start, end] 闭区间内的记录（date 缺失/越界的记录排除）。"""
+    return [r for r in records if start <= (r.get("date") or "") <= end]
+
+
+def _get_default_date_range(records, now=None):
+    """
+    计算默认报告范围（v3.13.19 Phase 2.5）。
+
+    返回:
+        (report_date, start_3d, end_3d)
+        - report_date: 今天有记录则为今天，否则为最近一个有记录的日子
+        - start_3d/end_3d: 近三天闭区间（含 report_date，用于明细与分类）
+    """
+    if now is None:
+        now = datetime.now()
+    today = now.strftime("%Y-%m-%d")
+    dates = sorted({(r.get("date") or "") for r in records if (r.get("date") or "") <= today})
+    report_date = today if today in dates else (dates[-1] if dates else today)
+    start_3d = (datetime.strptime(report_date, "%Y-%m-%d") - timedelta(days=2)).strftime("%Y-%m-%d")
+    return report_date, start_3d, report_date
+
+
+def _get_period_comparison(records, now=None):
+    """
+    计算期间对比（v3.13.18 Phase 2 / v3.13.19 复用 bounds 辅助）：本周 vs 上周、本月 vs 上月支出。
+
+    参数:
+        records: list — 财务记录
+        now: datetime — 当前时间（默认 datetime.now()，测试可传固定日期）
+
+    返回:
+        dict — {
+            "week":  {"label", "this_total", "last_total", "percent", "has_data"},
+            "month": {"label", "this_total", "last_total", "percent", "has_data"},
+        }
+        统计口径：仅支出（income 不计入开销，与记忆引擎 _finance_in_range 一致）。
+    """
+    if now is None:
+        now = datetime.now()
+
+    expenses = [r for r in records if r.get("type") == "expense"]
+
+    def _sum_in_range(recs, start, end):
+        return round(sum(r.get("amount", 0) or 0 for r in recs
+                         if start <= (r.get("date") or "") <= end), 2)
+
+    this_start, this_end = _week_bounds(now)
+    last_start, last_end = _last_week_bounds(now)
+    m_start, m_end = _month_bounds(now)
+    lm_start, lm_end = _last_month_bounds(now)
+
+    week_this = _sum_in_range(expenses, this_start, this_end)
+    week_last = _sum_in_range(expenses, last_start, last_end)
+    month_this = _sum_in_range(expenses, m_start, m_end)
+    month_last = _sum_in_range(expenses, lm_start, lm_end)
+
+    return {
+        "week": {
+            "label": "本周 vs 上周",
+            "this_total": week_this,
+            "last_total": week_last,
+            "percent": _percent_change(week_this, week_last),
+            "has_data": bool(week_this or week_last),
+        },
+        "month": {
+            "label": "本月 vs 上月",
+            "this_total": month_this,
+            "last_total": month_last,
+            "percent": _percent_change(month_this, month_last),
+            "has_data": bool(month_this or month_last),
+        },
+    }
+
+
+def _format_percent_change(percent):
+    """格式化百分比变化：None → '—'；正数 '+X%'；负数 '-X%'；0 → '0%'。"""
+    if percent is None:
+        return "—"
+    p = int(round(percent))
+    if p > 0:
+        return f"+{p}%"
+    if p < 0:
+        return f"{p}%"
+    return "0%"
+
+
+def _build_detail_table(records, limit=50):
+    """
+    构建交易明细（v3.13.18 Phase 2）：按 date 降序 + time 升序排序，截取最近 limit 条。
+
+    参数:
+        records: list — 财务记录
+        limit: int — 最大返回条数（默认 50）
+
+    返回:
+        list — 已排序的明细记录（最新在前，最多 limit 条）
+    """
+    def _key(r):
+        d = r.get("date", "") or "0000-00-00"
+        t = r.get("time", "") or "00:00"
+        return (-_date_to_ordinal(d), t)
+    return sorted(records, key=_key)[:limit]
+
+
+_VALID_SCOPES = ("default", "today", "week", "month", "all")
+
+
+# ===================== v3.13.20 Phase 3: 图表 + Excel 导出 =====================
+
+# 中文字体候选路径（Windows 自带字体；WSL 下指向 /mnt/c/Windows/Fonts）
+_CHINESE_FONT_CANDIDATES = [
+    "/mnt/c/Windows/Fonts/simhei.ttf",
+    "/mnt/c/Windows/Fonts/msyh.ttc",
+    "/mnt/c/Windows/Fonts/simsun.ttc",
+    "/mnt/c/Windows/Fonts/msyhbd.ttc",
+    "C:/Windows/Fonts/simhei.ttf",
+    "C:/Windows/Fonts/msyh.ttc",
+    "C:/Windows/Fonts/simsun.ttc",
+]
+
+
+def _setup_chinese_font():
+    """
+    为 matplotlib 注册中文字体并配置 rcParams（v3.13.20 Phase 3）。
+
+    返回:
+        list — 成功注册的字体名（为空则图表可能乱码，但不会抛异常）
+    """
+    try:
+        from matplotlib import font_manager, rcParams
+    except Exception:
+        return []
+    added = []
+    for cand in _CHINESE_FONT_CANDIDATES:
+        if os.path.exists(cand):
+            try:
+                font_manager.fontManager.addfont(cand)
+                name = font_manager.FontProperties(fname=cand).get_name()
+                added.append(name)
+            except Exception:
+                continue
+    if added:
+        rcParams["font.sans-serif"] = list(dict.fromkeys(
+            added + ["Microsoft YaHei", "SimHei", "SimSun", "Arial Unicode MS", "DejaVu Sans"]))
+    rcParams["axes.unicode_minus"] = False
+    return added
+
+
+def _aggregate_daily(records, days=7, end_date=None):
+    """
+    按日聚合支出/收入/结余，生成覆盖最近 days 天的连续日期序列（v3.13.20 Phase 3）。
+
+    参数:
+        records: list — 财务记录
+        days: int — 窗口天数（7 / 30）
+        end_date: str — 窗口结束日期（None 则取今日，今日无记录则取最近有数据日）
+
+    返回:
+        list[dict] — [{date, expense, income, balance}, ...]，日期升序，无数据日补 0
+        空数据返回 []（与 _compute_category_breakdown / _build_detail_table 一致）。
+    """
+    if not records:
+        return []
+    if end_date is None:
+        today = datetime.now().strftime("%Y-%m-%d")
+        dates = sorted({(r.get("date") or "") for r in records if r.get("date")})
+        end_date = today if today in dates else (dates[-1] if dates else today)
+    start = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=days - 1)).strftime("%Y-%m-%d")
+    daily = {}
+    for r in records:
+        d = r.get("date") or ""
+        if not (start <= d <= end_date):
+            continue
+        amt = r.get("amount", 0) or 0
+        t = r.get("type")
+        day = daily.setdefault(d, {"date": d, "expense": 0.0, "income": 0.0, "balance": 0.0})
+        if t == "expense":
+            day["expense"] += amt
+        elif t == "income":
+            day["income"] += amt
+    out = []
+    cur = datetime.strptime(start, "%Y-%m-%d")
+    end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+    while cur <= end_dt:
+        d = cur.strftime("%Y-%m-%d")
+        row = dict(daily.get(d, {"date": d, "expense": 0.0, "income": 0.0, "balance": 0.0}))
+        row["balance"] = round(row["income"] - row["expense"], 2)
+        out.append(row)
+        cur += timedelta(days=1)
+    return out
+
+
+def _generate_chart_image(records, chart_type="line", days=7, output_dir=None, end_date=None):
+    """
+    生成图表图片（matplotlib，v3.13.20 Phase 3）。
+
+    参数:
+        records: list — 财务记录
+        chart_type: str — "line" 折线（趋势）| "bar" 柱状（对比）
+        days: int — 7 或 30（显示天数窗口）
+        output_dir: str — 图片输出目录（默认系统临时目录，由调用方负责清理）
+        end_date: str — 窗口结束日期（None 则取今日或最近有数据日）
+
+    返回:
+        str — PNG 图片路径；matplotlib 缺失或图表失败返回 None（不抛异常，不影响报告生成）
+    """
+    plt = None
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except Exception:
+        return None
+    try:
+        _setup_chinese_font()
+        daily = _aggregate_daily(records, days=days, end_date=end_date)
+        if not daily:
+            return None
+        dates = [d["date"][5:] for d in daily]  # MM-DD 横轴
+        expenses = [d["expense"] for d in daily]
+        incomes = [d["income"] for d in daily]
+        balances = [d["balance"] for d in daily]
+
+        fig, ax = plt.subplots(figsize=(9, 3.4))
+        if chart_type == "bar":
+            x = range(len(dates))
+            w = 0.26
+            ax.bar([i - w for i in x], expenses, width=w, label="支出", color="#e57373")
+            ax.bar(x, incomes, width=w, label="收入", color="#81c784")
+            ax.bar([i + w for i in x], balances, width=w, label="结余", color="#64b5f6")
+            ax.set_title(f"近{days}天 每日支出/收入/结余对比", fontsize=12)
+        else:
+            ax.plot(dates, expenses, marker="o", label="支出", color="#e57373", linewidth=1.6, markersize=3)
+            ax.plot(dates, incomes, marker="o", label="收入", color="#81c784", linewidth=1.6, markersize=3)
+            ax.plot(dates, balances, marker="o", label="结余", color="#64b5f6", linewidth=1.6, markersize=3)
+            ax.set_title(f"近{days}天 每日收支趋势", fontsize=12)
+        ax.set_xticks(range(len(dates)))
+        ax.set_xticklabels(dates, rotation=45, ha="right", fontsize=8)
+        ax.axhline(0, color="gray", linewidth=0.6, linestyle="--")
+        ax.grid(axis="y", alpha=0.3)
+        ax.legend(fontsize=9, ncol=3)
+        fig.tight_layout()
+        if not output_dir:
+            output_dir = tempfile.gettempdir()
+        path = os.path.join(output_dir, f"chart_{chart_type}_{days}d.png")
+        fig.savefig(path, dpi=120, bbox_inches="tight")
+        plt.close(fig)
+        return path
+    except Exception:
+        if plt is not None:
+            try:
+                plt.close("all")
+            except Exception:
+                pass
+        return None
+
+
+def _generate_trend_chart(records, days=7, output_dir=None, end_date=None):
+    """折线图：近 N 天支出/收入/结余趋势。返回图片路径或 None（v3.13.20 Phase 3）。"""
+    return _generate_chart_image(records, chart_type="line", days=days,
+                                 output_dir=output_dir, end_date=end_date)
+
+
+def _generate_comparison_chart(records, days=7, output_dir=None, end_date=None):
+    """柱状图：近 N 天支出/收入/结余对比。返回图片路径或 None（v3.13.20 Phase 3）。"""
+    return _generate_chart_image(records, chart_type="bar", days=days,
+                                 output_dir=output_dir, end_date=end_date)
+
+
+def _resolve_report_windows(data, scope, now=None):
+    """
+    依据 scope 解析报告各记录窗口（v3.13.20 抽取，generate_report / generate_excel 共用）。
+
+    参数:
+        data: list — 财务记录
+        scope: str — "default" / "today" / "week" / "month" / "all"
+        now: datetime — 当前时间（默认 datetime.now()，测试可注入固定日期）
+
+    返回:
+        dict — {
+            "summary_records", "detail_records", "category_records",
+            "scope_title", "report_date",
+        }
+        report_date 为图表窗口锚点（default/today 时非空；期间对比始终基于全量数据）。
+    """
+    if now is None:
+        now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")
+
+    if scope == "all":
+        return {
+            "summary_records": list(data),
+            "detail_records": _build_detail_table(data, limit=50),
+            "category_records": list(data),
+            "scope_title": "全部数据",
+            "report_date": None,
+        }
+    if scope == "week":
+        w_start, w_end = _week_bounds(now)
+        w_records = _records_in_range(data, w_start, w_end)
+        return {
+            "summary_records": list(w_records),
+            "detail_records": _build_detail_table(w_records, limit=50),
+            "category_records": list(w_records),
+            "scope_title": "本周",
+            "report_date": today_str,
+        }
+    if scope == "month":
+        m_start, m_end = _month_bounds(now)
+        m_records = _records_in_range(data, m_start, m_end)
+        return {
+            "summary_records": list(m_records),
+            "detail_records": _build_detail_table(m_records, limit=50),
+            "category_records": list(m_records),
+            "scope_title": "本月",
+            "report_date": today_str,
+        }
+    if scope == "today":
+        t_records = _records_in_range(data, today_str, today_str)
+        return {
+            "summary_records": list(t_records),
+            "detail_records": _build_detail_table(t_records, limit=50),
+            "category_records": list(t_records),
+            "scope_title": f"{today_str}（今日）",
+            "report_date": today_str,
+        }
+    # default
+    report_date, start_3d, end_3d = _get_default_date_range(data, now)
+    t_records = _records_in_range(data, report_date, report_date)
+    near_3d = _records_in_range(data, start_3d, end_3d)
+    scope_title = report_date + ("（今日）" if report_date == today_str else "（最近有数据日）")
+    return {
+        "summary_records": list(t_records),
+        "detail_records": _build_detail_table(near_3d, limit=30),
+        "category_records": list(near_3d),
+        "scope_title": scope_title,
+        "report_date": report_date,
+    }
+
+
+def _build_report_docx(data, windows, summary, comparison, category_breakdown, output_dir, base):
+    """
+    构建并保存 Word 报告（v3.13.20 从 generate_report 抽取，五段式 + 趋势图表）。返回 docx 完整路径。
+    """
+    from docx import Document
+    from docx.shared import Inches
+
+    scope_title = windows["scope_title"]
+    detail_records = windows["detail_records"]
+    report_date = windows.get("report_date")
+
+    doc = Document()
+    doc.add_heading('每日财务报告', 0)
+    doc.add_paragraph(f'报告生成时间：{datetime.now().strftime("%Y-%m-%d %H:%M")}  范围：{scope_title}')
+    doc.add_paragraph()
+
+    # 一、收支汇总（当前范围）
+    doc.add_heading('一、收支汇总', level=1)
+    doc.add_paragraph(f'统计范围：{scope_title}')
+    doc.add_paragraph(f'总支出：{_format_amount(summary["expense_total"])}元')
+    doc.add_paragraph(f'总收入：{_format_amount(summary["income_total"])}元')
+    doc.add_paragraph(f'结余：{_format_amount(summary["balance"])}元')
+    doc.add_paragraph()
+
+    # 二、交易明细（当前范围）
+    doc.add_heading(f'二、交易明细（{len(detail_records)}条）', level=1)
+    table = doc.add_table(rows=1, cols=5)
+    table.style = 'Light Grid Accent 1'
+    hdr = table.rows[0].cells
+    hdr[0].text, hdr[1].text, hdr[2].text, hdr[3].text, hdr[4].text = '日期', '时段', '分类', '来源', '金额'
+    for r in detail_records:
+        row = table.add_row().cells
+        row[0].text = r.get("date", "")
+        row[1].text = r.get("period", "") or ""
+        row[2].text = r.get("category", "") or ""
+        row[3].text = r.get("source", "") or ""
+        row[4].text = f'{_format_amount(r.get("amount", 0))}元'
+    doc.add_paragraph()
+
+    # 三、收支趋势图表（近7天 + 近30天，视觉预览）——v3.13.20 Phase 3
+    doc.add_heading('三、收支趋势图表', level=1)
+    _chart_count = 0
+    with tempfile.TemporaryDirectory() as _chart_tmp:
+        for days, ctype, cname in (
+            (7, "line", "近7天 收支趋势（支出/收入/结余）"),
+            (7, "bar", "近7天 收支对比（支出/收入/结余）"),
+            (30, "line", "近30天 收支趋势（支出/收入/结余）"),
+            (30, "bar", "近30天 收支对比（支出/收入/结余）"),
+        ):
+            img = _generate_chart_image(data, chart_type=ctype, days=days,
+                                        output_dir=_chart_tmp, end_date=report_date)
+            if not img:
+                continue
+            try:
+                doc.add_picture(img, width=Inches(6.2))
+            except Exception:
+                continue
+            doc.add_paragraph(f"图：{cname}")
+            _chart_count += 1
+    if _chart_count == 0:
+        doc.add_paragraph("（图表生成失败，请查看表格数据）")
+    doc.add_paragraph()
+
+    # 四、期间对比（全量数据）
+    doc.add_heading('四、期间对比（全量数据）', level=1)
+    table = doc.add_table(rows=1, cols=4)
+    table.style = 'Light Grid Accent 1'
+    hdr = table.rows[0].cells
+    hdr[0].text, hdr[1].text, hdr[2].text, hdr[3].text = '对比项', '当前期', '上期', '变化'
+    for item in (comparison["week"], comparison["month"]):
+        row = table.add_row().cells
+        row[0].text = item["label"]
+        row[1].text = f'{_format_amount(item["this_total"])}元'
+        row[2].text = f'{_format_amount(item["last_total"])}元'
+        row[3].text = _format_percent_change(item["percent"])
+    doc.add_paragraph()
+
+    # 五、分类统计（当前范围）
+    doc.add_heading('五、分类统计', level=1)
+    if category_breakdown:
+        table = doc.add_table(rows=1, cols=3)
+        table.style = 'Light Grid Accent 1'
+        hdr = table.rows[0].cells
+        hdr[0].text, hdr[1].text, hdr[2].text = '分类', '金额', '占比'
+        for cat, info in category_breakdown.items():
+            row = table.add_row().cells
+            row[0].text = cat
+            row[1].text = f'{_format_amount(info["amount"])}元'
+            row[2].text = f'{info["percentage"]}%'
+    else:
+        doc.add_paragraph('（统计范围内无支出数据）')
+
+    full_path = os.path.join(output_dir, base + ".docx")
+    doc.save(full_path)
+    return full_path
+
+
+def generate_excel(data=None, output_path=None, scope="default"):
+    """
+    导出财务数据到 Excel 工作簿（v3.13.20 Phase 3）。
+
+    参数:
+        data: list — 财务记录（None 则自动加载 local_archive.json）
+        output_path: str — 输出 .xlsx 完整路径（None 则默认 项目根/每日财务/财务数据_YYYYMMDD_HHMMSS.xlsx）
+        scope: str — 同 generate_report 的 scope
+
+    返回:
+        dict — {"status": "success"/"error", "message", "file_path"}
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font
+    except Exception as e:
+        return {"status": "error", "message": f"缺少 openpyxl 依赖: {e}", "file_path": ""}
+
+    if data is None:
+        data = load_data()
+    if not data:
+        return {"status": "error", "message": "📭 数据为空，请先记账或导入数据", "file_path": ""}
+    if scope not in _VALID_SCOPES:
+        scope = "default"
+
+    windows = _resolve_report_windows(data, scope)
+    scope_title = windows["scope_title"]
+    summary = _compute_report_summary(windows["summary_records"])
+    category_breakdown = _compute_category_breakdown(windows["category_records"])
+    comparison = _get_period_comparison(data)
+    detail_all = _build_detail_table(data, limit=len(data))  # 全部记录（日期降序）
+
+    if not output_path:
+        proj_root = os.path.normpath(os.path.join(BASE_DIR, "..", ".."))
+        output_dir = os.path.join(proj_root, "每日财务")
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"财务数据_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
+
+    wb = Workbook()
+    bold = Font(bold=True)
+
+    # Sheet 1: Summary 收支汇总
+    ws = wb.active
+    ws.title = "Summary"
+    ws.append(["每日财务报告"])
+    ws.append([f"范围：{scope_title}"])
+    ws.append([])
+    ws.append(["项目", "金额（元）"])
+    for c in ws[4]:
+        c.font = bold
+    ws.append(["总支出", summary["expense_total"]])
+    ws.append(["总收入", summary["income_total"]])
+    ws.append(["结余", summary["balance"]])
+    ws.append([])
+    ws.append([f"报告生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M')}"])
+    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["B"].width = 14
+
+    # Sheet 2: Category 分类统计
+    ws = wb.create_sheet("Category")
+    ws.append(["分类", "金额（元）", "占比（%）"])
+    for c in ws[1]:
+        c.font = bold
+    if category_breakdown:
+        for cat, info in category_breakdown.items():
+            ws.append([cat, info["amount"], info["percentage"]])
+    else:
+        ws.append(["（统计范围内无支出数据）", "", ""])
+    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 12
+
+    # Sheet 3: Comparison 期间对比
+    ws = wb.create_sheet("Comparison")
+    ws.append(["对比项", "当前期（元）", "上期（元）", "变化"])
+    for c in ws[1]:
+        c.font = bold
+    for item in (comparison["week"], comparison["month"]):
+        ws.append([item["label"], item["this_total"], item["last_total"],
+                   _format_percent_change(item["percent"])])
+    ws.column_dimensions["A"].width = 20
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 14
+    ws.column_dimensions["D"].width = 12
+
+    # Sheet 4: Detail 交易明细
+    ws = wb.create_sheet("Detail")
+    ws.append(["日期", "时段", "分类", "来源", "金额（元）"])
+    for c in ws[1]:
+        c.font = bold
+    for r in detail_all:
+        ws.append([
+            r.get("date", ""),
+            r.get("period", "") or "",
+            r.get("category", "") or "",
+            r.get("source", "") or "",
+            r.get("amount", 0) or 0,
+        ])
+    for col, w in zip("ABCDE", (12, 10, 14, 20, 14)):
+        ws.column_dimensions[col].width = w
+
+    wb.save(output_path)
+    return {"status": "success", "message": f"Excel 已导出：{output_path}", "file_path": output_path}
+
+
+def generate_report(data=None, output_dir=None, scope="default", format="docx"):
+    """
+    生成财务报告（v3.13.20 Phase 3：支持趋势图表 + Excel 导出）。
+
+    参数:
+        data: list — 财务记录（默认调用 load_data() 读取 local_archive.json）
+        output_dir: str — 输出目录（默认 项目根/每日财务/）
+        scope: str — 报告范围：
+            "default" 今日汇总 + 近3天明细/分类 + 全量期间对比（今日无数据则取最近有数据日）
+            "today"   仅今日记录
+            "week"    本周记录
+            "month"   本月记录
+            "all"     全部记录（完整报告，明细最多 50 条）
+        format: str — 输出格式：
+            "docx"  Word 文档（五段式：收支汇总→交易明细→趋势图表→期间对比→分类统计）
+            "excel" 仅导出 Excel 工作簿（Summary/Category/Comparison/Detail 四工作表）
+            "both"  Word + Excel 同时生成（Excel 失败仍返回 Word，部分成功）
+
+    返回:
+        dict — {"status", "message", "file_path", "scope", "summary",
+                "docx_path", "excel_path"}
+        - format="docx" 时 file_path 为 docx；"excel" 时为 xlsx；"both" 时为已成功生成的产物
+        - matplotlib 缺失时图表段自动跳过并注明（不阻塞）；openpyxl 缺失时 "excel"/"both" 报错（both 仍返回 Word）
+    """
+    if data is None:
+        data = load_data()
+    if not data:
+        return {"status": "error", "message": "📭 数据为空，请先记账或导入数据", "file_path": ""}
+
+    if scope not in _VALID_SCOPES:
+        scope = "default"
+    if format not in ("docx", "excel", "both"):
+        format = "docx"
+
+    if not output_dir:
+        proj_root = os.path.normpath(os.path.join(BASE_DIR, "..", ".."))
+        output_dir = os.path.join(proj_root, "每日财务")
+    os.makedirs(output_dir, exist_ok=True)
+    base = f"财务报告_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    windows = _resolve_report_windows(data, scope)
+    summary = _compute_report_summary(windows["summary_records"])
+    comparison = _get_period_comparison(data)
+    category_breakdown = _compute_category_breakdown(windows["category_records"])
+
+    warnings = []
+    docx_path, excel_path = "", ""
+
+    # ---- Word 文档（含图表）----
+    if format in ("docx", "both"):
+        try:
+            from docx import Document
+        except Exception as e:
+            warnings.append(f"缺少 python-docx 依赖: {e}")
+        else:
+            try:
+                docx_path = _build_report_docx(data, windows, summary, comparison,
+                                               category_breakdown, output_dir, base)
+            except Exception as e:
+                warnings.append(f"Word 报告生成失败: {e}")
+        if not docx_path and format == "docx":
+            return {"status": "error", "message": "；".join(warnings) or "Word 报告生成失败",
+                    "file_path": ""}
+
+    # ---- Excel 导出 ----
+    if format in ("excel", "both"):
+        excel_path = os.path.join(output_dir, base + ".xlsx")
+        excel_result = generate_excel(data, output_path=excel_path, scope=scope)
+        if excel_result["status"] != "success":
+            excel_path = ""
+            warnings.append(f"Excel 导出失败: {excel_result['message']}")
+            if format == "excel":
+                return {"status": "error", "message": "；".join(warnings) or "Excel 导出失败",
+                        "file_path": ""}
+
+    if not docx_path and not excel_path:
+        return {"status": "error", "message": "；".join(warnings) or "报告生成失败", "file_path": ""}
+
+    file_path = docx_path or excel_path
+    if warnings:
+        message = "；".join(warnings)
+    else:
+        message = {
+            "docx": f"报告已生成：{docx_path}",
+            "excel": f"Excel 已导出：{excel_path}",
+            "both": f"报告已生成：docx={docx_path}；excel={excel_path}",
+        }[format]
+
+    return {
+        "status": "success",
+        "message": message,
+        "file_path": file_path,
+        "scope": scope,
+        "summary": summary,
+        "docx_path": docx_path,
+        "excel_path": excel_path,
+    }
 
 
 # ===================== 独立运行入口 =====================

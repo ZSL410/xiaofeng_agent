@@ -1,7 +1,7 @@
 # 晓风智能体 · 文档索引
 
 > 项目定位：本地运行的模块化 AI 助手，支持语音/文字交互、日程管理、财务记账、记忆系统。
-> 当前版本：**v3.13.0**  |  技术栈：Python 3 + Ollama(qwen2.5:7b/3b) + Edge TTS + Vosk
+> 当前版本：**v3.13.20**  |  技术栈：Python 3 + Ollama(qwen2.5:7b/3b) + Edge TTS + Vosk
 >
 > **📢 项目变更**：拟态（Electron 桌面桌宠前端）已分离为独立仓库 → [github.com/ZSL410/nitai](https://github.com/ZSL410/nitai)。前端通过 HTTP API（端口 5001）与本项目通信，独立开发维护。
 
@@ -27,8 +27,9 @@ python 00_核心主体/脑.py
 # 测试日程模块
 python 01_工具模块/日程模块/schedule_module.py
 
-# 生成财务报告
-python 01_工具模块/财务模块/generate_report.py
+# 生成财务报告（finance_module.generate_report，旧版独立脚本已归档到 docs/99_归档/；format 可选 docx[默认]/excel/both）
+python -c "import sys; sys.path.insert(0, '01_工具模块/财务模块'); import finance_module; finance_module.generate_report()"
+# 仅导出 Excel：finance_module.generate_report(format='excel')；Word+Excel：finance_module.generate_report(format='both')
 
 # 测试数据提炼
 python 00_核心主体/记忆/数据提炼.py
@@ -38,6 +39,9 @@ python 00_核心主体/记忆/数据提炼.py
 
 | 版本    | 日期       | 核心变更                      |
 |---------|------------|-------------------------------|
+| v3.13.20 | 2026-08-25 | ⚡ 财务报告 Phase 3（图表 + Excel）：`generate_report` 新增 `format` 参数（docx/excel/both）——Word 五段式插入收支趋势图表（matplotlib 近7天/近30天 折线/柱状，支出/收入/结余）；新增 `generate_excel` 四工作表导出；matplotlib/openpyxl 缺失优雅降级 |
+| v3.13.19 | 2026-08-25 | 🐛/🧹 财务报告 Phase 2.5：`generate_report` 默认范围修正（今日汇总+近3天明细/分类+全量对比）+ 新增 `scope` 参数（today/week/month/all）；旧版独立脚本归档到 `docs/99_归档/` |
+| v3.13.18 | 2026-08-25 | ⚡ 财务报告 Phase 2：`generate_report` 四段式——收支汇总 + 分类统计（分类/金额/占比）+ 期间对比（本周vs上周、本月vs上月）+ 交易明细（最近50条），纯 Python 聚合无 LLM |
 | v3.13.0 | 2026-08-16 | ⚡ 记忆系统 Phase 7（增强对比分析）：习惯总结（`get_habit_summary`，patterns.json + 高频活动 + 持续时长）+ 消费趋势（`analyze_spending_trend`，按周聚合 ±10% 判升降平 + 分类洞察，不足降级按月）+ 个性化建议（`get_personalized_recommendations`，咖啡/外卖/交通 → 省钱建议 + 节省估算）+ 分析路由触发词扩展（习惯/趋势/建议） |
 | v3.12.2 | 2026-08-16 | 🐛 情绪路由修复："我今天心情很好"不再被 3b 误判为财务；新增预路由 (K) 情绪表达 → chat（情绪词触发 + 工具意图排除）+ 3b 聊天触发词补情绪表达 + `get_related_memories(live=True)` 实时兜底（"咖啡和什么相关"总有结果） |
 | v3.12.1 | 2026-08-16 | 🐛 Phase 6 体验修复：强情绪自动创建情绪记忆（subtype=emotion，`_STRONG_MOODS` 白名单 + 工具轮 `is_tool_round` 拦截）+ `get_related_memories` 结构化返回（strength 强中弱 + reasons）+ 关联显示改用内容并标注强度原因 |

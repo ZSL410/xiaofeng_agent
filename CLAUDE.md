@@ -10,8 +10,9 @@
 # 启动晓风（终端 REPL）
 python 00_核心主体/脑.py
 
-# 独立运行：生成财务报告
-python 01_工具模块/财务模块/generate_report.py
+# 独立运行：生成财务报告（finance_module.generate_report；旧版独立脚本已归档到 docs/99_归档/generate_report.py）
+# format 可选：docx[默认，含图表] / excel / both；scope 可选：default/today/week/month/all
+python -c "import sys; sys.path.insert(0, '01_工具模块/财务模块'); import finance_module; finance_module.generate_report()"
 
 # 独立测试日程模块
 python 01_工具模块/日程模块/schedule_module.py

@@ -1,5 +1,22 @@
 [
   {
+    "id": "finance_20260824_2345_z7e2b0",
+    "type": "expense",
+    "date": "2026-08-24",
+    "time": "23:45",
+    "datetime": "2026-08-24T23:45:00",
+    "period": "深夜",
+    "amount": 25,
+    "source": "饭",
+    "category": "餐饮",
+    "content": "深夜饭花了25元",
+    "detail": null,
+    "created_at": "2026-08-24T23:45:00",
+    "updated_at": null,
+    "_original_text": "今天吃饭花了25元",
+    "_time_ref": "今天"
+  },
+  {
     "id": "finance_20260822_2019_s9j1bg",
     "type": "expense",
     "date": "2026-08-22",

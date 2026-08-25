@@ -2,6 +2,64 @@
   "version": "1.0",
   "records": [
     {
+      "id": "dialogue_20260824_2346_qwog11",
+      "dialogue_id": "session_20260824_2345_1r6rem",
+      "role": "assistant",
+      "original_text": "这个问题有点模糊哦，你是想问我什么颜色好看，还是有别的意思呢？能说得详细一点吗？🎨",
+      "summary": "请具体说明你的问题。",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T23:46:52",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T23:46:52.990732"
+    },
+    {
+      "id": "dialogue_20260824_2346_ozbkun",
+      "dialogue_id": "session_20260824_2345_1r6rem",
+      "role": "user",
+      "original_text": "你说什么颜色的好",
+      "summary": "你说什么颜色最好？",
+      "tags": [
+        "聊天"
+      ],
+      "timestamp": "2026-08-24T23:46:50",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T23:46:50.866484"
+    },
+    {
+      "id": "dialogue_20260824_2345_kbbdaj",
+      "dialogue_id": "session_20260824_2345_1r6rem",
+      "role": "assistant",
+      "original_text": "好嘞，已记下你今天饭花的25块钱～ 还有别的要记的吗？",
+      "summary": "确认：好嘞，已记下你今天饭花的25块钱～ 还有",
+      "tags": [
+        "财务",
+        "记忆"
+      ],
+      "timestamp": "2026-08-24T23:45:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T23:45:57.053402"
+    },
+    {
+      "id": "dialogue_20260824_2345_0ebwfa",
+      "dialogue_id": "session_20260824_2345_1r6rem",
+      "role": "user",
+      "original_text": "今天吃饭花了25元",
+      "summary": "记账：饭25元",
+      "tags": [
+        "吃饭",
+        "财务"
+      ],
+      "timestamp": "2026-08-24T23:45:57",
+      "mood": null,
+      "related_memory_ids": [],
+      "created_at": "2026-08-24T23:45:57.036485"
+    },
+    {
       "id": "dialogue_20260824_2312_z9py7x",
       "dialogue_id": "session_20260824_2312_qec0re",
       "role": "assistant",
@@ -9756,5 +9814,5 @@
       "created_at": "2026-08-12T00:03:45.854646"
     }
   ],
-  "updated_at": "2026-08-24T23:12:03.856243"
+  "updated_at": "2026-08-24T23:46:52.995503"
 }
